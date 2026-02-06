@@ -107,6 +107,7 @@ export default async function TaskDetailPage({ params }: PageProps) {
           taskUuid={taskUuid}
           projectUuid={projectUuid}
           status={task.status}
+          currentUserUuid={auth.actorUuid}
         />
       </div>
 

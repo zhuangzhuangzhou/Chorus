@@ -199,3 +199,46 @@ export async function revokeApiKey(uuid: string) {
     data: { revokedAt: new Date() },
   });
 }
+
+// 获取用户拥有的 Agents (for claim modal)
+export async function getAgentsByOwner(companyUuid: string, ownerUuid: string) {
+  return prisma.agent.findMany({
+    where: { companyUuid, ownerUuid },
+    select: {
+      uuid: true,
+      name: true,
+      roles: true,
+    },
+    orderBy: { name: "asc" },
+  });
+}
+
+// 获取公司内所有指定角色的 Agents (for assignment)
+export async function getAgentsByRole(companyUuid: string, role: string) {
+  return prisma.agent.findMany({
+    where: {
+      companyUuid,
+      roles: { has: role },
+    },
+    select: {
+      uuid: true,
+      name: true,
+      roles: true,
+      ownerUuid: true,
+    },
+    orderBy: { name: "asc" },
+  });
+}
+
+// 获取公司内所有用户 (for assignment)
+export async function getCompanyUsers(companyUuid: string) {
+  return prisma.user.findMany({
+    where: { companyUuid },
+    select: {
+      uuid: true,
+      name: true,
+      email: true,
+    },
+    orderBy: { name: "asc" },
+  });
+}

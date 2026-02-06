@@ -9,7 +9,7 @@
 - 技术架构: `docs/ARCHITECTURE.md`
 - UI 设计: `docs/design.pen`
 
-**当前状态**: M3 Web UI 进行中（基础页面完成，交互功能待完善）
+**当前状态**: M3 Web UI 进行中（核心交互功能已完成，仅剩 Dashboard 统计和 Knowledge 搜索）
 
 ---
 
@@ -21,7 +21,7 @@
 | M1: 后端 API | ✅ 完成 | 100% |
 | M2: MCP Server | ✅ 完成 | 100% |
 | M2.5: Super Admin | ✅ 完成 | 100% |
-| M3: Web UI | 🔄 进行中 | 60% |
+| M3: Web UI | 🔄 进行中 | 85% |
 | M4: Skill 文件 | ⏳ 待开始 | 0% |
 | M5: 联调测试 | ⏳ 待开始 | 0% |
 
@@ -476,19 +476,24 @@ shadcn 组件：
 > **架构参考**: `ARCHITECTURE.md` §3.2 目录结构 - src/app/, src/components/
 > **设计参考**: `docs/design.pen` 包含所有页面设计稿
 
-### 整体进度: 60%
+### 整体进度: 85%
 
 **已完成**:
 - ✅ Server Components + Server Actions 架构重构
 - ✅ i18n 国际化（中英文）
 - ✅ Stateful URL 路径重构 (`/projects/[uuid]/...`)
 - ✅ 基础页面渲染和数据展示
+- ✅ 项目创建时文档上传（.md 文件）
+- ✅ Idea 创建表单（含附件上传）
+- ✅ Assign Modal（分配给自己/其他用户/特定 Agent）
+- ✅ Task 验证按钮（To Verify → Done）
+- ✅ Kanban 拖拽功能（@hello-pangea/dnd）
+- ✅ shadcn RadioGroup 组件
 
 **待完成**:
-- ⏳ 交互功能（拖拽、模态框、表单）
 - ⏳ Dashboard 跨项目统计
 - ⏳ Knowledge 统一搜索
-- ⏳ 丰富的 UI 组件
+- ⏳ Document Diff 视图
 
 ### 任务清单
 
@@ -517,22 +522,25 @@ shadcn 组件：
 
 - [x] 项目列表页 (Server Component)
 - [x] 项目创建表单 (Server Actions)
+- [x] 文档上传功能（.md 文件，自动识别类型：PRD/技术设计/ADR）
+  > 文件: `src/app/(dashboard)/projects/new/page.tsx`
 - [x] Project Overview 页
 
-#### M3.4 Ideas 🔄 部分完成
+#### M3.4 Ideas ✅ 完成
 > PRD 参考: `PRD_Chorus.md` §4.1 F5 Idea 六阶段状态、认领方式
 > 架构参考: `ARCHITECTURE.md` §7.3 Idea 状态流转
 > 设计参考: `design.pen` - "Chorus - Project Ideas", "Modal - Claim Assignment"
 
 - [x] Ideas 列表页 (Server Component)
   - [x] 显示状态标签（Open/Assigned/In Progress 等）
-  - [x] Open 状态显示 "Claim" 按钮
-- [ ] **Idea 创建表单**（文本 + 附件上传）
-  > PRD 参考: `PRD_Chorus.md` §4.1 F5 Idea 支持文本和附件
-- [ ] **Claim 模态框**
-  > PRD 参考: `PRD_Chorus.md` §3.3.1 认领方式
-  - [ ] Radio: "Assign to myself"（所有我的 Agent 都能处理）
-  - [ ] Radio: "Assign to [Agent Name]"（下拉选择特定 Agent）
+  - [x] Open 状态显示 "Assign" 按钮
+- [x] Idea 创建表单（文本 + 附件上传）
+  > 文件: `src/app/(dashboard)/projects/[uuid]/ideas/idea-create-form.tsx`
+- [x] Assign 模态框（shadcn RadioGroup）
+  > 文件: `src/components/assign-modal.tsx`
+  - [x] "Assign to myself"（所有我的 Agent 都能处理）
+  - [x] "Assign to another user"（其他公司用户）
+  - [x] "Assign to specific Agent"（PM Agents 列表）
 - [x] Idea 详情视图 (Server Component)
 
 #### M3.5 Knowledge ⏳ 未完成
@@ -569,29 +577,31 @@ shadcn 组件：
   > 设计参考: `design.pen` - "Chorus - Proposal Output (Document Diff)"
 - [ ] **修改请求功能**（返回修改）
 
-#### M3.8 Tasks (Kanban) 🔄 部分完成
+#### M3.8 Tasks (Kanban) ✅ 完成
 > PRD 参考: `PRD_Chorus.md` §3.3.1 任务系统（六阶段工作流、认领规则）
 > 架构参考: `ARCHITECTURE.md` §7.2 任务状态流转, §3.2 目录结构 - src/components/kanban/
 > 设计参考: `design.pen` - "Chorus - Project Tasks (Kanban)", "Task Detail Panel", "Modal - Claim Task"
 
 - [x] 四列看板布局（Todo/In Progress/To Verify/Done）
   - [x] Todo 列包含 Open + Assigned 状态
-  - [x] Open 状态卡片显示 "Claim" 按钮样式
-- [ ] **拖拽移动功能**
-  > 需要安装 dnd-kit 或类似库
+  - [x] Open 状态卡片显示 "Assign" 按钮样式
+- [x] 拖拽移动功能（@hello-pangea/dnd）
+  > 文件: `src/app/(dashboard)/projects/[uuid]/tasks/kanban-board.tsx`
+  > Server Action: `src/app/(dashboard)/projects/[uuid]/tasks/actions.ts`
 - [x] 任务卡片
   - [x] 显示状态标签
   - [x] 显示 Assigned to 信息
   - [x] 显示 Story Points (Agent Hours)
-- [x] 任务详情页（独立页面，非侧边栏）
-- [ ] **任务详情侧边栏**（PRD 设计为 slide-out panel）
-- [ ] **Claim 模态框**
-  > PRD 参考: `PRD_Chorus.md` §3.3.1 认领方式
-  - [ ] Radio: "Assign to myself"
-  - [ ] Radio: "Assign to [Agent Name]"
-- [ ] **验证按钮**（To Verify → Done，Human 专属）
-  > PRD 参考: `PRD_Chorus.md` §3.3.1 To Verify 状态
-- [ ] **状态更新按钮**（In Progress → To Verify 等）
+- [x] 任务详情页（独立页面）
+- [ ] **任务详情侧边栏**（PRD 设计为 slide-out panel，暂用独立页面）
+- [x] Assign 模态框（shadcn RadioGroup）
+  > 文件: `src/components/assign-modal.tsx`（复用 Ideas 的模态框）
+  - [x] "Assign to myself"
+  - [x] "Assign to another user"
+  - [x] "Assign to specific Agent"（Developer Agents 列表）
+- [x] 验证按钮（To Verify → Done，Human 专属）
+  > 文件: `src/app/(dashboard)/projects/[uuid]/tasks/[taskUuid]/task-actions.tsx`
+- [x] 状态更新（通过拖拽或 TaskStatusProgress 组件）
 
 #### M3.9 Activity 🔄 部分完成
 > 架构参考: `ARCHITECTURE.md` §3.2 目录结构 - src/components/activity/
@@ -784,32 +794,33 @@ M5 (联调测试) ⏳
 
 ## M3 待完成功能优先级
 
-### P0 - 核心交互（必须完成）
+### P0 - 核心交互（必须完成）✅ 全部完成
 
-| 功能 | 页面 | 复杂度 | 说明 |
+| 功能 | 页面 | 复杂度 | 状态 |
 |-----|------|--------|------|
-| Idea 创建表单 | Ideas | 中 | 支持文本 + 附件上传 |
-| Claim 模态框 | Ideas/Tasks | 中 | 选择 "Assign to myself" 或特定 Agent |
-| Task 验证按钮 | Task Detail | 低 | To Verify → Done (Human only) |
-| Task 状态按钮 | Task Detail | 低 | In Progress → To Verify 等 |
+| Idea 创建表单 | Ideas | 中 | ✅ 完成 |
+| Assign 模态框 | Ideas/Tasks | 中 | ✅ 完成（shadcn RadioGroup） |
+| Task 验证按钮 | Task Detail | 低 | ✅ 完成 |
+| Task 状态更新 | Task Detail | 低 | ✅ 完成 |
+| Document 上传 | New Project | 中 | ✅ 完成（.md 文件上传） |
 
 ### P1 - 重要功能
 
-| 功能 | 页面 | 复杂度 | 说明 |
+| 功能 | 页面 | 复杂度 | 状态 |
 |-----|------|--------|------|
-| Kanban 拖拽 | Tasks | 高 | 需要 dnd-kit 集成 |
-| Knowledge 搜索 | Knowledge | 中 | 统一搜索 Ideas/Docs/Tasks |
-| Document 编辑 | Documents | 高 | Markdown 编辑器 |
-| Dashboard 统计 | Dashboard | 中 | 跨项目聚合数据 |
+| Kanban 拖拽 | Tasks | 高 | ✅ 完成（@hello-pangea/dnd） |
+| Knowledge 搜索 | Knowledge | 中 | ⏳ 待完成 |
+| Document 编辑 | Documents | 高 | ✅ 已有（Server Actions） |
+| Dashboard 统计 | Dashboard | 中 | ⏳ 待完成 |
 
 ### P2 - 体验优化
 
-| 功能 | 页面 | 复杂度 | 说明 |
+| 功能 | 页面 | 复杂度 | 状态 |
 |-----|------|--------|------|
-| Task 侧边栏 | Tasks | 中 | 替代独立页面 |
-| Document Diff | Proposals | 高 | 对比视图 |
-| Activity 筛选 | Activity | 低 | 按类型/参与者筛选 |
-| Agent 独立页 | Agents | 中 | 从 Settings 分离 |
+| Task 侧边栏 | Tasks | 中 | ⏳ 暂用独立页面 |
+| Document Diff | Proposals | 高 | ⏳ 待完成 |
+| Activity 筛选 | Activity | 低 | ⏳ 待完成 |
+| Agent 独立页 | Agents | 中 | ⏳ 合并到 Settings |
 
 ---
 
@@ -823,20 +834,20 @@ M5 (联调测试) ⏳
 | Chorus - Projects | f2Faj | ✅ |
 | Chorus - New Project | MsJV4 | ✅ |
 | Chorus - Project Overview | QQV0z | ✅ |
-| Chorus - Project Ideas | rNq1h | 🔄 缺少创建表单和 Claim 模态框 |
+| Chorus - Project Ideas | rNq1h | ✅ 完成（创建表单 + Assign 模态框） |
 | Chorus - Project Proposals | XlN0Q | ✅ |
 | Chorus - Proposal Output (PRD) | dF5OI | ✅ |
 | Chorus - Proposal Output (Tasks) | mlAGV | ✅ |
 | Chorus - Proposal Output (Document Diff) | aop75 | ⏳ 未实现 |
-| Chorus - Project Tasks (Kanban) | 511Kf | 🔄 缺少拖拽和 Claim 模态框 |
-| Task Detail Panel | 1wqLo | 🔄 实现为独立页面，非侧边栏 |
+| Chorus - Project Tasks (Kanban) | 511Kf | ✅ 完成（拖拽 + Assign 模态框） |
+| Task Detail Panel | 1wqLo | ✅ 完成（独立页面 + 验证按钮） |
 | Chorus - Documents List | q2i2n | ✅ |
 | Chorus - Document Preview | B1x5H | ✅ |
 | Chorus - All Agents | 3xsuC | ⏳ 合并到 Settings |
 | Chorus - Settings | WU9KX | ✅ |
 | Modal - Create API Key | BjBrG | ✅ |
-| Modal - Claim Assignment | VobiB | ⏳ 未实现 |
-| Modal - Claim Task | QAR54 | ⏳ 未实现 |
+| Modal - Assign (Idea) | VobiB | ✅ 完成（AssignModal） |
+| Modal - Assign (Task) | QAR54 | ✅ 完成（AssignModal 复用） |
 
 ---
 

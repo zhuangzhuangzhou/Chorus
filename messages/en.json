@@ -32,9 +32,18 @@
     "processing": "Processing...",
     "saving": "Saving...",
     "claim": "Claim",
+    "assign": "Assign",
+    "verify": "Verify",
     "reject": "Reject",
     "approve": "Approve",
     "selectProject": "Please select a project"
+  },
+  "assign": {
+    "selectAssignee": "Choose who should handle this item",
+    "assignToMyself": "Assign to myself",
+    "assignToMyselfDesc": "All your agents can see and work on this",
+    "orAssignToUser": "Or assign to another user",
+    "orAssignToAgent": "Or assign to a specific agent"
   },
   "time": {
     "justNow": "Just now",
@@ -187,7 +196,7 @@
       "documents": "Documents",
       "documentsDesc": "Upload PRD, technical design, or any reference documents for PM Agent to analyze",
       "dragDrop": "Drag & drop files here, or click to browse",
-      "fileTypes": "PDF, Markdown, Word documents up to 10MB",
+      "fileTypes": "Markdown files (.md) up to 10MB",
       "createAndStart": "Create & Start PM Agent"
     }
   },
@@ -207,6 +216,7 @@
     "ideaNotFound": "Idea not found",
     "backToIdeas": "Back to Ideas",
     "claimIdea": "Claim Idea",
+    "assignIdea": "Assign Idea",
     "source": "Source:"
   },
   "tasks": {
@@ -219,6 +229,7 @@
     "taskNotFound": "Task not found",
     "backToTasks": "Back to Tasks",
     "claimTask": "Claim Task",
+    "assignTask": "Assign Task",
     "statusProgress": "Status Progress",
     "subtasks": "Subtasks",
     "parentTask": "Parent Task",

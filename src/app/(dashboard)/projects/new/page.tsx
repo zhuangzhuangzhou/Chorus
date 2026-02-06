@@ -109,15 +109,37 @@ export default function NewProjectPage() {
     setLoading(true);
 
     try {
+      // Read uploaded markdown files
+      const documents: { name: string; content: string; type: "prd" | "tech_design" | "adr" | "spec" | "guide" }[] = [];
+
+      for (const uploadedFile of uploadedFiles) {
+        // Only process .md files
+        if (uploadedFile.name.toLowerCase().endsWith(".md")) {
+          const content = await uploadedFile.file.text();
+          // Determine document type based on filename
+          let type: "prd" | "tech_design" | "adr" | "spec" | "guide" = "spec";
+          const lowerName = uploadedFile.name.toLowerCase();
+          if (lowerName.includes("prd")) type = "prd";
+          else if (lowerName.includes("tech") || lowerName.includes("architecture")) type = "tech_design";
+          else if (lowerName.includes("adr")) type = "adr";
+          else if (lowerName.includes("guide")) type = "guide";
+
+          documents.push({
+            name: uploadedFile.name,
+            content,
+            type,
+          });
+        }
+      }
+
       const result = await createProjectAction({
         name: formData.name,
         description: formData.description,
         ideas: ideas,
+        documents,
       });
 
       if (result.success && result.projectUuid) {
-        // TODO: Upload documents when API is ready
-
         // Save as current project and redirect
         localStorage.setItem("currentProjectUuid", result.projectUuid);
         router.push(`/projects/${result.projectUuid}`);
@@ -294,7 +316,7 @@ export default function NewProjectPage() {
                   ref={fileInputRef}
                   type="file"
                   multiple
-                  accept=".pdf,.md,.doc,.docx,.txt"
+                  accept=".md"
                   onChange={(e) => e.target.files && handleFiles(e.target.files)}
                   className="hidden"
                 />

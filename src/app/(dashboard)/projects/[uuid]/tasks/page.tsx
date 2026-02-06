@@ -2,30 +2,12 @@
 // Server Component - UUID 从 URL 获取
 
 import { redirect } from "next/navigation";
-import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { getServerAuthContext } from "@/lib/auth-server";
 import { listTasks } from "@/services/task.service";
 import { projectExists } from "@/services/project.service";
-
-const statusConfig: Record<string, { label: string; color: string }> = {
-  open: { label: "Open", color: "bg-[#FFF3E0] text-[#E65100]" },
-  assigned: { label: "Assigned", color: "bg-[#E3F2FD] text-[#1976D2]" },
-  in_progress: { label: "In Progress", color: "bg-[#E8F5E9] text-[#5A9E6F]" },
-  to_verify: { label: "To Verify", color: "bg-[#F3E5F5] text-[#7B1FA2]" },
-  done: { label: "Done", color: "bg-[#E0F2F1] text-[#00796B]" },
-  closed: { label: "Closed", color: "bg-[#F5F5F5] text-[#9A9A9A]" },
-};
-
-const columns = [
-  { id: "todo", label: "To Do", statuses: ["open", "assigned"] },
-  { id: "in_progress", label: "In Progress", statuses: ["in_progress"] },
-  { id: "to_verify", label: "To Verify", statuses: ["to_verify"] },
-  { id: "done", label: "Done", statuses: ["done", "closed"] },
-];
+import { KanbanBoard } from "./kanban-board";
 
 interface PageProps {
   params: Promise<{ uuid: string }>;
@@ -53,17 +35,6 @@ export default async function TasksPage({ params }: PageProps) {
     skip: 0,
     take: 1000,
   });
-
-  const getTasksForColumn = (statuses: string[]) => {
-    return tasks.filter((task) => statuses.includes(task.status));
-  };
-
-  const getColumnHours = (statuses: string[]) => {
-    return getTasksForColumn(statuses).reduce(
-      (sum, task) => sum + (task.storyPoints || 0),
-      0
-    );
-  };
 
   const totalHours = tasks.reduce((sum, task) => sum + (task.storyPoints || 0), 0);
 
@@ -117,117 +88,8 @@ export default async function TasksPage({ params }: PageProps) {
         </Button>
       </div>
 
-      {/* Kanban Board */}
-      <div className="flex flex-1 gap-4 overflow-x-auto pb-4">
-        {columns.map((column) => {
-          const columnTasks = getTasksForColumn(column.statuses);
-          return (
-            <div
-              key={column.id}
-              className="flex w-[300px] flex-shrink-0 flex-col rounded-xl bg-[#F5F2EC] p-4"
-            >
-              {/* Column Header */}
-              <div className="mb-4 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <h3 className="font-medium text-[#2C2C2C]">{column.label}</h3>
-                  <span className="rounded-full bg-white px-2 py-0.5 text-xs font-medium text-[#6B6B6B]">
-                    {columnTasks.length}
-                  </span>
-                </div>
-                {getColumnHours(column.statuses) > 0 && (
-                  <span className="flex items-center gap-1 text-xs text-[#9A9A9A]">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      className="h-3 w-3"
-                    >
-                      <circle cx="12" cy="12" r="10" />
-                      <polyline points="12 6 12 12 16 14" />
-                    </svg>
-                    {getColumnHours(column.statuses)}h
-                  </span>
-                )}
-              </div>
-
-              {/* Tasks */}
-              <div className="flex-1 space-y-3 overflow-y-auto">
-                {columnTasks.length === 0 ? (
-                  <div className="flex h-24 items-center justify-center rounded-lg border-2 border-dashed border-[#E5E0D8] text-sm text-[#9A9A9A]">
-                    {t("tasks.noTasks")}
-                  </div>
-                ) : (
-                  columnTasks.map((task) => (
-                    <Link key={task.uuid} href={`/projects/${projectUuid}/tasks/${task.uuid}`}>
-                      <Card className="cursor-pointer border-[#E5E0D8] bg-white p-4 transition-all hover:border-[#C67A52] hover:shadow-sm">
-                        <div className="mb-2 flex items-start justify-between">
-                          <Badge className={statusConfig[task.status]?.color || ""}>
-                            {statusConfig[task.status]?.label || task.status}
-                          </Badge>
-                          {task.storyPoints && (
-                            <span className="flex items-center gap-1 rounded bg-[#FFF3E0] px-2 py-0.5 text-xs font-medium text-[#E65100]">
-                              <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                className="h-3 w-3"
-                              >
-                                <circle cx="12" cy="12" r="10" />
-                                <polyline points="12 6 12 12 16 14" />
-                              </svg>
-                              {task.storyPoints}h
-                            </span>
-                          )}
-                        </div>
-                        <h4 className="mb-1 font-medium text-[#2C2C2C]">
-                          {task.title}
-                        </h4>
-                        {task.description && (
-                          <p className="mb-2 line-clamp-2 text-sm text-[#6B6B6B]">
-                            {task.description}
-                          </p>
-                        )}
-                        <div className="flex items-center justify-between text-xs text-[#9A9A9A]">
-                          {task.assignee ? (
-                            <span className="flex items-center gap-1">
-                              <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                className="h-3 w-3"
-                              >
-                                <path d="M12 8V4H8" />
-                                <rect width="16" height="12" x="4" y="8" rx="2" />
-                              </svg>
-                              {task.assignee.name}
-                            </span>
-                          ) : task.status === "open" ? (
-                            <span className="text-[#C67A52]">{t("common.claim")}</span>
-                          ) : (
-                            <span>{t("common.unassigned")}</span>
-                          )}
-                        </div>
-                      </Card>
-                    </Link>
-                  ))
-                )}
-              </div>
-            </div>
-          );
-        })}
-      </div>
+      {/* Kanban Board with drag-and-drop */}
+      <KanbanBoard projectUuid={projectUuid} initialTasks={tasks} />
     </div>
   );
 }

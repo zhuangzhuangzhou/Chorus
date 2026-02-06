@@ -91,6 +91,7 @@ export default async function IdeaDetailPage({ params }: PageProps) {
           ideaUuid={ideaUuid}
           projectUuid={projectUuid}
           status={idea.status}
+          currentUserUuid={auth.actorUuid}
         />
       </div>
 

@@ -7,10 +7,11 @@ import { getTranslations } from "next-intl/server";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Lightbulb, Bot } from "lucide-react";
+import { Lightbulb, Bot } from "lucide-react";
 import { getServerAuthContext } from "@/lib/auth-server";
 import { listIdeas } from "@/services/idea.service";
 import { projectExists } from "@/services/project.service";
+import { IdeaCreateForm } from "./idea-create-form";
 
 const statusConfig: Record<string, { label: string; color: string }> = {
   open: { label: "Open", color: "bg-[#FFF3E0] text-[#E65100]" },
@@ -72,10 +73,7 @@ export default async function IdeasPage({ params, searchParams }: PageProps) {
             {t("ideas.subtitle")}
           </p>
         </div>
-        <Button>
-          <Plus className="mr-2 h-4 w-4" />
-          {t("ideas.newIdea")}
-        </Button>
+        <IdeaCreateForm projectUuid={projectUuid} />
       </div>
 
       {/* Filter Tabs */}
@@ -113,9 +111,7 @@ export default async function IdeasPage({ params, searchParams }: PageProps) {
               : t("ideas.ideasWithStatus")}
           </p>
           {filter === "all" && (
-            <Button>
-              {t("ideas.addFirstIdea")}
-            </Button>
+            <IdeaCreateForm projectUuid={projectUuid} />
           )}
         </Card>
       ) : (

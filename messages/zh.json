@@ -32,9 +32,18 @@
     "processing": "处理中...",
     "saving": "保存中...",
     "claim": "认领",
+    "assign": "分配",
+    "verify": "验证",
     "reject": "拒绝",
     "approve": "批准",
     "selectProject": "请先选择一个项目"
+  },
+  "assign": {
+    "selectAssignee": "选择谁来处理此项目",
+    "assignToMyself": "分配给我自己",
+    "assignToMyselfDesc": "您的所有智能体都可以查看并处理此项目",
+    "orAssignToUser": "或分配给其他用户",
+    "orAssignToAgent": "或分配给特定智能体"
   },
   "time": {
     "justNow": "刚刚",
@@ -187,7 +196,7 @@
       "documents": "文档",
       "documentsDesc": "上传 PRD、技术设计或任何参考文档供 PM 智能体分析",
       "dragDrop": "拖放文件到此处，或点击浏览",
-      "fileTypes": "支持 PDF、Markdown、Word 文档，最大 10MB",
+      "fileTypes": "支持 Markdown 文件（.md），最大 10MB",
       "createAndStart": "创建并启动 PM 智能体"
     }
   },
@@ -207,6 +216,7 @@
     "ideaNotFound": "想法未找到",
     "backToIdeas": "返回想法列表",
     "claimIdea": "认领想法",
+    "assignIdea": "分配想法",
     "source": "来源："
   },
   "tasks": {
@@ -219,6 +229,7 @@
     "taskNotFound": "任务未找到",
     "backToTasks": "返回任务列表",
     "claimTask": "认领任务",
+    "assignTask": "分配任务",
     "statusProgress": "状态进度",
     "subtasks": "子任务",
     "parentTask": "父任务",

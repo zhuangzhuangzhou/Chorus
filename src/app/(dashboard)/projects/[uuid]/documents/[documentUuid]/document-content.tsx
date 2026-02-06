@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
+import { Streamdown } from "streamdown";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { updateDocumentAction } from "./actions";
@@ -87,10 +88,12 @@ export function DocumentContent({ documentUuid, projectUuid, initialContent }: D
           placeholder={t("documents.documentContent")}
         />
       ) : (
-        <div className="prose prose-sm max-w-none">
-          <div className="whitespace-pre-wrap text-[#2C2C2C]">
-            {initialContent || <span className="text-[#9A9A9A] italic">{t("common.noContent")}</span>}
-          </div>
+        <div className="prose prose-sm max-w-none text-[#2C2C2C]">
+          {initialContent ? (
+            <Streamdown>{initialContent}</Streamdown>
+          ) : (
+            <span className="text-[#9A9A9A] italic">{t("common.noContent")}</span>
+          )}
         </div>
       )}
     </Card>
