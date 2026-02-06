@@ -2,16 +2,6 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -41,11 +31,9 @@ export default function LoginPage() {
       const result = data.data;
 
       if (result.type === "super_admin") {
-        // 跳转到 Super Admin 密码登录页
         router.push(`/login/admin?email=${encodeURIComponent(email)}`);
       } else if (result.type === "oidc" && result.company) {
         // TODO: 实现 OIDC 重定向
-        // 目前显示提示信息
         setError(
           `OIDC login for ${result.company.name} is not yet implemented`
         );
@@ -60,62 +48,71 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="space-y-1 text-center">
-          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-primary">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className="h-6 w-6 text-primary-foreground"
-            >
-              <circle cx="12" cy="12" r="10" />
-              <path d="M8 14s1.5 2 4 2 4-2 4-2" />
-              <line x1="9" y1="9" x2="9.01" y2="9" />
-              <line x1="15" y1="9" x2="15.01" y2="9" />
-            </svg>
-          </div>
-          <CardTitle className="text-2xl font-bold">Welcome to Chorus</CardTitle>
-          <CardDescription>
+    <div className="flex min-h-screen items-center justify-center bg-[#FAF8F4] p-4">
+      <div className="w-full max-w-[400px] rounded-xl border border-[#E5E2DC] bg-white p-10">
+        {/* Logo Section */}
+        <div className="mb-8 flex flex-col items-center gap-2">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="h-12 w-12 text-[#171717]"
+          >
+            <path d="M9 18V5l12-2v13" />
+            <circle cx="6" cy="18" r="3" />
+            <circle cx="18" cy="16" r="3" />
+          </svg>
+          <h1 className="text-[28px] font-semibold text-[#171717]">Chorus</h1>
+          <p className="text-sm text-[#737373]">
             AI-Human Collaboration Platform
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="you@company.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                disabled={loading}
-              />
-            </div>
-
-            {error && (
-              <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">
-                {error}
-              </div>
-            )}
-
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? "Checking..." : "Continue"}
-            </Button>
-          </form>
-
-          <p className="mt-4 text-center text-sm text-muted-foreground">
-            Enter your email to sign in or create an account
           </p>
-        </CardContent>
-      </Card>
+        </div>
+
+        {/* Form Section */}
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-2">
+            <label
+              htmlFor="email"
+              className="text-sm font-medium text-[#171717]"
+            >
+              Email
+            </label>
+            <input
+              id="email"
+              type="email"
+              placeholder="you@company.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              disabled={loading}
+              className="h-11 w-full rounded-lg border border-[#E5E5E5] bg-white px-3 text-sm text-[#171717] placeholder:text-[#A3A3A3] focus:border-[#171717] focus:outline-none focus:ring-1 focus:ring-[#171717] disabled:opacity-50"
+            />
+          </div>
+
+          {error && (
+            <div className="rounded-lg bg-red-50 p-3 text-sm text-red-600">
+              {error}
+            </div>
+          )}
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="flex h-11 w-full items-center justify-center rounded-lg bg-[#171717] text-sm font-medium text-white transition-colors hover:bg-[#2C2C2C] disabled:opacity-50"
+          >
+            {loading ? "Checking..." : "Continue"}
+          </button>
+        </form>
+
+        {/* Help Text */}
+        <p className="mt-8 text-center text-xs text-[#737373]">
+          Enter your email to sign in or create an account
+        </p>
+      </div>
     </div>
   );
 }

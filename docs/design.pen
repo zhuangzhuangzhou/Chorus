@@ -15987,6 +15987,182 @@
                           ]
                         }
                       ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "6QOal",
+                      "name": "Persona Field",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": 12,
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "gbIhH",
+                          "name": "personaHeader",
+                          "width": "fill_container",
+                          "justifyContent": "space_between",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "CeQJr",
+                              "name": "personaLabel",
+                              "fill": "#2C2C2C",
+                              "content": "Agent Persona",
+                              "fontFamily": "IBM Plex Sans",
+                              "fontSize": 13,
+                              "fontWeight": "500"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "xi4AS",
+                              "name": "zeroBadge",
+                              "fill": "#E8F5E9",
+                              "cornerRadius": 4,
+                              "padding": [
+                                2,
+                                8
+                              ],
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "Plq4c",
+                                  "name": "badgeText",
+                                  "fill": "#5A9E6F",
+                                  "content": "Zero Context Injection",
+                                  "fontFamily": "IBM Plex Sans",
+                                  "fontSize": 10,
+                                  "fontWeight": "500"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "text",
+                          "id": "kb2Wb",
+                          "name": "personaDesc",
+                          "fill": "#6B6B6B",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "Define the agent's personality and behavior. This will be automatically injected when the agent checks in.",
+                          "lineHeight": 1.4,
+                          "fontFamily": "IBM Plex Sans",
+                          "fontSize": 12,
+                          "fontWeight": "normal"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "HdHMc",
+                          "name": "personaPresets",
+                          "gap": 8,
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "bWTuL",
+                              "name": "preset1",
+                              "fill": "#C67A52",
+                              "cornerRadius": 20,
+                              "padding": [
+                                6,
+                                12
+                              ],
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "UFjZ4",
+                                  "name": "preset1Text",
+                                  "fill": "#FFFFFF",
+                                  "content": "UX-Focused PM",
+                                  "fontFamily": "IBM Plex Sans",
+                                  "fontSize": 11,
+                                  "fontWeight": "500"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "52svx",
+                              "name": "preset2",
+                              "fill": "#F5F2EC",
+                              "cornerRadius": 20,
+                              "padding": [
+                                6,
+                                12
+                              ],
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "orcyY",
+                                  "name": "preset2Text",
+                                  "fill": "#6B6B6B",
+                                  "content": "Tech-Savvy PM",
+                                  "fontFamily": "IBM Plex Sans",
+                                  "fontSize": 11,
+                                  "fontWeight": "500"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "OIvDH",
+                              "name": "preset3",
+                              "fill": "#F5F2EC",
+                              "cornerRadius": 20,
+                              "padding": [
+                                6,
+                                12
+                              ],
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "paR3e",
+                                  "name": "preset3Text",
+                                  "fill": "#6B6B6B",
+                                  "content": "Quality Dev",
+                                  "fontFamily": "IBM Plex Sans",
+                                  "fontSize": 11,
+                                  "fontWeight": "500"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "tNseO",
+                          "name": "personaInput",
+                          "width": "fill_container",
+                          "height": 80,
+                          "fill": "#FFFFFF",
+                          "cornerRadius": 8,
+                          "stroke": {
+                            "thickness": 1,
+                            "fill": "#E5E0D8"
+                          },
+                          "padding": [
+                            12,
+                            14
+                          ],
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "7xT9v",
+                              "name": "personaInputText",
+                              "fill": "#2C2C2C",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
+                              "content": "You are a product manager who prioritizes user experience above all. You always consider the end-user perspective and advocate for intuitive designs.",
+                              "lineHeight": 1.5,
+                              "fontFamily": "IBM Plex Sans",
+                              "fontSize": 13,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        }
+                      ]
                     }
                   ]
                 },
