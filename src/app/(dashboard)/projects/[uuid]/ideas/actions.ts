@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { getServerAuthContext } from "@/lib/auth-server";
-import { createIdea } from "@/services/idea.service";
+import { createIdea, updateIdea } from "@/services/idea.service";
 
 interface Attachment {
   type: string;
@@ -39,5 +39,32 @@ export async function createIdeaAction(input: CreateIdeaInput) {
   } catch (error) {
     console.error("Failed to create idea:", error);
     return { success: false, error: "Failed to create idea" };
+  }
+}
+
+interface UpdateIdeaInput {
+  ideaUuid: string;
+  projectUuid: string;
+  title: string;
+  content: string | null;
+}
+
+export async function updateIdeaAction(input: UpdateIdeaInput) {
+  const auth = await getServerAuthContext();
+  if (!auth) {
+    return { success: false, error: "Unauthorized" };
+  }
+
+  try {
+    const idea = await updateIdea(input.ideaUuid, auth.companyUuid, {
+      title: input.title,
+      content: input.content,
+    });
+
+    revalidatePath(`/projects/${input.projectUuid}/ideas`);
+    return { success: true, idea };
+  } catch (error) {
+    console.error("Failed to update idea:", error);
+    return { success: false, error: "Failed to update idea" };
   }
 }

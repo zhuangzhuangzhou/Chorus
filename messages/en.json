@@ -54,7 +54,12 @@
     "taskSubmitted": "{actor} submitted this task for review",
     "taskCompleted": "{actor} completed this task",
     "taskReleased": "{actor} released this task",
-    "taskStatusChanged": "{actor} changed the task status"
+    "taskStatusChanged": "{actor} changed the task status",
+    "ideaCreated": "{actor} created this idea",
+    "ideaAssigned": "{actor} was assigned to this idea",
+    "ideaClaimed": "{actor} claimed this idea",
+    "ideaReleased": "{actor} released this idea",
+    "ideaStatusChanged": "{actor} changed the idea status"
   },
   "comments": {
     "title": "Comments",
@@ -258,7 +263,16 @@
     "onlySelectedPmAgentCanWork": "Only the selected PM Agent can process this idea",
     "selectPmAgent": "Select a PM Agent",
     "noPmAgentsAvailable": "No PM agents available",
-    "releaseIdeaAssigneeDesc": "Remove current assignee and make this idea available again"
+    "releaseIdeaAssigneeDesc": "Remove current assignee and make this idea available again",
+    "proposalGenerated": "Proposal Generated",
+    "viewProposal": "View Proposal",
+    "assignedTo": "Assigned to",
+    "titleLabel": "Title",
+    "submit": "Submit",
+    "editIdea": "Edit Idea",
+    "saveChanges": "Save Changes",
+    "titleRequired": "Title is required",
+    "updateFailed": "Failed to update idea"
   },
   "tasks": {
     "title": "Tasks",

@@ -54,7 +54,12 @@
     "taskSubmitted": "{actor} 提交了此任务待审核",
     "taskCompleted": "{actor} 完成了此任务",
     "taskReleased": "{actor} 释放了此任务",
-    "taskStatusChanged": "{actor} 更改了任务状态"
+    "taskStatusChanged": "{actor} 更改了任务状态",
+    "ideaCreated": "{actor} 创建了此想法",
+    "ideaAssigned": "{actor} 被分配到此想法",
+    "ideaClaimed": "{actor} 认领了此想法",
+    "ideaReleased": "{actor} 释放了此想法",
+    "ideaStatusChanged": "{actor} 更改了想法状态"
   },
   "comments": {
     "title": "评论",
@@ -258,7 +263,16 @@
     "onlySelectedPmAgentCanWork": "只有选中的 PM 智能体可以处理此想法",
     "selectPmAgent": "选择一个 PM 智能体",
     "noPmAgentsAvailable": "没有可用的 PM 智能体",
-    "releaseIdeaAssigneeDesc": "移除当前负责人，使此想法重新可用"
+    "releaseIdeaAssigneeDesc": "移除当前负责人，使此想法重新可用",
+    "proposalGenerated": "已生成提案",
+    "viewProposal": "查看提案",
+    "assignedTo": "分配给",
+    "titleLabel": "标题",
+    "submit": "提交",
+    "editIdea": "编辑想法",
+    "saveChanges": "保存更改",
+    "titleRequired": "标题不能为空",
+    "updateFailed": "更新想法失败"
   },
   "tasks": {
     "title": "任务",

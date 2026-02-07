@@ -153,3 +153,31 @@ export async function createComment({
     updatedAt: comment.updatedAt.toISOString(),
   };
 }
+
+// 批量获取评论数量
+export async function batchCommentCounts(
+  companyUuid: string,
+  targetType: TargetType,
+  targetUuids: string[]
+): Promise<Record<string, number>> {
+  if (targetUuids.length === 0) return {};
+
+  const counts = await prisma.comment.groupBy({
+    by: ["targetUuid"],
+    where: {
+      companyUuid,
+      targetType,
+      targetUuid: { in: targetUuids },
+    },
+    _count: { targetUuid: true },
+  });
+
+  const result: Record<string, number> = {};
+  for (const uuid of targetUuids) {
+    result[uuid] = 0;
+  }
+  for (const item of counts) {
+    result[item.targetUuid] = item._count.targetUuid;
+  }
+  return result;
+}
