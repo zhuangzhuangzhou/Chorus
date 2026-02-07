@@ -272,7 +272,9 @@
     "editIdea": "Edit Idea",
     "saveChanges": "Save Changes",
     "titleRequired": "Title is required",
-    "updateFailed": "Failed to update idea"
+    "updateFailed": "Failed to update idea",
+    "deleteIdea": "Delete Idea",
+    "deleteIdeaConfirm": "Are you sure you want to delete \"{title}\"? This action cannot be undone."
   },
   "tasks": {
     "title": "Tasks",

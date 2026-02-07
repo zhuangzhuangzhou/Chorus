@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
-import { X, Bot, User, Send, FileText, Loader2, Pencil, Check } from "lucide-react";
+import { X, Bot, User, Send, FileText, Loader2, Pencil, Check, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,13 +12,24 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   getIdeaCommentsAction,
   createIdeaCommentAction,
 } from "./[ideaUuid]/comment-actions";
 import { getIdeaActivitiesAction } from "./[ideaUuid]/activity-actions";
-import { updateIdeaAction } from "./actions";
+import { updateIdeaAction, deleteIdeaAction } from "./actions";
 import type { ActivityResponse } from "@/services/activity.service";
 import type { CommentResponse } from "@/services/comment.service";
 import { AssignIdeaModal } from "./assign-idea-modal";
@@ -44,7 +55,7 @@ interface IdeaDetailPanelProps {
   currentUserUuid: string;
   isUsedInProposal: boolean;
   onClose: () => void;
-  onIdeaUpdated?: (uuid: string, title: string, content: string | null) => void;
+  onDeleted?: () => void;
 }
 
 // 状态颜色配置
@@ -125,7 +136,7 @@ export function IdeaDetailPanel({
   currentUserUuid,
   isUsedInProposal,
   onClose,
-  onIdeaUpdated,
+  onDeleted,
 }: IdeaDetailPanelProps) {
   const t = useTranslations();
   const router = useRouter();
@@ -143,6 +154,7 @@ export function IdeaDetailPanel({
   const [editContent, setEditContent] = useState(idea.content || "");
   const [isSaving, setIsSaving] = useState(false);
   const [editError, setEditError] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const canAssign = idea.status === "open" || idea.status === "assigned" || idea.status === "in_progress";
   const canCreateProposal =
@@ -230,10 +242,21 @@ export function IdeaDetailPanel({
 
     if (result.success) {
       setIsEditing(false);
-      onIdeaUpdated?.(idea.uuid, editTitle.trim(), editContent.trim() || null);
       router.refresh();
     } else {
       setEditError(result.error || t("ideas.updateFailed"));
+    }
+  };
+
+  const handleDelete = async () => {
+    setIsDeleting(true);
+    const result = await deleteIdeaAction(idea.uuid, projectUuid);
+    setIsDeleting(false);
+
+    if (result.success) {
+      onDeleted?.();
+      onClose();
+      router.refresh();
     }
   };
 
@@ -546,6 +569,44 @@ export function IdeaDetailPanel({
                     {idea.status === "completed" ? t("status.completed") : t("status.closed")}
                   </div>
                 ) : null}
+                <div className="ml-auto">
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        className="h-9 w-9 border-[#E5E0D8] text-[#D32F2F] hover:bg-[#FFEBEE] hover:text-[#D32F2F] hover:border-[#D32F2F]"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>{t("ideas.deleteIdea")}</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          {t("ideas.deleteIdeaConfirm", { title: idea.title })}
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
+                        <AlertDialogAction
+                          variant="destructive"
+                          onClick={handleDelete}
+                          disabled={isDeleting}
+                        >
+                          {isDeleting ? (
+                            <>
+                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                              {t("common.delete")}
+                            </>
+                          ) : (
+                            t("common.delete")
+                          )}
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </div>
               </>
             )}
           </div>

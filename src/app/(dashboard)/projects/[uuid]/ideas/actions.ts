@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { getServerAuthContext } from "@/lib/auth-server";
-import { createIdea, updateIdea } from "@/services/idea.service";
+import { createIdea, updateIdea, deleteIdea } from "@/services/idea.service";
 
 interface Attachment {
   type: string;
@@ -66,5 +66,21 @@ export async function updateIdeaAction(input: UpdateIdeaInput) {
   } catch (error) {
     console.error("Failed to update idea:", error);
     return { success: false, error: "Failed to update idea" };
+  }
+}
+
+export async function deleteIdeaAction(ideaUuid: string, projectUuid: string) {
+  const auth = await getServerAuthContext();
+  if (!auth) {
+    return { success: false, error: "Unauthorized" };
+  }
+
+  try {
+    await deleteIdea(ideaUuid);
+    revalidatePath(`/projects/${projectUuid}/ideas`);
+    return { success: true };
+  } catch (error) {
+    console.error("Failed to delete idea:", error);
+    return { success: false, error: "Failed to delete idea" };
   }
 }

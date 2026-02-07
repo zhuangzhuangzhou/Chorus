@@ -273,7 +273,9 @@
     "saveChanges": "保存更改",
     "completed": "已完成",
     "titleRequired": "标题不能为空",
-    "updateFailed": "更新想法失败"
+    "updateFailed": "更新想法失败",
+    "deleteIdea": "删除想法",
+    "deleteIdeaConfirm": "确定要删除「{title}」吗？此操作无法撤销。"
   },
   "tasks": {
     "title": "任务",

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { Bot, MessageSquare, FileText, User } from "lucide-react";
@@ -75,27 +75,21 @@ function formatRelativeTime(dateString: string): string {
 }
 
 export function IdeasList({
-  ideas: initialIdeas,
+  ideas,
   projectUuid,
   currentUserUuid,
   usedIdeaUuids,
   ideaProposalMap,
 }: IdeasListProps) {
   const t = useTranslations();
-  const [ideas, setIdeas] = useState(initialIdeas);
-  const [selectedIdea, setSelectedIdea] = useState<IdeaItem | null>(null);
+  const [selectedIdeaUuid, setSelectedIdeaUuid] = useState<string | null>(null);
   const usedSet = new Set(usedIdeaUuids);
 
-  const handleIdeaUpdated = (uuid: string, title: string, content: string | null) => {
-    setIdeas((prev) =>
-      prev.map((idea) =>
-        idea.uuid === uuid ? { ...idea, title, content } : idea
-      )
-    );
-    setSelectedIdea((prev) =>
-      prev && prev.uuid === uuid ? { ...prev, title, content } : prev
-    );
-  };
+  // Derive selectedIdea from current props — always in sync with server data
+  const selectedIdea = useMemo(
+    () => (selectedIdeaUuid ? ideas.find((i) => i.uuid === selectedIdeaUuid) ?? null : null),
+    [selectedIdeaUuid, ideas]
+  );
 
   return (
     <>
@@ -108,7 +102,7 @@ export function IdeasList({
             <Card
               key={idea.uuid}
               className="cursor-pointer border-[#E5E0D8] py-4 transition-all hover:border-[#C67A52]/50 hover:shadow-sm"
-              onClick={() => setSelectedIdea(idea)}
+              onClick={() => setSelectedIdeaUuid(idea.uuid)}
             >
               {/* Header: Author meta + Status badge */}
               <CardHeader className="gap-0 py-0">
@@ -200,8 +194,8 @@ export function IdeasList({
           projectUuid={projectUuid}
           currentUserUuid={currentUserUuid}
           isUsedInProposal={usedSet.has(selectedIdea.uuid)}
-          onClose={() => setSelectedIdea(null)}
-          onIdeaUpdated={handleIdeaUpdated}
+          onClose={() => setSelectedIdeaUuid(null)}
+          onDeleted={() => setSelectedIdeaUuid(null)}
         />
       )}
     </>
