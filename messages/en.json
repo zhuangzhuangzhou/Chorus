@@ -301,7 +301,20 @@
     "selectAgent": "Select an agent",
     "selectUser": "Select a user",
     "noAgentsAvailable": "No agents available",
-    "noUsersAvailable": "No other users available"
+    "noUsersAvailable": "No other users available",
+    "editTask": "Edit Task",
+    "createTaskTitle": "Create Task",
+    "deleteTask": "Delete Task",
+    "deleteTaskConfirm": "Are you sure you want to delete \"{title}\"? This action cannot be undone.",
+    "titleLabel": "Title",
+    "titleRequired": "Title is required",
+    "descriptionLabel": "Description",
+    "priorityLabel": "Priority",
+    "storyPointsLabel": "Story Points (hours)",
+    "acceptanceCriteriaLabel": "Acceptance Criteria",
+    "saveChanges": "Save Changes",
+    "createFailed": "Failed to create task",
+    "updateFailed": "Failed to update task"
   },
   "proposals": {
     "pageTitle": "Proposals",

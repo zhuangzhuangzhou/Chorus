@@ -302,7 +302,20 @@
     "selectAgent": "选择智能体",
     "selectUser": "选择用户",
     "noAgentsAvailable": "暂无可用的智能体",
-    "noUsersAvailable": "暂无其他用户"
+    "noUsersAvailable": "暂无其他用户",
+    "editTask": "编辑任务",
+    "createTaskTitle": "创建任务",
+    "deleteTask": "删除任务",
+    "deleteTaskConfirm": "确定要删除「{title}」吗？此操作无法撤销。",
+    "titleLabel": "标题",
+    "titleRequired": "标题不能为空",
+    "descriptionLabel": "描述",
+    "priorityLabel": "优先级",
+    "storyPointsLabel": "故事点（小时）",
+    "acceptanceCriteriaLabel": "验收标准",
+    "saveChanges": "保存更改",
+    "createFailed": "创建任务失败",
+    "updateFailed": "更新任务失败"
   },
   "proposals": {
     "pageTitle": "提案",

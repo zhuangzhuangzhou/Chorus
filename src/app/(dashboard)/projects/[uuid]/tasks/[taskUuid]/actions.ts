@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { getServerAuthContext } from "@/lib/auth-server";
-import { claimTask, getTaskByUuid, updateTask, releaseTask } from "@/services/task.service";
+import { claimTask, getTaskByUuid, updateTask, releaseTask, createTask, deleteTask } from "@/services/task.service";
 import { getAgentsByRole, getCompanyUsers } from "@/services/agent.service";
 import { createActivity } from "@/services/activity.service";
 
@@ -253,6 +253,114 @@ export async function claimTaskToUserAction(taskUuid: string, userUuid: string) 
   } catch (error) {
     console.error("Failed to assign task to user:", error);
     return { success: false, error: "Failed to assign task" };
+  }
+}
+
+// Create a new task
+interface CreateTaskInput {
+  projectUuid: string;
+  title: string;
+  description?: string;
+  priority?: string;
+  storyPoints?: number | null;
+  acceptanceCriteria?: string | null;
+}
+
+export async function createTaskAction(input: CreateTaskInput) {
+  const auth = await getServerAuthContext();
+  if (!auth) {
+    return { success: false, error: "Unauthorized" };
+  }
+
+  try {
+    const task = await createTask({
+      companyUuid: auth.companyUuid,
+      projectUuid: input.projectUuid,
+      title: input.title,
+      description: input.description || null,
+      priority: input.priority || "medium",
+      storyPoints: input.storyPoints,
+      acceptanceCriteria: input.acceptanceCriteria,
+      createdByUuid: auth.actorUuid,
+    });
+
+    // Record activity
+    await createActivity({
+      companyUuid: auth.companyUuid,
+      projectUuid: input.projectUuid,
+      targetType: "task",
+      targetUuid: task.uuid,
+      actorType: auth.type,
+      actorUuid: auth.actorUuid,
+      action: "task_created",
+    });
+
+    revalidatePath(`/projects/${input.projectUuid}/tasks`);
+    return { success: true, taskUuid: task.uuid };
+  } catch (error) {
+    console.error("Failed to create task:", error);
+    return { success: false, error: "Failed to create task" };
+  }
+}
+
+// Update task editable fields
+interface UpdateTaskFieldsInput {
+  taskUuid: string;
+  projectUuid: string;
+  title: string;
+  description?: string | null;
+  priority?: string;
+  storyPoints?: number | null;
+  acceptanceCriteria?: string | null;
+}
+
+export async function updateTaskFieldsAction(input: UpdateTaskFieldsInput) {
+  const auth = await getServerAuthContext();
+  if (!auth) {
+    return { success: false, error: "Unauthorized" };
+  }
+
+  try {
+    const task = await getTaskByUuid(auth.companyUuid, input.taskUuid);
+    if (!task) {
+      return { success: false, error: "Task not found" };
+    }
+
+    await updateTask(input.taskUuid, {
+      title: input.title,
+      description: input.description,
+      priority: input.priority,
+      storyPoints: input.storyPoints,
+      acceptanceCriteria: input.acceptanceCriteria,
+    });
+
+    revalidatePath(`/projects/${input.projectUuid}/tasks`);
+    return { success: true };
+  } catch (error) {
+    console.error("Failed to update task:", error);
+    return { success: false, error: "Failed to update task" };
+  }
+}
+
+// Delete a task
+export async function deleteTaskAction(taskUuid: string, projectUuid: string) {
+  const auth = await getServerAuthContext();
+  if (!auth) {
+    return { success: false, error: "Unauthorized" };
+  }
+
+  try {
+    const task = await getTaskByUuid(auth.companyUuid, taskUuid);
+    if (!task) {
+      return { success: false, error: "Task not found" };
+    }
+
+    await deleteTask(taskUuid);
+    revalidatePath(`/projects/${projectUuid}/tasks`);
+    return { success: true };
+  } catch (error) {
+    console.error("Failed to delete task:", error);
+    return { success: false, error: "Failed to delete task" };
   }
 }
 
