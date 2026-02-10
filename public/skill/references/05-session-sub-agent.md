@@ -112,41 +112,53 @@ Suitable when using Claude Code's `Task` tool to spawn sub-agents:
 
 **Team Lead (Main Agent) Workflow:**
 
+The team lead creates sessions, assigns task UUIDs to sub-agents, then **delegates all task management** to them. After spawning, the team lead only monitors completion.
+
 ```python
 # 1. Check in and get tasks
 chorus_checkin()
 tasks = chorus_list_tasks({ projectUuid, status: "assigned" })
 
-# 2. Create a session for each sub-agent
+# 2. Create a session for each sub-agent (or reopen existing ones)
 session1 = chorus_create_session({ name: "frontend-worker" })
 session2 = chorus_create_session({ name: "backend-worker" })
 
-# 3. Each session checks in to its assigned task
-chorus_session_checkin_task({ sessionUuid: session1.uuid, taskUuid: task1.uuid })
-chorus_session_checkin_task({ sessionUuid: session2.uuid, taskUuid: task2.uuid })
-
-# 4. Spawn sub-agents and pass the sessionUuid
-# (via Claude Code Task tool or other agent frameworks)
+# 3. Spawn sub-agents — pass task UUIDs and session UUID
+# DO NOT checkin to tasks or move task status here — that's the sub-agent's job
 spawn_agent("frontend-worker", {
-  task: task1,
+  taskUuids: [task1.uuid],
   sessionUuid: session1.uuid,
-  instructions: "Use sessionUuid when calling chorus_report_work and chorus_update_task"
+  instructions: "You own these tasks end-to-end: checkin, move status, report work, submit for verify"
 })
+
+# 4. Monitor — periodically check that all tasks reach to_verify/done
+chorus_list_tasks({ projectUuid })  # verify no tasks are stuck or missed
+
+# 5. Close sessions when sub-agents finish
+chorus_close_session({ sessionUuid: session1.uuid })
 ```
 
 **Sub-Agent (Worker) Workflow:**
 
-```python
-# Sub-agent receives sessionUuid and taskUuid
+Each sub-agent manages its own tasks end-to-end. The team lead must NOT checkin, move status, or report work on behalf of sub-agents.
 
-# 1. Start work, update status
+```python
+# Sub-agent receives sessionUuid and taskUuids from team lead
+
+# 1. Checkin to task — sub-agent does this itself
+chorus_session_checkin_task({
+  sessionUuid: "<session-uuid>",
+  taskUuid: "<task-uuid>"
+})
+
+# 2. Move task to in_progress
 chorus_update_task({
   taskUuid: "<task-uuid>",
   status: "in_progress",
   sessionUuid: "<session-uuid>"    # Identifies which worker
 })
 
-# 2. Periodic heartbeat (report_work auto-heartbeats; explicit call also available)
+# 3. Periodic heartbeat (report_work auto-heartbeats; explicit call also available)
 chorus_session_heartbeat({ sessionUuid: "<session-uuid>" })
 
 # 3. Report progress
@@ -156,7 +168,13 @@ chorus_report_work({
   sessionUuid: "<session-uuid>"    # Activity will display "Agent / Session"
 })
 
-# 4. Team Lead closes the session when done
+# 4. Submit for verification when done
+chorus_submit_for_verify({ taskUuid: "<task-uuid>", summary: "Implemented API endpoints" })
+
+# 5. Checkout from task
+chorus_session_checkout_task({ sessionUuid: "<session-uuid>", taskUuid: "<task-uuid>" })
+
+# Team Lead closes the session after sub-agent finishes
 ```
 
 ---
@@ -191,6 +209,7 @@ Session data is visible in the following UI locations:
 ## Tips
 
 - **Use meaningful session names** — Use descriptive names like `frontend-worker`, `api-worker`, `test-runner` rather than `worker-1`, `worker-2`
+- **Task status ownership** — Only the sub-agent checked into a task should update that task's status (`assigned → in_progress → to_verify`). The team lead should not move tasks on behalf of sub-agents
 - **Close sessions promptly** — Close the session after the sub-agent finishes work to avoid showing false active workers in the UI
 - **report_work includes auto-heartbeat** — Calling `chorus_report_work` with `sessionUuid` automatically updates the heartbeat; no need to call heartbeat separately
 - **close_session includes auto-checkout** — Closing a session automatically checks out all active task checkins

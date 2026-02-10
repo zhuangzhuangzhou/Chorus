@@ -169,9 +169,9 @@ When implementing any user-facing feature or UI change, you **must** update `doc
 Every requirement — from idea to completion — must be tracked in Chorus through its full lifecycle:
 
 - **Create an Idea** for the requirement (or use an existing one)
-- **Create a Proposal** with document drafts (PRD) and task drafts
-- **Approve the Proposal** to materialize tasks
-- **Claim and work on Tasks**, reporting progress with `chorus_report_work`
+- **Create a Proposal** with document drafts (PRD) and task drafts. **Always set up task dependency DAG** using `dependsOnDraftUuids` in task drafts — e.g., frontend tasks depend on backend API tasks, integration tests depend on both. Tasks without proper dependencies will be worked on in parallel, which may cause failures if there are implicit ordering requirements.
+- **Approve the Proposal** to materialize tasks (dependencies are preserved)
+- **Claim and work on Tasks**, reporting progress with `chorus_report_work`. Respect the DAG — only start a task when its dependencies are done.
 - **Submit for verification** when done, then Admin verifies
 
 For large features, create a **dedicated Chorus Project** to isolate tracking. Use `chorus_admin_create_project` to set one up, then create ideas and proposals within that project scope.
@@ -180,12 +180,19 @@ For large features, create a **dedicated Chorus Project** to isolate tracking. U
 
 When using Claude Code Agent Teams (swarm mode with sub-agents), you **must** use Chorus Session tools for sub-agent-level observability:
 
+**Team Lead responsibilities:**
 - **Before spawning sub-agents**: Call `chorus_list_sessions` to check for reusable sessions. Reopen closed sessions with `chorus_reopen_session` instead of creating new ones.
 - **Create sessions**: Each sub-agent gets its own session via `chorus_create_session` with a descriptive name (e.g., "frontend-worker", "backend-worker").
-- **Checkin to tasks**: When a sub-agent starts working on a task, call `chorus_session_checkin_task`. Checkout when done.
-- **Pass sessionUuid**: When calling `chorus_report_work` or `chorus_update_task`, always include the `sessionUuid` parameter so activity is attributed to the correct sub-agent.
-- **Heartbeat**: Long-running sub-agents should call `chorus_session_heartbeat` periodically (sessions become inactive after 1 hour without heartbeat).
+- **Assign work**: Pass the Chorus task UUIDs and session UUID to each sub-agent when spawning. After that, **all task management is the sub-agent's responsibility** — the team lead does not checkin, move status, or report work on behalf of sub-agents.
+- **Monitor completion**: The team lead's ongoing role is to check that all Chorus tasks reach `to_verify` / `done` and no tasks are missed. Use `chorus_list_tasks` to verify status.
 - **Close sessions**: When sub-agents finish, close their sessions with `chorus_close_session`.
+
+**Sub-Agent responsibilities (each sub-agent manages its own tasks end-to-end):**
+- **Checkin to tasks**: When starting work on a task, call `chorus_session_checkin_task` with its own sessionUuid. Checkout when done.
+- **Move task status**: The sub-agent moves its own task through the lifecycle: `assigned → in_progress → to_verify`. The team lead must NOT move tasks on behalf of sub-agents.
+- **Pass sessionUuid**: When calling `chorus_report_work` or `chorus_update_task`, always include the `sessionUuid` parameter so activity is attributed to the correct sub-agent.
+- **Report work**: Call `chorus_report_work` to log progress and `chorus_submit_for_verify` when done.
+- **Heartbeat**: Long-running sub-agents should call `chorus_session_heartbeat` periodically (sessions become inactive after 1 hour without heartbeat).
 
 This ensures every action is traceable to the specific sub-agent that performed it, visible in the Settings page, Kanban board worker badges, and Task Detail panel.
 

@@ -38,7 +38,7 @@ export interface CompanyUpdateInput {
 
 // 邮箱识别响应
 export interface IdentifyResponse {
-  type: "super_admin" | "oidc" | "not_found";
+  type: "super_admin" | "oidc" | "default_auth" | "not_found";
   company?: {
     uuid: string;
     name: string;

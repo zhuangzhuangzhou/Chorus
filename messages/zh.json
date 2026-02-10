@@ -485,7 +485,16 @@
     "registeringUser": "正在注册用户...",
     "loginSuccess": "登录成功！正在跳转...",
     "authFailed": "认证失败",
-    "backToLogin": "返回登录"
+    "backToLogin": "返回登录",
+    "defaultAuth": {
+      "title": "登录",
+      "email": "邮箱",
+      "password": "密码",
+      "submit": "登录",
+      "error": "邮箱或密码错误",
+      "ssoLink": "使用 SSO 登录",
+      "orDivider": "或"
+    }
   },
   "projectOverview": {
     "loadingProject": "加载项目中...",

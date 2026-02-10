@@ -484,7 +484,16 @@
     "registeringUser": "Registering user...",
     "loginSuccess": "Login successful! Redirecting...",
     "authFailed": "Authentication failed",
-    "backToLogin": "Back to Login"
+    "backToLogin": "Back to Login",
+    "defaultAuth": {
+      "title": "Sign In",
+      "email": "Email",
+      "password": "Password",
+      "submit": "Sign In",
+      "error": "Invalid email or password",
+      "ssoLink": "Use SSO instead",
+      "orDivider": "or"
+    }
   },
   "projectOverview": {
     "loadingProject": "Loading project...",

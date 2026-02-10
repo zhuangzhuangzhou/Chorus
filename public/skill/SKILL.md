@@ -162,7 +162,8 @@ Based on your role from checkin, follow the appropriate workflow:
 2. **Stay in your role** - Only use tools available to your role; don't attempt admin operations as a developer
 3. **Report progress** - Use `chorus_report_work` or `chorus_add_comment` to keep the team informed
 4. **Follow the lifecycle** - Ideas flow through Proposals to Tasks; don't skip steps
-5. **Verify before claiming** - Check available items before claiming; don't claim what you can't finish
+5. **Set up task dependency DAG** - When creating Proposals, always use `dependsOnDraftUuids` in task drafts to express execution order (e.g., frontend depends on backend API). Tasks without dependencies will be assumed parallelizable.
+6. **Verify before claiming** - Check available items before claiming; don't claim what you can't finish
 6. **Document decisions** - Add comments explaining your reasoning on proposals and tasks
 7. **Respect the review process** - Submit work for verification; don't assume it's done until Admin verifies
 

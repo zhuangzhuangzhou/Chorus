@@ -118,6 +118,96 @@ export async function findOrCreateUserByOidc(input: OidcUserInput) {
   });
 }
 
+// Find or create user for default auth (auto-provision company + user)
+export async function findOrCreateDefaultUser(email: string) {
+  const domain = email.split("@")[1]?.toLowerCase();
+  if (!domain) {
+    throw new Error("Invalid email: no domain");
+  }
+
+  // Look for company by email domain (without requiring oidcEnabled)
+  let company = await prisma.company.findFirst({
+    where: {
+      emailDomains: {
+        has: domain,
+      },
+    },
+    select: {
+      id: true,
+      uuid: true,
+      name: true,
+    },
+  });
+
+  // If no company, create one
+  if (!company) {
+    company = await prisma.company.create({
+      data: {
+        name: domain,
+        emailDomains: [domain],
+        oidcEnabled: false,
+      },
+      select: {
+        id: true,
+        uuid: true,
+        name: true,
+      },
+    });
+  }
+
+  // Look for existing user by email in that company
+  let user = await prisma.user.findFirst({
+    where: {
+      email,
+      companyUuid: company.uuid,
+    },
+    select: {
+      id: true,
+      uuid: true,
+      email: true,
+      name: true,
+      oidcSub: true,
+      companyUuid: true,
+      company: {
+        select: {
+          uuid: true,
+          name: true,
+        },
+      },
+    },
+  });
+
+  if (user) {
+    return user;
+  }
+
+  // Create new user
+  user = await prisma.user.create({
+    data: {
+      email,
+      name: email.split("@")[0],
+      oidcSub: "default_user",
+      companyUuid: company.uuid,
+    },
+    select: {
+      id: true,
+      uuid: true,
+      email: true,
+      name: true,
+      oidcSub: true,
+      companyUuid: true,
+      company: {
+        select: {
+          uuid: true,
+          name: true,
+        },
+      },
+    },
+  });
+
+  return user;
+}
+
 // Get user by UUID with company info
 export async function getUserByUuid(userUuid: string) {
   return prisma.user.findUnique({

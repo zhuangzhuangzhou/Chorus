@@ -186,6 +186,30 @@ export async function getCompanyStats() {
   return { totalCompanies, totalUsers, totalAgents };
 }
 
+// ===== 通过邮箱域名查找 Company (不限制 oidcEnabled) =====
+export async function getCompanyByEmailDomainAny(email: string) {
+  const domain = email.split("@")[1]?.toLowerCase();
+  if (!domain) {
+    return null;
+  }
+
+  return prisma.company.findFirst({
+    where: {
+      emailDomains: {
+        has: domain,
+      },
+    },
+    select: {
+      id: true,
+      uuid: true,
+      name: true,
+      oidcIssuer: true,
+      oidcClientId: true,
+      oidcEnabled: true,
+    },
+  });
+}
+
 // ===== 检查邮箱域名是否已被使用 =====
 export async function isEmailDomainTaken(
   domain: string,

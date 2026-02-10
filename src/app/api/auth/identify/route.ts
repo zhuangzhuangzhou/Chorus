@@ -5,6 +5,7 @@ import { NextRequest } from "next/server";
 import { withErrorHandler, parseBody } from "@/lib/api-handler";
 import { success, errors } from "@/lib/api-response";
 import { isSuperAdminEmail } from "@/lib/super-admin";
+import { isDefaultAuthEnabled, getDefaultUserEmail } from "@/lib/default-auth";
 import * as companyService from "@/services/company.service";
 import { IdentifyResponse } from "@/types/admin";
 
@@ -31,6 +32,14 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
   if (isSuperAdminEmail(email)) {
     const response: IdentifyResponse = {
       type: "super_admin",
+    };
+    return success(response);
+  }
+
+  // Check if default auth is enabled and email matches
+  if (isDefaultAuthEnabled() && email === getDefaultUserEmail()) {
+    const response: IdentifyResponse = {
+      type: "default_auth",
     };
     return success(response);
   }
