@@ -7,7 +7,7 @@ import { Clock } from "lucide-react";
 import { getServerAuthContext } from "@/lib/auth-server";
 import { listTasks } from "@/services/task.service";
 import { projectExists } from "@/services/project.service";
-import { KanbanBoard } from "./kanban-board";
+import { TaskViewToggle } from "./task-view-toggle";
 
 interface PageProps {
   params: Promise<{ uuid: string }>;
@@ -60,8 +60,8 @@ export default async function TasksPage({ params }: PageProps) {
         </div>
       </div>
 
-      {/* Kanban Board with drag-and-drop */}
-      <KanbanBoard projectUuid={projectUuid} initialTasks={tasks} currentUserUuid={auth.actorUuid} />
+      {/* Task Views: Kanban / DAG */}
+      <TaskViewToggle projectUuid={projectUuid} initialTasks={tasks} currentUserUuid={auth.actorUuid} />
     </div>
   );
 }

@@ -187,12 +187,29 @@ model Task {
   createdByUuid  String    // User or Agent UUID
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
+  // 任务依赖关系（DAG）
+  dependsOn      TaskDependency[] @relation("taskDependencies")
+  dependedBy     TaskDependency[] @relation("taskDependedBy")
 
   @@index([companyUuid])
   @@index([projectUuid])
   @@index([proposalUuid])
   @@index([assigneeUuid])
   @@index([status])
+}
+
+// 任务依赖关系（DAG 边）
+model TaskDependency {
+  id            Int      @id @default(autoincrement())
+  taskUuid      String
+  dependsOnUuid String
+  task          Task     @relation("taskDependencies", fields: [taskUuid], references: [uuid], onDelete: Cascade)
+  dependsOn     Task     @relation("taskDependedBy", fields: [dependsOnUuid], references: [uuid], onDelete: Cascade)
+  createdAt     DateTime @default(now())
+
+  @@unique([taskUuid, dependsOnUuid])
+  @@index([taskUuid])
+  @@index([dependsOnUuid])
 }
 
 // 提议（容器模型：Agent/人类创建，人类审批，包含文档草稿和任务列表）

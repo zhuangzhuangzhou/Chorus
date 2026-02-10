@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { X, Pencil, CheckCircle, Play, Eye, Bot, User, Send, FileText, Loader2, Check, Trash2 } from "lucide-react";
+import { X, Pencil, CheckCircle, Play, Eye, Bot, User, Send, FileText, Loader2, Check, Trash2, GitBranch, Plus, ArrowRight } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -43,6 +43,18 @@ import {
 } from "./[taskUuid]/source-actions";
 import type { CommentResponse } from "@/services/comment.service";
 import { AssignTaskModal } from "./assign-task-modal";
+import {
+  getTaskDependenciesAction,
+  addTaskDependencyAction,
+  removeTaskDependencyAction,
+  getProjectTasksForDependencyAction,
+} from "./[taskUuid]/dependency-actions";
+
+interface DependencyTask {
+  uuid: string;
+  title: string;
+  status: string;
+}
 
 interface Task {
   uuid: string;
@@ -60,6 +72,8 @@ interface Task {
     assignedAt: string | null;
     assignedBy: { type: string; uuid: string; name: string } | null;
   } | null;
+  dependsOn?: DependencyTask[];
+  dependedBy?: DependencyTask[];
 }
 
 interface TaskDetailPanelProps {
@@ -191,6 +205,14 @@ export function TaskDetailPanel({
   const [source, setSource] = useState<ProposalSource | null>(null);
   const [showAssignModal, setShowAssignModal] = useState(false);
 
+  // Dependency state
+  const [dependsOn, setDependsOn] = useState<DependencyTask[]>([]);
+  const [dependedBy, setDependedBy] = useState<DependencyTask[]>([]);
+  const [isLoadingDeps, setIsLoadingDeps] = useState(false);
+  const [allProjectTasks, setAllProjectTasks] = useState<DependencyTask[]>([]);
+  const [showDepDropdown, setShowDepDropdown] = useState(false);
+  const [depError, setDepError] = useState<string | null>(null);
+
   // Edit / Create mode state
   const isCreateMode = task === null;
   const [isEditing, setIsEditing] = useState(isCreateMode);
@@ -234,10 +256,22 @@ export function TaskDetailPanel({
         setSource(result);
       }
     }
+    async function loadDependencies() {
+      setIsLoadingDeps(true);
+      const [depsResult, projectTasksResult] = await Promise.all([
+        getTaskDependenciesAction(task!.uuid),
+        getProjectTasksForDependencyAction(projectUuid),
+      ]);
+      setDependsOn(depsResult.dependsOn);
+      setDependedBy(depsResult.dependedBy);
+      setAllProjectTasks(projectTasksResult.tasks);
+      setIsLoadingDeps(false);
+    }
     loadComments();
     loadActivities();
     loadSource();
-  }, [task?.uuid, task?.proposalUuid]);
+    loadDependencies();
+  }, [task?.uuid, task?.proposalUuid, projectUuid]);
 
   // Reset edit state when task changes
   useEffect(() => {
@@ -373,6 +407,37 @@ export function TaskDetailPanel({
       router.refresh();
     }
   };
+
+  const handleAddDependency = async (dependsOnUuid: string) => {
+    if (!task) return;
+    setDepError(null);
+    const result = await addTaskDependencyAction(task.uuid, dependsOnUuid);
+    if (result.success) {
+      const addedTask = allProjectTasks.find(t => t.uuid === dependsOnUuid);
+      if (addedTask) {
+        setDependsOn(prev => [...prev, addedTask]);
+      }
+      setShowDepDropdown(false);
+    } else {
+      setDepError(result.error || "Failed to add dependency");
+    }
+  };
+
+  const handleRemoveDependency = async (dependsOnUuid: string) => {
+    if (!task) return;
+    setDepError(null);
+    const result = await removeTaskDependencyAction(task.uuid, dependsOnUuid);
+    if (result.success) {
+      setDependsOn(prev => prev.filter(d => d.uuid !== dependsOnUuid));
+    } else {
+      setDepError(result.error || "Failed to remove dependency");
+    }
+  };
+
+  // Available tasks for dependency dropdown (filter out self and already-dependent tasks)
+  const availableDepsForAdd = allProjectTasks.filter(
+    t => t.uuid !== task?.uuid && !dependsOn.some(d => d.uuid === t.uuid)
+  );
 
   // Render the edit/create form
   const renderEditForm = () => (
@@ -605,6 +670,133 @@ export function TaskDetailPanel({
                     </a>
                   </div>
                 )}
+
+                {/* Dependencies Section */}
+                <div className="mt-5">
+                  <label className="text-[11px] font-medium uppercase tracking-wide text-[#9A9A9A]">
+                    Dependencies
+                  </label>
+
+                  {depError && (
+                    <div className="mt-2 rounded-lg bg-destructive/10 p-2.5 text-xs text-destructive">
+                      {depError}
+                    </div>
+                  )}
+
+                  {isLoadingDeps ? (
+                    <div className="mt-2 flex items-center justify-center py-4">
+                      <Loader2 className="h-4 w-4 animate-spin text-[#9A9A9A]" />
+                    </div>
+                  ) : (
+                    <>
+                      {/* Depends On */}
+                      {dependsOn.length > 0 && (
+                        <div className="mt-2">
+                          <div className="flex items-center gap-1.5 mb-1.5">
+                            <ArrowRight className="h-3 w-3 text-[#9A9A9A]" />
+                            <span className="text-[10px] font-medium uppercase tracking-wide text-[#9A9A9A]">
+                              Depends on
+                            </span>
+                          </div>
+                          <div className="space-y-1.5">
+                            {dependsOn.map((dep) => (
+                              <div
+                                key={dep.uuid}
+                                className="group flex items-center justify-between rounded-lg bg-[#FAF8F4] p-3"
+                              >
+                                <div className="flex items-center gap-2 min-w-0">
+                                  <GitBranch className="h-3.5 w-3.5 shrink-0 text-[#C67A52]" />
+                                  <span className="text-xs text-[#2C2C2C] truncate">
+                                    {dep.title}
+                                  </span>
+                                  <Badge className={`shrink-0 text-[10px] ${statusColors[dep.status] || ""}`}>
+                                    {dep.status.replace("_", " ")}
+                                  </Badge>
+                                </div>
+                                <button
+                                  className="opacity-0 group-hover:opacity-100 transition-opacity ml-2 shrink-0"
+                                  onClick={() => handleRemoveDependency(dep.uuid)}
+                                >
+                                  <X className="h-3.5 w-3.5 text-[#9A9A9A] hover:text-[#D32F2F]" />
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Depended By (blocked by this) */}
+                      {dependedBy.length > 0 && (
+                        <div className="mt-3">
+                          <div className="flex items-center gap-1.5 mb-1.5">
+                            <ArrowRight className="h-3 w-3 rotate-180 text-[#9A9A9A]" />
+                            <span className="text-[10px] font-medium uppercase tracking-wide text-[#9A9A9A]">
+                              Blocked by this
+                            </span>
+                          </div>
+                          <div className="space-y-1.5">
+                            {dependedBy.map((dep) => (
+                              <div
+                                key={dep.uuid}
+                                className="flex items-center gap-2 rounded-lg bg-[#FAF8F4] p-3"
+                              >
+                                <GitBranch className="h-3.5 w-3.5 shrink-0 text-[#6B6B6B]" />
+                                <span className="text-xs text-[#2C2C2C] truncate">
+                                  {dep.title}
+                                </span>
+                                <Badge className={`shrink-0 text-[10px] ${statusColors[dep.status] || ""}`}>
+                                  {dep.status.replace("_", " ")}
+                                </Badge>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {dependsOn.length === 0 && dependedBy.length === 0 && (
+                        <p className="mt-2 text-sm italic text-[#9A9A9A]">No dependencies</p>
+                      )}
+
+                      {/* Add Dependency */}
+                      <div className="mt-3 relative">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-8 gap-1.5 border-[#E5E0D8] text-xs text-[#6B6B6B]"
+                          onClick={() => setShowDepDropdown(!showDepDropdown)}
+                        >
+                          <Plus className="h-3 w-3" />
+                          Add Dependency
+                        </Button>
+
+                        {showDepDropdown && (
+                          <div className="absolute left-0 top-10 z-10 w-full max-h-48 overflow-y-auto rounded-lg border border-[#E5E0D8] bg-white shadow-lg">
+                            {availableDepsForAdd.length === 0 ? (
+                              <div className="p-3 text-xs text-[#9A9A9A]">
+                                No tasks available
+                              </div>
+                            ) : (
+                              availableDepsForAdd.map((t) => (
+                                <button
+                                  key={t.uuid}
+                                  className="flex w-full items-center gap-2 px-3 py-2 text-left hover:bg-[#FAF8F4] transition-colors"
+                                  onClick={() => handleAddDependency(t.uuid)}
+                                >
+                                  <span className="text-xs text-[#2C2C2C] truncate flex-1">
+                                    {t.title}
+                                  </span>
+                                  <Badge className={`shrink-0 text-[10px] ${statusColors[t.status] || ""}`}>
+                                    {t.status.replace("_", " ")}
+                                  </Badge>
+                                </button>
+                              ))
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </>
+                  )}
+                </div>
 
                 {/* Activity Section - fills remaining space */}
                 <div className="mt-5 flex-1">

@@ -54,6 +54,7 @@ export interface TaskDraft {
   storyPoints?: number;
   priority?: string;
   acceptanceCriteria?: string;  // 验收标准
+  dependsOnDraftUuids?: string[];  // 依赖的 taskDraft UUID 列表
 }
 
 // 输入类型（uuid 可选，会自动生成）
@@ -374,7 +375,7 @@ export async function updateProposalContent(
   }
 
   const proposal = await prisma.proposal.update({
-    where: { uuid: proposalUuid },
+    where: { uuid: proposalUuid, companyUuid },
     data: updateData,
     include: {
       project: { select: { uuid: true, name: true } },
@@ -434,13 +435,30 @@ export async function approveProposal(
 
     // 创建任务（如果有任务草稿）
     if (taskDrafts && taskDrafts.length > 0) {
-      await createTasksFromProposal(
+      const { draftToTaskUuidMap } = await createTasksFromProposal(
         proposal.companyUuid,
         proposal.projectUuid,
         proposal.uuid,
         proposal.createdByUuid,
         taskDrafts
       );
+
+      // 物化依赖关系：将 draftUuid 引用转换为真实 taskUuid
+      for (const draft of taskDrafts) {
+        if (draft.dependsOnDraftUuids && draft.dependsOnDraftUuids.length > 0) {
+          const taskUuid = draftToTaskUuidMap.get(draft.uuid);
+          if (!taskUuid) continue;
+
+          for (const depDraftUuid of draft.dependsOnDraftUuids) {
+            const depTaskUuid = draftToTaskUuidMap.get(depDraftUuid);
+            if (!depTaskUuid) continue;
+
+            await tx.taskDependency.create({
+              data: { taskUuid, dependsOnUuid: depTaskUuid },
+            });
+          }
+        }
+      }
     }
 
     return updated;

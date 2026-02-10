@@ -177,6 +177,7 @@ export function registerPmTools(server: McpServer, auth: AgentAuthContext) {
           storyPoints: z.number().optional().describe("工作量估算（Agent 小时）"),
           priority: z.enum(["low", "medium", "high"]).optional().describe("优先级"),
           acceptanceCriteria: z.string().optional().describe("验收标准（Markdown）"),
+          dependsOnDraftUuids: z.array(z.string()).optional().describe("依赖的 taskDraft UUID 列表"),
         })).optional().describe("任务草稿列表"),
       }),
     },
@@ -431,14 +432,15 @@ export function registerPmTools(server: McpServer, auth: AgentAuthContext) {
         storyPoints: z.number().optional().describe("工作量估算（Agent 小时）"),
         priority: z.enum(["low", "medium", "high"]).optional().describe("优先级"),
         acceptanceCriteria: z.string().optional().describe("验收标准（Markdown）"),
+        dependsOnDraftUuids: z.array(z.string()).optional().describe("依赖的 taskDraft UUID 列表"),
       }),
     },
-    async ({ proposalUuid, title, description, storyPoints, priority, acceptanceCriteria }) => {
+    async ({ proposalUuid, title, description, storyPoints, priority, acceptanceCriteria, dependsOnDraftUuids }) => {
       try {
         const proposal = await proposalService.addTaskDraft(
           proposalUuid,
           auth.companyUuid,
-          { title, description, storyPoints, priority, acceptanceCriteria }
+          { title, description, storyPoints, priority, acceptanceCriteria, dependsOnDraftUuids }
         );
         return {
           content: [{ type: "text", text: JSON.stringify(proposal, null, 2) }],
@@ -503,16 +505,18 @@ export function registerPmTools(server: McpServer, auth: AgentAuthContext) {
         storyPoints: z.number().optional().describe("工作量估算（Agent 小时）"),
         priority: z.enum(["low", "medium", "high"]).optional().describe("优先级"),
         acceptanceCriteria: z.string().optional().describe("验收标准（Markdown）"),
+        dependsOnDraftUuids: z.array(z.string()).optional().describe("依赖的 taskDraft UUID 列表"),
       }),
     },
-    async ({ proposalUuid, draftUuid, title, description, storyPoints, priority, acceptanceCriteria }) => {
+    async ({ proposalUuid, draftUuid, title, description, storyPoints, priority, acceptanceCriteria, dependsOnDraftUuids }) => {
       try {
-        const updates: { title?: string; description?: string; storyPoints?: number; priority?: string; acceptanceCriteria?: string } = {};
+        const updates: { title?: string; description?: string; storyPoints?: number; priority?: string; acceptanceCriteria?: string; dependsOnDraftUuids?: string[] } = {};
         if (title !== undefined) updates.title = title;
         if (description !== undefined) updates.description = description;
         if (storyPoints !== undefined) updates.storyPoints = storyPoints;
         if (priority !== undefined) updates.priority = priority;
         if (acceptanceCriteria !== undefined) updates.acceptanceCriteria = acceptanceCriteria;
+        if (dependsOnDraftUuids !== undefined) updates.dependsOnDraftUuids = dependsOnDraftUuids;
 
         const proposal = await proposalService.updateTaskDraft(
           proposalUuid,

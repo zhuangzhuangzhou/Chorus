@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { getServerAuthContext } from "@/lib/auth-server";
-import { updateTask, getTaskByUuid } from "@/services/task.service";
+import { updateTask, getTaskByUuid, getProjectTaskDependencies } from "@/services/task.service";
 
 // Map column IDs to task statuses
 const columnToStatusMap: Record<string, string> = {
@@ -52,5 +52,19 @@ export async function moveTaskToColumnAction(
   } catch (error) {
     console.error("Failed to move task:", error);
     return { success: false, error: "Failed to move task" };
+  }
+}
+
+export async function getProjectDependenciesAction(projectUuid: string) {
+  const auth = await getServerAuthContext();
+  if (!auth) {
+    return { nodes: [], edges: [] };
+  }
+
+  try {
+    return await getProjectTaskDependencies(auth.companyUuid, projectUuid);
+  } catch (error) {
+    console.error("Failed to get project dependencies:", error);
+    return { nodes: [], edges: [] };
   }
 }
