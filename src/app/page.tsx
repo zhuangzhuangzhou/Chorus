@@ -9,7 +9,7 @@ export default function Home() {
   const router = useRouter();
 
   useEffect(() => {
-    // Check if user is logged in by checking for session cookies
+    // Check if user is logged in by checking sessions
     const checkAuth = async () => {
       try {
         // Check admin session
@@ -17,23 +17,23 @@ export default function Home() {
         const adminData = await adminResponse.json();
 
         if (adminData.success) {
-          // Super Admin is logged in, redirect to admin dashboard
           router.replace("/admin");
           return;
         }
 
-        // Check if user has a current project (indicating regular user session)
-        const currentProjectUuid = localStorage.getItem("currentProjectUuid");
-        if (currentProjectUuid) {
-          // User has selected a project, redirect to projects page
-          router.replace("/projects");
-          return;
+        // Check user session (works for both OIDC and default auth via cookie)
+        const userResponse = await fetch("/api/auth/session");
+        if (userResponse.ok) {
+          const userData = await userResponse.json();
+          if (userData.success) {
+            router.replace("/projects");
+            return;
+          }
         }
 
         // Not logged in, redirect to login
         router.replace("/login");
       } catch {
-        // On error, redirect to login
         router.replace("/login");
       }
     };

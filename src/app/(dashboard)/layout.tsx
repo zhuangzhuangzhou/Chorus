@@ -71,14 +71,10 @@ export default function DashboardLayout({
   }, []);
 
   const checkSession = async () => {
-    const token = await getAccessToken();
-
-    if (!token) {
-      router.push("/login");
-      return;
-    }
-
     try {
+      // Use authFetch which adds OIDC Authorization header if available.
+      // For default auth users (no OIDC), cookies are still sent automatically
+      // and the server authenticates via the user_session httpOnly cookie.
       const response = await authFetch("/api/auth/session");
 
       if (!response.ok) {

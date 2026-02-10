@@ -151,7 +151,7 @@ export async function login(): Promise<void> {
 
 // Logout
 export async function logout(): Promise<void> {
-  // Clear HTTP-only cookie first
+  // Clear HTTP-only cookies (both OIDC and default auth)
   try {
     await fetch("/api/auth/logout", { method: "POST" });
   } catch {
@@ -160,11 +160,22 @@ export async function logout(): Promise<void> {
 
   const manager = getUserManager();
   if (manager) {
+    // Only attempt OIDC signout redirect if there's an active OIDC user session.
+    // Without this check, stale OIDC config in localStorage would cause default
+    // auth users to be redirected to the OIDC provider on logout.
     try {
-      await manager.signoutRedirect();
+      const user = await manager.getUser();
+      if (user) {
+        await manager.signoutRedirect();
+        return; // signoutRedirect navigates away from the page
+      }
     } catch {
-      // Signout redirect may fail, clear user anyway
+      // Signout redirect may fail, clean up locally
+    }
+    try {
       await manager.removeUser();
+    } catch {
+      // Ignore
     }
   }
   clearUserManager();

@@ -15,11 +15,15 @@ export async function POST() {
     maxAge: 0, // Expire immediately
   };
 
-  // Clear all OIDC auth cookies
+  // Clear OIDC auth cookies
   response.cookies.set("oidc_access_token", "", expireOpts);
   response.cookies.set("oidc_refresh_token", "", expireOpts);
   response.cookies.set("oidc_client_id", "", expireOpts);
   response.cookies.set("oidc_issuer", "", expireOpts);
+
+  // Clear default auth cookies
+  response.cookies.set("user_session", "", expireOpts);
+  response.cookies.set("user_refresh", "", expireOpts);
 
   return response;
 }

@@ -34,7 +34,6 @@ export default function LoginPage() {
         const data = await response.json();
         if (data.success && data.data?.enabled) {
           setDefaultAuth(data.data);
-          setEmail(data.data.email);
         }
       } catch {
         // Default auth not available, show normal flow
@@ -268,7 +267,6 @@ export default function LoginPage() {
                     onClick={() => {
                       setShowSsoForm(false);
                       setError("");
-                      setEmail(defaultAuth.email);
                     }}
                   >
                     {t("login.backToLogin")}
