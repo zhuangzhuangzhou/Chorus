@@ -212,8 +212,10 @@ export function TaskDetailPanel({
   const [dependedBy, setDependedBy] = useState<DependencyTask[]>([]);
   const [isLoadingDeps, setIsLoadingDeps] = useState(false);
   const [allProjectTasks, setAllProjectTasks] = useState<DependencyTask[]>([]);
-  const [showDepDropdown, setShowDepDropdown] = useState(false);
   const [depError, setDepError] = useState<string | null>(null);
+
+  // Pending dependencies for create mode (stored locally until task is created)
+  const [pendingDeps, setPendingDeps] = useState<DependencyTask[]>([]);
 
   // Edit / Create mode state
   const isCreateMode = task === null;
@@ -274,6 +276,16 @@ export function TaskDetailPanel({
     loadSource();
     loadDependencies();
   }, [task?.uuid, task?.proposalUuid, projectUuid]);
+
+  // Load project tasks for dependency picker in create mode
+  useEffect(() => {
+    if (!isCreateMode) return;
+    async function loadProjectTasks() {
+      const result = await getProjectTasksForDependencyAction(projectUuid);
+      setAllProjectTasks(result.tasks);
+    }
+    loadProjectTasks();
+  }, [isCreateMode, projectUuid]);
 
   // Reset edit state when task changes
   useEffect(() => {
@@ -370,6 +382,13 @@ export function TaskDetailPanel({
       setIsSaving(false);
 
       if (result.success) {
+        // Add pending dependencies after task creation
+        if (pendingDeps.length > 0 && result.taskUuid) {
+          await Promise.all(
+            pendingDeps.map((dep) => addTaskDependencyAction(result.taskUuid!, dep.uuid))
+          );
+          onDependencyChange?.();
+        }
         onCreated?.();
         onClose();
         router.refresh();
@@ -419,7 +438,6 @@ export function TaskDetailPanel({
       if (addedTask) {
         setDependsOn(prev => [...prev, addedTask]);
       }
-      setShowDepDropdown(false);
       onDependencyChange?.();
     } else {
       setDepError(result.error || "Failed to add dependency");
@@ -454,6 +472,11 @@ export function TaskDetailPanel({
   // Available tasks for dependency dropdown (filter out self and already-dependent tasks)
   const availableDepsForAdd = allProjectTasks.filter(
     t => t.uuid !== task?.uuid && !dependsOn.some(d => d.uuid === t.uuid)
+  );
+
+  // Available tasks for create mode dependency picker
+  const availableDepsForCreate = allProjectTasks.filter(
+    t => !pendingDeps.some(d => d.uuid === t.uuid)
   );
 
   // Render the edit/create form
@@ -534,6 +557,71 @@ export function TaskDetailPanel({
           className="border-[#E5E0D8] text-sm resize-none focus-visible:ring-[#C67A52]"
         />
       </div>
+
+      {/* Dependency picker for create mode */}
+      {isCreateMode && (
+        <div className="space-y-2">
+          <Label className="text-[13px] font-medium text-[#2C2C2C]">
+            Dependencies
+          </Label>
+
+          {/* Selected pending deps */}
+          {pendingDeps.length > 0 && (
+            <div className="space-y-1.5">
+              {pendingDeps.map((dep) => (
+                <div
+                  key={dep.uuid}
+                  className="group flex items-center justify-between rounded-lg bg-[#FAF8F4] p-2.5"
+                >
+                  <div className="flex items-center gap-2 min-w-0">
+                    <GitBranch className="h-3.5 w-3.5 shrink-0 text-[#C67A52]" />
+                    <span className="text-xs text-[#2C2C2C] truncate">{dep.title}</span>
+                    <Badge className={`shrink-0 text-[10px] ${statusColors[dep.status] || ""}`}>
+                      {dep.status.replace("_", " ")}
+                    </Badge>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity ml-2 shrink-0"
+                    onClick={() => setPendingDeps(prev => prev.filter(d => d.uuid !== dep.uuid))}
+                  >
+                    <X className="h-3.5 w-3.5 text-[#9A9A9A] hover:text-[#D32F2F]" />
+                  </Button>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Add dependency select */}
+          {availableDepsForCreate.length > 0 && (
+            <Select
+              key={pendingDeps.length}
+              onValueChange={(uuid) => {
+                const found = allProjectTasks.find(t => t.uuid === uuid);
+                if (found) {
+                  setPendingDeps(prev => [...prev, found]);
+                }
+              }}
+            >
+              <SelectTrigger className="h-8 border-[#E5E0D8] text-xs text-[#6B6B6B] focus:ring-[#C67A52]">
+                <div className="flex items-center gap-1.5">
+                  <Plus className="h-3 w-3" />
+                  <SelectValue placeholder="Add Dependency" />
+                </div>
+              </SelectTrigger>
+              <SelectContent>
+                {availableDepsForCreate.map((t) => (
+                  <SelectItem key={t.uuid} value={t.uuid}>
+                    <span className="truncate">{t.title}</span>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+        </div>
+      )}
     </div>
   );
 
@@ -730,12 +818,14 @@ export function TaskDetailPanel({
                                     {dep.status.replace("_", " ")}
                                   </Badge>
                                 </div>
-                                <button
-                                  className="opacity-0 group-hover:opacity-100 transition-opacity ml-2 shrink-0"
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity ml-2 shrink-0"
                                   onClick={() => handleRemoveDependency(dep.uuid)}
                                 >
                                   <X className="h-3.5 w-3.5 text-[#9A9A9A] hover:text-[#D32F2F]" />
-                                </button>
+                                </Button>
                               </div>
                             ))}
                           </div>
@@ -766,12 +856,14 @@ export function TaskDetailPanel({
                                     {dep.status.replace("_", " ")}
                                   </Badge>
                                 </div>
-                                <button
-                                  className="opacity-0 group-hover:opacity-100 transition-opacity ml-2 shrink-0"
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity ml-2 shrink-0"
                                   onClick={() => handleRemoveDependedBy(dep.uuid)}
                                 >
                                   <X className="h-3.5 w-3.5 text-[#9A9A9A] hover:text-[#D32F2F]" />
-                                </button>
+                                </Button>
                               </div>
                             ))}
                           </div>
@@ -783,42 +875,28 @@ export function TaskDetailPanel({
                       )}
 
                       {/* Add Dependency */}
-                      <div className="mt-3 relative">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="h-8 gap-1.5 border-[#E5E0D8] text-xs text-[#6B6B6B]"
-                          onClick={() => setShowDepDropdown(!showDepDropdown)}
-                        >
-                          <Plus className="h-3 w-3" />
-                          Add Dependency
-                        </Button>
-
-                        {showDepDropdown && (
-                          <div className="absolute left-0 top-10 z-10 w-full max-h-48 overflow-y-auto rounded-lg border border-[#E5E0D8] bg-white shadow-lg">
-                            {availableDepsForAdd.length === 0 ? (
-                              <div className="p-3 text-xs text-[#9A9A9A]">
-                                No tasks available
+                      {availableDepsForAdd.length > 0 && (
+                        <div className="mt-3">
+                          <Select
+                            key={dependsOn.length}
+                            onValueChange={(uuid) => handleAddDependency(uuid)}
+                          >
+                            <SelectTrigger className="h-8 border-[#E5E0D8] text-xs text-[#6B6B6B] focus:ring-[#C67A52]">
+                              <div className="flex items-center gap-1.5">
+                                <Plus className="h-3 w-3" />
+                                <SelectValue placeholder="Add Dependency" />
                               </div>
-                            ) : (
-                              availableDepsForAdd.map((t) => (
-                                <button
-                                  key={t.uuid}
-                                  className="flex w-full items-center gap-2 px-3 py-2 text-left hover:bg-[#FAF8F4] transition-colors"
-                                  onClick={() => handleAddDependency(t.uuid)}
-                                >
-                                  <span className="text-xs text-[#2C2C2C] truncate flex-1">
-                                    {t.title}
-                                  </span>
-                                  <Badge className={`shrink-0 text-[10px] ${statusColors[t.status] || ""}`}>
-                                    {t.status.replace("_", " ")}
-                                  </Badge>
-                                </button>
-                              ))
-                            )}
-                          </div>
-                        )}
-                      </div>
+                            </SelectTrigger>
+                            <SelectContent>
+                              {availableDepsForAdd.map((t) => (
+                                <SelectItem key={t.uuid} value={t.uuid}>
+                                  <span className="truncate">{t.title}</span>
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      )}
                     </>
                   )}
                 </div>
