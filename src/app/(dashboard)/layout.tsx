@@ -210,7 +210,7 @@ export default function DashboardLayout({
                       onClick={() => setProjectMenuOpen(!projectMenuOpen)}
                       className="w-full justify-between px-3 py-1.5"
                     >
-                      <span className="text-[11px] font-semibold uppercase tracking-wider text-foreground">
+                      <span className="truncate text-[11px] font-semibold uppercase tracking-wider text-foreground">
                         {currentProject.name}
                       </span>
                       <ChevronDown
@@ -225,13 +225,13 @@ export default function DashboardLayout({
                             variant="ghost"
                             size="sm"
                             onClick={() => selectProject(project)}
-                            className={`w-full justify-start px-3 py-2 text-[13px] ${
+                            className={`w-full justify-start px-3 py-2 text-[13px] [&>*]:truncate ${
                               currentProject?.uuid === project.uuid
                                 ? "bg-secondary font-medium text-foreground"
                                 : "text-muted-foreground"
                             }`}
                           >
-                            {project.name}
+                            <span className="truncate">{project.name}</span>
                           </Button>
                         ))}
                         <div className="my-1 border-t border-border" />
