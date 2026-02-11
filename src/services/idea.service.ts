@@ -5,6 +5,7 @@
 import { prisma } from "@/lib/prisma";
 import { formatAssigneeComplete, formatCreatedBy } from "@/lib/uuid-resolver";
 import { eventBus } from "@/lib/event-bus";
+import { AlreadyClaimedError, NotClaimedError, isPrismaNotFound } from "@/lib/errors";
 
 // ===== 类型定义 =====
 
@@ -245,7 +246,7 @@ export async function updateIdea(
   return formatIdeaResponse(idea);
 }
 
-// 认领 Idea
+// 认领 Idea (atomic: only succeeds if status is "open")
 export async function claimIdea({
   ideaUuid,
   companyUuid,
@@ -253,44 +254,58 @@ export async function claimIdea({
   assigneeUuid,
   assignedByUuid,
 }: IdeaClaimParams): Promise<IdeaResponse> {
-  const idea = await prisma.idea.update({
-    where: { uuid: ideaUuid },
-    data: {
-      status: "assigned",
-      assigneeType,
-      assigneeUuid,
-      assignedAt: new Date(),
-      assignedByUuid,
-    },
-    include: {
-      project: { select: { uuid: true, name: true } },
-    },
-  });
+  try {
+    const idea = await prisma.idea.update({
+      where: { uuid: ideaUuid, status: "open" },
+      data: {
+        status: "assigned",
+        assigneeType,
+        assigneeUuid,
+        assignedAt: new Date(),
+        assignedByUuid,
+      },
+      include: {
+        project: { select: { uuid: true, name: true } },
+      },
+    });
 
-  eventBus.emitChange({ companyUuid: idea.companyUuid, projectUuid: idea.project!.uuid, entityType: "idea", entityUuid: idea.uuid, action: "updated" });
+    eventBus.emitChange({ companyUuid: idea.companyUuid, projectUuid: idea.project!.uuid, entityType: "idea", entityUuid: idea.uuid, action: "updated" });
 
-  return formatIdeaResponse(idea);
+    return formatIdeaResponse(idea);
+  } catch (e: unknown) {
+    if (isPrismaNotFound(e)) {
+      throw new AlreadyClaimedError("Idea");
+    }
+    throw e;
+  }
 }
 
-// 放弃认领 Idea
+// 放弃认领 Idea (atomic: only succeeds if status is "assigned")
 export async function releaseIdea(uuid: string): Promise<IdeaResponse> {
-  const idea = await prisma.idea.update({
-    where: { uuid },
-    data: {
-      status: "open",
-      assigneeType: null,
-      assigneeUuid: null,
-      assignedAt: null,
-      assignedByUuid: null,
-    },
-    include: {
-      project: { select: { uuid: true, name: true } },
-    },
-  });
+  try {
+    const idea = await prisma.idea.update({
+      where: { uuid, status: "assigned" },
+      data: {
+        status: "open",
+        assigneeType: null,
+        assigneeUuid: null,
+        assignedAt: null,
+        assignedByUuid: null,
+      },
+      include: {
+        project: { select: { uuid: true, name: true } },
+      },
+    });
 
-  eventBus.emitChange({ companyUuid: idea.companyUuid, projectUuid: idea.project!.uuid, entityType: "idea", entityUuid: idea.uuid, action: "updated" });
+    eventBus.emitChange({ companyUuid: idea.companyUuid, projectUuid: idea.project!.uuid, entityType: "idea", entityUuid: idea.uuid, action: "updated" });
 
-  return formatIdeaResponse(idea);
+    return formatIdeaResponse(idea);
+  } catch (e: unknown) {
+    if (isPrismaNotFound(e)) {
+      throw new NotClaimedError("Idea");
+    }
+    throw e;
+  }
 }
 
 // 删除 Idea

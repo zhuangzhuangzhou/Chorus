@@ -7,6 +7,7 @@ import { withErrorHandler } from "@/lib/api-handler";
 import { success, errors } from "@/lib/api-response";
 import { getAuthContext, isUser, isAssignee } from "@/lib/auth";
 import { getTaskByUuid, releaseTask } from "@/services/task.service";
+import { NotClaimedError } from "@/lib/errors";
 
 type RouteContext = { params: Promise<{ uuid: string }> };
 
@@ -25,11 +26,6 @@ export const POST = withErrorHandler<{ uuid: string }>(
       return errors.notFound("Task");
     }
 
-    // 只有 assigned 状态的 Task 可以放弃认领
-    if (task.status !== "assigned") {
-      return errors.badRequest("Can only release tasks with assigned status");
-    }
-
     // 检查权限：用户可以释放任何 Task，Agent 只能释放自己认领的
     if (!isUser(auth)) {
       if (!isAssignee(auth, task.assigneeType, task.assigneeUuid)) {
@@ -37,7 +33,14 @@ export const POST = withErrorHandler<{ uuid: string }>(
       }
     }
 
-    const updated = await releaseTask(task.uuid);
-    return success(updated);
+    try {
+      const updated = await releaseTask(task.uuid);
+      return success(updated);
+    } catch (e) {
+      if (e instanceof NotClaimedError) {
+        return errors.badRequest("Can only release tasks with assigned status");
+      }
+      throw e;
+    }
   }
 );

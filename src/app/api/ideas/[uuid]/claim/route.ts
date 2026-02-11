@@ -8,6 +8,7 @@ import { withErrorHandler, parseBody } from "@/lib/api-handler";
 import { success, errors } from "@/lib/api-response";
 import { getAuthContext, isUser, isAgent, isPmAgent } from "@/lib/auth";
 import { getIdeaByUuid, claimIdea } from "@/services/idea.service";
+import { AlreadyClaimedError } from "@/lib/errors";
 
 type RouteContext = { params: Promise<{ uuid: string }> };
 
@@ -24,11 +25,6 @@ export const POST = withErrorHandler<{ uuid: string }>(
     const idea = await getIdeaByUuid(auth.companyUuid, uuid);
     if (!idea) {
       return errors.notFound("Idea");
-    }
-
-    // 只有 open 状态的 Idea 可被认领
-    if (idea.status !== "open") {
-      return errors.alreadyClaimed();
     }
 
     let assigneeType: string;
@@ -76,14 +72,21 @@ export const POST = withErrorHandler<{ uuid: string }>(
       return errors.forbidden("Invalid authentication context");
     }
 
-    const updated = await claimIdea({
-      ideaUuid: idea.uuid,
-      companyUuid: auth.companyUuid,
-      assigneeType,
-      assigneeUuid,
-      assignedByUuid,
-    });
+    try {
+      const updated = await claimIdea({
+        ideaUuid: idea.uuid,
+        companyUuid: auth.companyUuid,
+        assigneeType,
+        assigneeUuid,
+        assignedByUuid,
+      });
 
-    return success(updated);
+      return success(updated);
+    } catch (e) {
+      if (e instanceof AlreadyClaimedError) {
+        return errors.alreadyClaimed();
+      }
+      throw e;
+    }
   }
 );

@@ -5,6 +5,7 @@
 import { prisma } from "@/lib/prisma";
 import { formatAssigneeComplete, formatCreatedBy } from "@/lib/uuid-resolver";
 import { eventBus } from "@/lib/event-bus";
+import { AlreadyClaimedError, NotClaimedError, isPrismaNotFound } from "@/lib/errors";
 
 // ===== 类型定义 =====
 
@@ -301,7 +302,7 @@ export async function updateTask(
   return formatTaskResponse(task);
 }
 
-// 认领 Task
+// 认领 Task (atomic: only succeeds if status is "open")
 export async function claimTask({
   taskUuid,
   companyUuid,
@@ -309,44 +310,58 @@ export async function claimTask({
   assigneeUuid,
   assignedByUuid,
 }: TaskClaimParams): Promise<TaskResponse> {
-  const task = await prisma.task.update({
-    where: { uuid: taskUuid },
-    data: {
-      status: "assigned",
-      assigneeType,
-      assigneeUuid,
-      assignedAt: new Date(),
-      assignedByUuid,
-    },
-    include: {
-      project: { select: { uuid: true, name: true } },
-    },
-  });
+  try {
+    const task = await prisma.task.update({
+      where: { uuid: taskUuid, status: "open" },
+      data: {
+        status: "assigned",
+        assigneeType,
+        assigneeUuid,
+        assignedAt: new Date(),
+        assignedByUuid,
+      },
+      include: {
+        project: { select: { uuid: true, name: true } },
+      },
+    });
 
-  eventBus.emitChange({ companyUuid: task.companyUuid, projectUuid: task.project.uuid, entityType: "task", entityUuid: task.uuid, action: "updated" });
+    eventBus.emitChange({ companyUuid: task.companyUuid, projectUuid: task.project.uuid, entityType: "task", entityUuid: task.uuid, action: "updated" });
 
-  return formatTaskResponse(task);
+    return formatTaskResponse(task);
+  } catch (e: unknown) {
+    if (isPrismaNotFound(e)) {
+      throw new AlreadyClaimedError("Task");
+    }
+    throw e;
+  }
 }
 
-// 放弃认领 Task
+// 放弃认领 Task (atomic: only succeeds if status is "assigned")
 export async function releaseTask(uuid: string): Promise<TaskResponse> {
-  const task = await prisma.task.update({
-    where: { uuid },
-    data: {
-      status: "open",
-      assigneeType: null,
-      assigneeUuid: null,
-      assignedAt: null,
-      assignedByUuid: null,
-    },
-    include: {
-      project: { select: { uuid: true, name: true } },
-    },
-  });
+  try {
+    const task = await prisma.task.update({
+      where: { uuid, status: "assigned" },
+      data: {
+        status: "open",
+        assigneeType: null,
+        assigneeUuid: null,
+        assignedAt: null,
+        assignedByUuid: null,
+      },
+      include: {
+        project: { select: { uuid: true, name: true } },
+      },
+    });
 
-  eventBus.emitChange({ companyUuid: task.companyUuid, projectUuid: task.project.uuid, entityType: "task", entityUuid: task.uuid, action: "updated" });
+    eventBus.emitChange({ companyUuid: task.companyUuid, projectUuid: task.project.uuid, entityType: "task", entityUuid: task.uuid, action: "updated" });
 
-  return formatTaskResponse(task);
+    return formatTaskResponse(task);
+  } catch (e: unknown) {
+    if (isPrismaNotFound(e)) {
+      throw new NotClaimedError("Task");
+    }
+    throw e;
+  }
 }
 
 // 删除 Task

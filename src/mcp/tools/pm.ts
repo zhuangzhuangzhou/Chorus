@@ -12,6 +12,7 @@ import * as documentService from "@/services/document.service";
 import * as taskService from "@/services/task.service";
 import * as activityService from "@/services/activity.service";
 import { getAgentByUuid } from "@/services/agent.service";
+import { AlreadyClaimedError, NotClaimedError } from "@/lib/errors";
 
 export function registerPmTools(server: McpServer, auth: AgentAuthContext) {
   // chorus_claim_idea - 认领 Idea
@@ -29,31 +30,34 @@ export function registerPmTools(server: McpServer, auth: AgentAuthContext) {
         return { content: [{ type: "text", text: "Idea 不存在" }], isError: true };
       }
 
-      if (idea.status !== "open") {
-        return { content: [{ type: "text", text: "只能认领 open 状态的 Idea" }], isError: true };
+      try {
+        const updated = await ideaService.claimIdea({
+          ideaUuid: idea.uuid,
+          companyUuid: auth.companyUuid,
+          assigneeType: "agent",
+          assigneeUuid: auth.actorUuid,
+        });
+
+        await activityService.createActivity({
+          companyUuid: auth.companyUuid,
+          projectUuid: idea.projectUuid,
+          targetType: "idea",
+          targetUuid: idea.uuid,
+          actorType: "agent",
+          actorUuid: auth.actorUuid,
+          action: "assigned",
+          value: { assigneeType: "agent", assigneeUuid: auth.actorUuid },
+        });
+
+        return {
+          content: [{ type: "text", text: JSON.stringify(updated, null, 2) }],
+        };
+      } catch (e) {
+        if (e instanceof AlreadyClaimedError) {
+          return { content: [{ type: "text", text: "只能认领 open 状态的 Idea" }], isError: true };
+        }
+        throw e;
       }
-
-      const updated = await ideaService.claimIdea({
-        ideaUuid: idea.uuid,
-        companyUuid: auth.companyUuid,
-        assigneeType: "agent",
-        assigneeUuid: auth.actorUuid,
-      });
-
-      await activityService.createActivity({
-        companyUuid: auth.companyUuid,
-        projectUuid: idea.projectUuid,
-        targetType: "idea",
-        targetUuid: idea.uuid,
-        actorType: "agent",
-        actorUuid: auth.actorUuid,
-        action: "assigned",
-        value: { assigneeType: "agent", assigneeUuid: auth.actorUuid },
-      });
-
-      return {
-        content: [{ type: "text", text: JSON.stringify(updated, null, 2) }],
-      };
     }
   );
 
@@ -72,10 +76,6 @@ export function registerPmTools(server: McpServer, auth: AgentAuthContext) {
         return { content: [{ type: "text", text: "Idea 不存在" }], isError: true };
       }
 
-      if (idea.status !== "assigned") {
-        return { content: [{ type: "text", text: "只能放弃 assigned 状态的 Idea" }], isError: true };
-      }
-
       // 检查是否是认领者 (UUID comparison)
       const isAssignee =
         (idea.assigneeType === "agent" && idea.assigneeUuid === auth.actorUuid) ||
@@ -85,21 +85,28 @@ export function registerPmTools(server: McpServer, auth: AgentAuthContext) {
         return { content: [{ type: "text", text: "只有认领者可以放弃认领" }], isError: true };
       }
 
-      const updated = await ideaService.releaseIdea(idea.uuid);
+      try {
+        const updated = await ideaService.releaseIdea(idea.uuid);
 
-      await activityService.createActivity({
-        companyUuid: auth.companyUuid,
-        projectUuid: idea.projectUuid,
-        targetType: "idea",
-        targetUuid: idea.uuid,
-        actorType: "agent",
-        actorUuid: auth.actorUuid,
-        action: "released",
-      });
+        await activityService.createActivity({
+          companyUuid: auth.companyUuid,
+          projectUuid: idea.projectUuid,
+          targetType: "idea",
+          targetUuid: idea.uuid,
+          actorType: "agent",
+          actorUuid: auth.actorUuid,
+          action: "released",
+        });
 
-      return {
-        content: [{ type: "text", text: JSON.stringify(updated, null, 2) }],
-      };
+        return {
+          content: [{ type: "text", text: JSON.stringify(updated, null, 2) }],
+        };
+      } catch (e) {
+        if (e instanceof NotClaimedError) {
+          return { content: [{ type: "text", text: "只能放弃 assigned 状态的 Idea" }], isError: true };
+        }
+        throw e;
+      }
     }
   );
 
@@ -746,29 +753,39 @@ export function registerPmTools(server: McpServer, auth: AgentAuthContext) {
       }
 
       // 执行分配
-      const updated = await taskService.claimTask({
-        taskUuid: task.uuid,
-        companyUuid: auth.companyUuid,
-        assigneeType: "agent",
-        assigneeUuid: agentUuid,
-        assignedByUuid: auth.actorUuid, // PM Agent 作为分配者
-      });
+      try {
+        const updated = await taskService.claimTask({
+          taskUuid: task.uuid,
+          companyUuid: auth.companyUuid,
+          assigneeType: "agent",
+          assigneeUuid: agentUuid,
+          assignedByUuid: auth.actorUuid, // PM Agent 作为分配者
+        });
 
-      // 记录 activity
-      await activityService.createActivity({
-        companyUuid: auth.companyUuid,
-        projectUuid: task.projectUuid,
-        targetType: "task",
-        targetUuid: task.uuid,
-        actorType: "agent",
-        actorUuid: auth.actorUuid,
-        action: "assigned",
-        value: { assigneeType: "agent", assigneeUuid: agentUuid, assignedBy: auth.actorUuid },
-      });
+        // 记录 activity
+        await activityService.createActivity({
+          companyUuid: auth.companyUuid,
+          projectUuid: task.projectUuid,
+          targetType: "task",
+          targetUuid: task.uuid,
+          actorType: "agent",
+          actorUuid: auth.actorUuid,
+          action: "assigned",
+          value: { assigneeType: "agent", assigneeUuid: agentUuid, assignedBy: auth.actorUuid },
+        });
 
-      return {
-        content: [{ type: "text", text: JSON.stringify(updated, null, 2) }],
-      };
+        return {
+          content: [{ type: "text", text: JSON.stringify(updated, null, 2) }],
+        };
+      } catch (e) {
+        if (e instanceof AlreadyClaimedError) {
+          return {
+            content: [{ type: "text", text: `Task 已被认领，无法分配` }],
+            isError: true,
+          };
+        }
+        throw e;
+      }
     }
   );
 }

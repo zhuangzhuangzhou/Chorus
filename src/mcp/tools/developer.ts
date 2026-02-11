@@ -9,6 +9,7 @@ import * as taskService from "@/services/task.service";
 import * as activityService from "@/services/activity.service";
 import * as commentService from "@/services/comment.service";
 import * as sessionService from "@/services/session.service";
+import { AlreadyClaimedError, NotClaimedError } from "@/lib/errors";
 
 export function registerDeveloperTools(server: McpServer, auth: AgentAuthContext) {
   // chorus_claim_task - 认领 Task
@@ -26,31 +27,34 @@ export function registerDeveloperTools(server: McpServer, auth: AgentAuthContext
         return { content: [{ type: "text", text: "Task 不存在" }], isError: true };
       }
 
-      if (task.status !== "open") {
-        return { content: [{ type: "text", text: "只能认领 open 状态的 Task" }], isError: true };
+      try {
+        const updated = await taskService.claimTask({
+          taskUuid: task.uuid,
+          companyUuid: auth.companyUuid,
+          assigneeType: "agent",
+          assigneeUuid: auth.actorUuid,
+        });
+
+        await activityService.createActivity({
+          companyUuid: auth.companyUuid,
+          projectUuid: task.projectUuid,
+          targetType: "task",
+          targetUuid: task.uuid,
+          actorType: "agent",
+          actorUuid: auth.actorUuid,
+          action: "assigned",
+          value: { assigneeType: "agent", assigneeUuid: auth.actorUuid },
+        });
+
+        return {
+          content: [{ type: "text", text: JSON.stringify(updated, null, 2) }],
+        };
+      } catch (e) {
+        if (e instanceof AlreadyClaimedError) {
+          return { content: [{ type: "text", text: "只能认领 open 状态的 Task" }], isError: true };
+        }
+        throw e;
       }
-
-      const updated = await taskService.claimTask({
-        taskUuid: task.uuid,
-        companyUuid: auth.companyUuid,
-        assigneeType: "agent",
-        assigneeUuid: auth.actorUuid,
-      });
-
-      await activityService.createActivity({
-        companyUuid: auth.companyUuid,
-        projectUuid: task.projectUuid,
-        targetType: "task",
-        targetUuid: task.uuid,
-        actorType: "agent",
-        actorUuid: auth.actorUuid,
-        action: "assigned",
-        value: { assigneeType: "agent", assigneeUuid: auth.actorUuid },
-      });
-
-      return {
-        content: [{ type: "text", text: JSON.stringify(updated, null, 2) }],
-      };
     }
   );
 
@@ -69,10 +73,6 @@ export function registerDeveloperTools(server: McpServer, auth: AgentAuthContext
         return { content: [{ type: "text", text: "Task 不存在" }], isError: true };
       }
 
-      if (task.status !== "assigned") {
-        return { content: [{ type: "text", text: "只能放弃 assigned 状态的 Task" }], isError: true };
-      }
-
       // 检查是否是认领者 (UUID comparison)
       const isAssignee =
         (task.assigneeType === "agent" && task.assigneeUuid === auth.actorUuid) ||
@@ -82,21 +82,28 @@ export function registerDeveloperTools(server: McpServer, auth: AgentAuthContext
         return { content: [{ type: "text", text: "只有认领者可以放弃认领" }], isError: true };
       }
 
-      const updated = await taskService.releaseTask(task.uuid);
+      try {
+        const updated = await taskService.releaseTask(task.uuid);
 
-      await activityService.createActivity({
-        companyUuid: auth.companyUuid,
-        projectUuid: task.projectUuid,
-        targetType: "task",
-        targetUuid: task.uuid,
-        actorType: "agent",
-        actorUuid: auth.actorUuid,
-        action: "released",
-      });
+        await activityService.createActivity({
+          companyUuid: auth.companyUuid,
+          projectUuid: task.projectUuid,
+          targetType: "task",
+          targetUuid: task.uuid,
+          actorType: "agent",
+          actorUuid: auth.actorUuid,
+          action: "released",
+        });
 
-      return {
-        content: [{ type: "text", text: JSON.stringify(updated, null, 2) }],
-      };
+        return {
+          content: [{ type: "text", text: JSON.stringify(updated, null, 2) }],
+        };
+      } catch (e) {
+        if (e instanceof NotClaimedError) {
+          return { content: [{ type: "text", text: "只能放弃 assigned 状态的 Task" }], isError: true };
+        }
+        throw e;
+      }
     }
   );
 

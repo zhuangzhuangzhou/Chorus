@@ -57,13 +57,22 @@ export async function getAuthContext(
     }
   }
 
-  // 2. 尝试 Session Cookie 认证（SuperAdmin）- 无 Authorization header 时
+  // 2. 尝试 Session Cookie 认证 — 无 Authorization header 时
   const userSession = await getUserSessionFromRequest(request);
   if (userSession) {
     return userSession;
   }
 
-  // 3. Fallback: Header 模拟用户认证（开发用）- UUID-based
+  // 3. 尝试 OIDC Access Token Cookie 认证（EventSource 等无法发送 Authorization header 的场景）
+  const oidcCookieToken = request.cookies.get("oidc_access_token")?.value;
+  if (oidcCookieToken && isOidcToken(oidcCookieToken)) {
+    const oidcContext = await verifyOidcAccessToken(oidcCookieToken);
+    if (oidcContext) {
+      return oidcContext;
+    }
+  }
+
+  // 4. Fallback: Header 模拟用户认证（开发用）- UUID-based
   const userUuidHeader = request.headers.get("x-user-uuid");
   const companyUuidHeader = request.headers.get("x-company-uuid");
 

@@ -7,6 +7,7 @@ import { withErrorHandler } from "@/lib/api-handler";
 import { success, errors } from "@/lib/api-response";
 import { getAuthContext, isUser, isAssignee } from "@/lib/auth";
 import { getIdeaByUuid, releaseIdea } from "@/services/idea.service";
+import { NotClaimedError } from "@/lib/errors";
 
 type RouteContext = { params: Promise<{ uuid: string }> };
 
@@ -25,11 +26,6 @@ export const POST = withErrorHandler<{ uuid: string }>(
       return errors.notFound("Idea");
     }
 
-    // 只有 assigned 状态的 Idea 可以放弃认领
-    if (idea.status !== "assigned") {
-      return errors.badRequest("Can only release ideas with assigned status");
-    }
-
     // 检查权限：用户可以释放任何 Idea，Agent 只能释放自己认领的
     if (!isUser(auth)) {
       if (!isAssignee(auth, idea.assigneeType, idea.assigneeUuid)) {
@@ -37,7 +33,14 @@ export const POST = withErrorHandler<{ uuid: string }>(
       }
     }
 
-    const updated = await releaseIdea(idea.uuid);
-    return success(updated);
+    try {
+      const updated = await releaseIdea(idea.uuid);
+      return success(updated);
+    } catch (e) {
+      if (e instanceof NotClaimedError) {
+        return errors.badRequest("Can only release ideas with assigned status");
+      }
+      throw e;
+    }
   }
 );
