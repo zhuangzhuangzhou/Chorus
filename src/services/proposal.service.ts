@@ -738,7 +738,12 @@ export async function removeTaskDraft(
   }
 
   const existingDrafts = (proposal.taskDrafts as unknown as TaskDraft[]) || [];
-  const updatedDrafts = existingDrafts.filter(d => d.uuid !== draftUuid);
+  const updatedDrafts = existingDrafts
+    .filter(d => d.uuid !== draftUuid)
+    .map(d => ({
+      ...d,
+      dependsOnDraftUuids: d.dependsOnDraftUuids?.filter(uuid => uuid !== draftUuid),
+    }));
 
   const updated = await prisma.proposal.update({
     where: { uuid: proposalUuid },

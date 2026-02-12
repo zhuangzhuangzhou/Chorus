@@ -172,6 +172,7 @@ export async function addTaskDraftAction(
     storyPoints?: number;
     priority?: string;
     acceptanceCriteria?: string;
+    dependsOnDraftUuids?: string[];
   }
 ) {
   const auth = await getServerAuthContext();
@@ -234,6 +235,7 @@ export async function updateTaskDraftAction(
     storyPoints?: number;
     priority?: string;
     acceptanceCriteria?: string;
+    dependsOnDraftUuids?: string[];
   }
 ) {
   const auth = await getServerAuthContext();
