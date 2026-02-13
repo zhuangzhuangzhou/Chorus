@@ -195,25 +195,34 @@ Every requirement — from idea to completion — must be tracked in Chorus thro
 
 For large features, create a **dedicated Chorus Project** to isolate tracking. Use `chorus_admin_create_project` to set one up, then create ideas and proposals within that project scope.
 
-### 3. Agent Team Sessions are Mandatory
+### 3. Developer Sessions are Mandatory
 
-When using Claude Code Agent Teams (swarm mode with sub-agents), you **must** use Chorus Session tools for sub-agent-level observability:
+**All Developer agents MUST create a session and checkin to tasks** before starting work. This applies whether running as a single agent or as part of an Agent Team. The UI uses sessions to display which developer is actively working on which task (Kanban board worker badges, Task Detail panel, Settings page).
 
-**Team Lead responsibilities:**
+**Single-agent Developer workflow:**
+- After `chorus_checkin()`, call `chorus_list_sessions` to check for reusable sessions. Reopen with `chorus_reopen_session` or create with `chorus_create_session`.
+- Before working on any task: call `chorus_session_checkin_task` with your sessionUuid.
+- Always pass `sessionUuid` to `chorus_update_task` and `chorus_report_work`.
+- When done with a task: call `chorus_session_checkout_task`.
+- When all work is complete: call `chorus_close_session`.
+
+**Multi-agent (Agent Team) workflow:**
+
+Team Lead responsibilities:
 - **Before spawning sub-agents**: Call `chorus_list_sessions` to check for reusable sessions. Reopen closed sessions with `chorus_reopen_session` instead of creating new ones.
-- **Create sessions**: Each sub-agent gets its own session via `chorus_create_session` with a descriptive name (e.g., "frontend-worker", "backend-worker").
+- **Create sessions**: Each sub-agent gets its own session via `chorus_create_session` with a descriptive name (e.g., "frontend-worker", "backend-worker"). Never share a session across multiple workers.
 - **Assign work**: Pass the Chorus task UUIDs and session UUID to each sub-agent when spawning. After that, **all task management is the sub-agent's responsibility** — the team lead does not checkin, move status, or report work on behalf of sub-agents.
 - **Monitor completion**: The team lead's ongoing role is to check that all Chorus tasks reach `to_verify` / `done` and no tasks are missed. Use `chorus_list_tasks` to verify status.
 - **Close sessions**: When sub-agents finish, close their sessions with `chorus_close_session`.
 
-**Sub-Agent responsibilities (each sub-agent manages its own tasks end-to-end):**
+Sub-Agent responsibilities (each sub-agent manages its own tasks end-to-end):
 - **Checkin to tasks**: When starting work on a task, call `chorus_session_checkin_task` with its own sessionUuid. Checkout when done.
 - **Move task status**: The sub-agent moves its own task through the lifecycle: `assigned → in_progress → to_verify`. The team lead must NOT move tasks on behalf of sub-agents.
 - **Pass sessionUuid**: When calling `chorus_report_work` or `chorus_update_task`, always include the `sessionUuid` parameter so activity is attributed to the correct sub-agent.
 - **Report work**: Call `chorus_report_work` to log progress and `chorus_submit_for_verify` when done.
 - **Heartbeat**: Long-running sub-agents should call `chorus_session_heartbeat` periodically (sessions become inactive after 1 hour without heartbeat).
 
-This ensures every action is traceable to the specific sub-agent that performed it, visible in the Settings page, Kanban board worker badges, and Task Detail panel.
+This ensures every action is traceable to the specific agent/sub-agent that performed it, visible in the Settings page, Kanban board worker badges, and Task Detail panel.
 
 ## Common Pitfalls
 

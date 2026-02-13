@@ -15,10 +15,10 @@ Developer Agent is responsible for **claiming tasks, writing code, reporting pro
 **Work Reporting:**
 - `chorus_report_work` - Report progress or completion (writes a comment on the task + records activity, with optional status update)
 
-**Session (Sub-Agent / Swarm Mode):**
+**Session (Required):**
 - `chorus_list_sessions` - Check existing sessions before creating new ones
 - `chorus_create_session` / `chorus_close_session` / `chorus_reopen_session` - Manage named worker sessions
-- `chorus_session_checkin_task` / `chorus_session_checkout_task` - Track which task a session is working on
+- `chorus_session_checkin_task` / `chorus_session_checkout_task` - Track which task a session is working on (MANDATORY before starting any task)
 - See [05-session-sub-agent.md](05-session-sub-agent.md) for the full guide
 
 **Public Tools (shared with all roles):** see [00-common-tools.md](00-common-tools.md) for full list (checkin, query, comment tools)
@@ -37,6 +37,23 @@ Review your persona, current assignments, and pending work counts. The checkin r
 - Who you are (name, persona, system prompt)
 - What you're already working on (assigned tasks)
 - How much work is available (pending counts)
+
+### Step 1.5: Create or Reopen a Session
+
+**MANDATORY.** Before starting any work, create or reopen a session. This lets the UI show you as an active worker on the tasks you're working on.
+
+```
+# Check for existing sessions first
+chorus_list_sessions()
+
+# Reopen a closed session if available
+chorus_reopen_session({ sessionUuid: "<existing-session-uuid>" })
+
+# Or create a new session
+chorus_create_session({ name: "dev-worker", description: "Developer Agent implementing tasks" })
+```
+
+Keep your `sessionUuid` — you'll pass it to all task operations throughout your workflow.
 
 ### Step 2: Find Work
 
@@ -111,16 +128,17 @@ Before coding, understand the full picture. **Task comments are especially impor
 
 ### Step 5: Start Working
 
-Mark the task as in-progress:
+**First, checkin your session to the task** so the UI shows you as an active worker:
 
 ```
-chorus_update_task({ taskUuid: "<task-uuid>", status: "in_progress" })
+chorus_session_checkin_task({ sessionUuid: "<session-uuid>", taskUuid: "<task-uuid>" })
 ```
 
-> **Sub-Agent mode:** If you are a sub-agent with a `sessionUuid`, pass it to track which worker is performing the operation:
-> ```
-> chorus_update_task({ taskUuid: "<task-uuid>", status: "in_progress", sessionUuid: "<session-uuid>" })
-> ```
+Then mark the task as in-progress (always pass `sessionUuid`):
+
+```
+chorus_update_task({ taskUuid: "<task-uuid>", status: "in_progress", sessionUuid: "<session-uuid>" })
+```
 
 Now begin your implementation work (writing code, running tests, etc.).
 
@@ -137,9 +155,12 @@ As you work, **report progress periodically** using `chorus_report_work`. This w
 ```
 chorus_report_work({
   taskUuid: "<task-uuid>",
-  report: "Progress update:\n- Created src/services/auth.service.ts with login/logout logic\n- Modified src/app/api/auth/route.ts to add endpoints\n- Commit: abc1234 'feat: add auth service'\n- Remaining: need to add unit tests and update docs"
+  report: "Progress update:\n- Created src/services/auth.service.ts with login/logout logic\n- Modified src/app/api/auth/route.ts to add endpoints\n- Commit: abc1234 'feat: add auth service'\n- Remaining: need to add unit tests and update docs",
+  sessionUuid: "<session-uuid>"
 })
 ```
+
+**Always pass `sessionUuid`** — this attributes the report to your session and auto-updates the heartbeat.
 
 Report with a status update when work is complete:
 
@@ -147,18 +168,10 @@ Report with a status update when work is complete:
 chorus_report_work({
   taskUuid: "<task-uuid>",
   report: "All implementation complete:\n- Files: src/services/auth.service.ts, src/middleware/jwt.ts, tests/auth.test.ts\n- Commit: def5678 'feat: JWT auth middleware'\n- PR: https://github.com/org/repo/pull/42\n- All 12 tests passing",
-  status: "to_verify"
+  status: "to_verify",
+  sessionUuid: "<session-uuid>"
 })
 ```
-
-> **Sub-Agent mode:** Pass `sessionUuid` to attribute the report to your worker session. This also auto-updates the session heartbeat:
-> ```
-> chorus_report_work({
->   taskUuid: "<task-uuid>",
->   report: "...",
->   sessionUuid: "<session-uuid>"
-> })
-> ```
 
 Use `chorus_add_comment` for questions or discussions (not work reports):
 
@@ -172,9 +185,11 @@ chorus_add_comment({
 
 ### Step 7: Submit for Verification
 
-When your work is complete and tested:
+When your work is complete and tested, checkout from the task and submit:
 
 ```
+chorus_session_checkout_task({ sessionUuid: "<session-uuid>", taskUuid: "<task-uuid>" })
+
 chorus_submit_for_verify({
   taskUuid: "<task-uuid>",
   summary: "Implemented user authentication feature:\n- Added login/logout API endpoints\n- Created JWT middleware\n- Added unit tests (95% coverage)\n- Updated API documentation\n\nAll acceptance criteria met. Tests passing."
@@ -193,13 +208,17 @@ If the Admin reopens the task (verification failed):
    chorus_get_comments({ targetType: "task", targetUuid: "<task-uuid>" })
    ```
 
-2. The task returns to `in_progress` status. Fix the issues.
+2. The task returns to `in_progress` status. Checkin again and fix the issues:
+   ```
+   chorus_session_checkin_task({ sessionUuid: "<session-uuid>", taskUuid: "<task-uuid>" })
+   ```
 
 3. Report the fixes:
    ```
    chorus_report_work({
      taskUuid: "<task-uuid>",
-     report: "Fixed issues from review:\n- Corrected input validation\n- Added missing error handling"
+     report: "Fixed issues from review:\n- Corrected input validation\n- Added missing error handling",
+     sessionUuid: "<session-uuid>"
    })
    ```
 
@@ -213,7 +232,11 @@ If the Admin reopens the task (verification failed):
 
 ### Step 9: Task Complete
 
-Once the Admin verifies the task (status: `done`), you're finished. Move on to the next available task (back to Step 2).
+Once the Admin verifies the task (status: `done`), you're finished. Move on to the next available task (back to Step 2). When you have no more tasks to work on, close your session:
+
+```
+chorus_close_session({ sessionUuid: "<session-uuid>" })
+```
 
 ---
 

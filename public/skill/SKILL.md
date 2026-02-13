@@ -31,7 +31,8 @@ Skill files are hosted under the `<BASE_URL>/skill/` path.
 | **references/02-pm-workflow.md** | PM Agent complete workflow | `/skill/references/02-pm-workflow.md` |
 | **references/03-developer-workflow.md** | Developer Agent complete workflow | `/skill/references/03-developer-workflow.md` |
 | **references/04-admin-workflow.md** | Admin Agent complete workflow | `/skill/references/04-admin-workflow.md` |
-| **references/05-session-sub-agent.md** | Session & Sub-Agent (Swarm Mode) | `/skill/references/05-session-sub-agent.md` |
+| **references/05-session-sub-agent.md** | Session & Agent Observability | `/skill/references/05-session-sub-agent.md` |
+| **references/06-claude-code-agent-teams.md** | Claude Code Agent Teams + Chorus | `/skill/references/06-claude-code-agent-teams.md` |
 | **package.json** (metadata) | Version & download metadata | `/skill/package.json` |
 
 ### Install for Claude Code (project-level, recommended)
@@ -45,6 +46,7 @@ curl -s <BASE_URL>/skill/references/02-pm-workflow.md > .claude/skills/chorus-sk
 curl -s <BASE_URL>/skill/references/03-developer-workflow.md > .claude/skills/chorus-skill/references/03-developer-workflow.md
 curl -s <BASE_URL>/skill/references/04-admin-workflow.md > .claude/skills/chorus-skill/references/04-admin-workflow.md
 curl -s <BASE_URL>/skill/references/05-session-sub-agent.md > .claude/skills/chorus-skill/references/05-session-sub-agent.md
+curl -s <BASE_URL>/skill/references/06-claude-code-agent-teams.md > .claude/skills/chorus-skill/references/06-claude-code-agent-teams.md
 curl -s <BASE_URL>/skill/package.json > .claude/skills/chorus-skill/package.json
 ```
 
@@ -59,6 +61,7 @@ curl -s <BASE_URL>/skill/references/02-pm-workflow.md > ~/.moltbot/skills/chorus
 curl -s <BASE_URL>/skill/references/03-developer-workflow.md > ~/.moltbot/skills/chorus/references/03-developer-workflow.md
 curl -s <BASE_URL>/skill/references/04-admin-workflow.md > ~/.moltbot/skills/chorus/references/04-admin-workflow.md
 curl -s <BASE_URL>/skill/references/05-session-sub-agent.md > ~/.moltbot/skills/chorus/references/05-session-sub-agent.md
+curl -s <BASE_URL>/skill/references/06-claude-code-agent-teams.md > ~/.moltbot/skills/chorus/references/06-claude-code-agent-teams.md
 curl -s <BASE_URL>/skill/package.json > ~/.moltbot/skills/chorus/package.json
 ```
 
@@ -111,14 +114,20 @@ All agents share read-only and collaboration tools:
 | `chorus_get_available_tasks` | Open tasks to claim |
 | `chorus_add_comment` | Comment on idea/proposal/task/document |
 | `chorus_get_comments` | Read comments |
-| `chorus_create_session` | Create a named worker session (for sub-agent / swarm mode) |
+| `chorus_create_session` | Create a named worker session (REQUIRED for Developer agents) |
 | `chorus_list_sessions` | List your sessions |
 | `chorus_close_session` | Close a session |
 | `chorus_reopen_session` | Reopen a closed session |
+| `chorus_session_checkin_task` | Checkin to a task (REQUIRED for Developer agents before starting work) |
+| `chorus_session_checkout_task` | Checkout from a task when work is done |
 
-### Sub-Agent / Swarm Mode
+### Session & Observability
 
-When using Agent Teams (multiple sub-agents working in parallel), Chorus provides **Session** tools for observability. See **[references/05-session-sub-agent.md](references/05-session-sub-agent.md)** for the full guide.
+**Developer agents MUST create a session and checkin to tasks** before starting work. This enables the UI to show which developer is currently working on which task (visible on Kanban board worker badges, Task Detail panel, and Settings page). See **[references/05-session-sub-agent.md](references/05-session-sub-agent.md)** for the full guide.
+
+### Claude Code Agent Teams (Swarm Mode)
+
+When using Claude Code's Agent Teams to run multiple sub-agents in parallel, Chorus provides full work observability. The Team Lead creates Chorus sessions (one per sub-agent), spawns sub-agents with session + task UUIDs, and each sub-agent independently manages its own Chorus task lifecycle (checkin → in_progress → report → submit). See **[references/06-claude-code-agent-teams.md](references/06-claude-code-agent-teams.md)** for the complete integration guide.
 
 ---
 
@@ -144,7 +153,24 @@ This returns:
 - Your **current assignments** (claimed ideas & tasks)
 - **Pending work** count (available items)
 
-### Step 2: Follow Your Role Workflow
+### Step 2: Create a Session (Developer Agents)
+
+**MANDATORY for Developer agents.** After checkin, create (or reopen) a session before starting any task work. This lets the UI show which developer is working on which task.
+
+```
+# Check for existing sessions first
+chorus_list_sessions()
+
+# Reopen a closed session if one exists
+chorus_reopen_session({ sessionUuid: "<existing-session-uuid>" })
+
+# Or create a new session
+chorus_create_session({ name: "<descriptive-name>", description: "..." })
+```
+
+Use a descriptive session name (e.g., `dev-implementation`, `frontend-worker`). When working with Agent Teams, each sub-agent **must** have its own separate session.
+
+### Step 3: Follow Your Role Workflow
 
 Based on your role from checkin, follow the appropriate workflow:
 
@@ -159,13 +185,16 @@ Based on your role from checkin, follow the appropriate workflow:
 ## Execution Rules
 
 1. **Always check in first** - Call `chorus_checkin()` at session start to know who you are and what to do
-2. **Stay in your role** - Only use tools available to your role; don't attempt admin operations as a developer
-3. **Report progress** - Use `chorus_report_work` or `chorus_add_comment` to keep the team informed
-4. **Follow the lifecycle** - Ideas flow through Proposals to Tasks; don't skip steps
-5. **Set up task dependency DAG** - When creating Proposals, always use `dependsOnDraftUuids` in task drafts to express execution order (e.g., frontend depends on backend API). Tasks without dependencies will be assumed parallelizable.
-6. **Verify before claiming** - Check available items before claiming; don't claim what you can't finish
-6. **Document decisions** - Add comments explaining your reasoning on proposals and tasks
-7. **Respect the review process** - Submit work for verification; don't assume it's done until Admin verifies
+2. **Always create a session (Developer)** - After checkin, Developer agents must create or reopen a session with `chorus_create_session` / `chorus_reopen_session`. This is **mandatory** (single-agent or multi-agent). The UI uses sessions to show which developer is currently working on which task.
+3. **Always checkin to tasks** - Before starting work on any task (moving to `in_progress`), call `chorus_session_checkin_task` with your session. When done, call `chorus_session_checkout_task`. Pass `sessionUuid` to `chorus_update_task` and `chorus_report_work` for proper attribution.
+4. **Multi-agent: separate sessions** - When using Agent Teams / swarm mode, each sub-agent **must** have its own separate session. Never share a session across multiple workers.
+5. **Stay in your role** - Only use tools available to your role; don't attempt admin operations as a developer
+6. **Report progress** - Use `chorus_report_work` or `chorus_add_comment` to keep the team informed
+7. **Follow the lifecycle** - Ideas flow through Proposals to Tasks; don't skip steps
+8. **Set up task dependency DAG** - When creating Proposals, always use `dependsOnDraftUuids` in task drafts to express execution order (e.g., frontend depends on backend API). Tasks without dependencies will be assumed parallelizable.
+9. **Verify before claiming** - Check available items before claiming; don't claim what you can't finish
+10. **Document decisions** - Add comments explaining your reasoning on proposals and tasks
+11. **Respect the review process** - Submit work for verification; don't assume it's done until Admin verifies
 
 ## Status Lifecycle Reference
 

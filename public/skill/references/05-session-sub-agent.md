@@ -1,29 +1,44 @@
-# Session & Sub-Agent (Swarm Mode)
+# Session & Agent Observability
 
 ## Overview
 
-The Chorus Session mechanism allows a main Agent to create multiple **named sub-sessions** (e.g., `frontend-worker`, `backend-worker`), where each session represents a sub-agent worker. Through session checkin/checkout, Chorus can track which worker is working on which task, enabling **Agent work observability**.
+The Chorus Session mechanism tracks **which agent is currently working on which task**. **Developer agents MUST create a session and checkin to tasks** before starting work — this applies to single agents and multi-agent teams alike. Session data powers the UI observability features (Kanban board worker badges, Task Detail panel active workers, Settings page).
 
 ### Core Concepts
 
 ```
-Main Agent (Sr. Claude)
-  ├── Session: "frontend-worker"  ──checkin──> Task A
-  ├── Session: "backend-worker"   ──checkin──> Task B
-  └── Session: "test-runner"      ──checkin──> Task A, Task B
+Single Agent:
+  Agent ──> Session: "dev-worker" ──checkin──> Task A
+
+Multi-Agent (Swarm Mode):
+  Main Agent (Team Lead)
+    ├── Session: "frontend-worker"  ──checkin──> Task A
+    ├── Session: "backend-worker"   ──checkin──> Task B
+    └── Session: "test-runner"      ──checkin──> Task A, Task B
 ```
 
 - **Agent** = A Chorus identity (has API Key, role, persona)
-- **Session** = A work unit under that Agent (represents a sub-agent / worker)
+- **Session** = A work unit under that Agent (one session per worker — even single Developer agents need one)
 - **Checkin** = Session declares it is working on a specific Task
 - **Heartbeat** = Session heartbeat indicating the worker is still active (automatically marked inactive after 1 hour with no heartbeat)
 
+### Why Sessions Are Mandatory
+
+Without a session checkin, the UI cannot show that an agent is actively working on a task. This means:
+- Kanban board cards won't display worker badges
+- Task Detail panel won't show active workers
+- Settings page won't show which tasks an agent is working on
+- Other agents may accidentally claim or work on the same task
+
 ### Mapping to Claude Code Agent Teams
+
+For the full Claude Code Agent Teams integration guide, see **[06-claude-code-agent-teams.md](06-claude-code-agent-teams.md)**.
 
 | Claude Code Concept | Chorus Concept | Description |
 |---------------------|----------------|-------------|
+| Single Agent | Agent + 1 Session | Agent creates one session for itself |
 | Team Lead Agent | Main Agent | Owns the API Key, responsible for creating sessions and assigning work |
-| Spawned Sub-Agent | Session | Each sub-agent creates an independent session |
+| Spawned Sub-Agent | Session | Each sub-agent gets its own independent session |
 | Sub-Agent's Task | Session Checkin | Sub-agent checks in to the task it is working on |
 | Sub-Agent completes and returns | Session Close | Close session, automatically checks out all tasks |
 
@@ -56,6 +71,43 @@ The following existing tools have an optional `sessionUuid` parameter:
 ---
 
 ## Usage Patterns
+
+### Pattern 0: Single Agent (No Sub-Agents)
+
+Even when working as a single agent (not using Agent Teams), **you must create a session and checkin to tasks**. This is the simplest pattern:
+
+```
+# 1. Check in
+chorus_checkin()
+
+# 2. Create or reopen a session
+chorus_list_sessions()
+# If a closed session exists, reopen it:
+chorus_reopen_session({ sessionUuid: "<existing-session-uuid>" })
+# Otherwise create a new one:
+chorus_create_session({ name: "dev-worker", description: "Single developer agent" })
+
+# 3. Claim a task
+chorus_claim_task({ taskUuid: "<task-uuid>" })
+
+# 4. Checkin to the task (REQUIRED — enables UI observability)
+chorus_session_checkin_task({ sessionUuid: "<session-uuid>", taskUuid: "<task-uuid>" })
+
+# 5. Move to in_progress (always pass sessionUuid)
+chorus_update_task({ taskUuid: "<task-uuid>", status: "in_progress", sessionUuid: "<session-uuid>" })
+
+# 6. Do work, report progress (always pass sessionUuid)
+chorus_report_work({ taskUuid: "<task-uuid>", report: "...", sessionUuid: "<session-uuid>" })
+
+# 7. Checkout and submit when done
+chorus_session_checkout_task({ sessionUuid: "<session-uuid>", taskUuid: "<task-uuid>" })
+chorus_submit_for_verify({ taskUuid: "<task-uuid>", summary: "..." })
+
+# 8. Close session when all work is done
+chorus_close_session({ sessionUuid: "<session-uuid>" })
+```
+
+---
 
 ### Session Reuse: Check Before Creating
 
@@ -106,76 +158,11 @@ chorus_report_work({
 chorus_close_session({ sessionUuid: "<session-uuid>" })
 ```
 
-### Pattern 2: Claude Code Agent Team Integration
+### Pattern 2: Claude Code Agent Teams (Swarm Mode)
 
-Suitable when using Claude Code's `Task` tool to spawn sub-agents:
+For a complete guide on integrating Claude Code Agent Teams with Chorus sessions, see **[06-claude-code-agent-teams.md](06-claude-code-agent-teams.md)**.
 
-**Team Lead (Main Agent) Workflow:**
-
-The team lead creates sessions, assigns task UUIDs to sub-agents, then **delegates all task management** to them. After spawning, the team lead only monitors completion.
-
-```python
-# 1. Check in and get tasks
-chorus_checkin()
-tasks = chorus_list_tasks({ projectUuid, status: "assigned" })
-
-# 2. Create a session for each sub-agent (or reopen existing ones)
-session1 = chorus_create_session({ name: "frontend-worker" })
-session2 = chorus_create_session({ name: "backend-worker" })
-
-# 3. Spawn sub-agents — pass task UUIDs and session UUID
-# DO NOT checkin to tasks or move task status here — that's the sub-agent's job
-spawn_agent("frontend-worker", {
-  taskUuids: [task1.uuid],
-  sessionUuid: session1.uuid,
-  instructions: "You own these tasks end-to-end: checkin, move status, report work, submit for verify"
-})
-
-# 4. Monitor — periodically check that all tasks reach to_verify/done
-chorus_list_tasks({ projectUuid })  # verify no tasks are stuck or missed
-
-# 5. Close sessions when sub-agents finish
-chorus_close_session({ sessionUuid: session1.uuid })
-```
-
-**Sub-Agent (Worker) Workflow:**
-
-Each sub-agent manages its own tasks end-to-end. The team lead must NOT checkin, move status, or report work on behalf of sub-agents.
-
-```python
-# Sub-agent receives sessionUuid and taskUuids from team lead
-
-# 1. Checkin to task — sub-agent does this itself
-chorus_session_checkin_task({
-  sessionUuid: "<session-uuid>",
-  taskUuid: "<task-uuid>"
-})
-
-# 2. Move task to in_progress
-chorus_update_task({
-  taskUuid: "<task-uuid>",
-  status: "in_progress",
-  sessionUuid: "<session-uuid>"    # Identifies which worker
-})
-
-# 3. Periodic heartbeat (report_work auto-heartbeats; explicit call also available)
-chorus_session_heartbeat({ sessionUuid: "<session-uuid>" })
-
-# 3. Report progress
-chorus_report_work({
-  taskUuid: "<task-uuid>",
-  report: "Completed API endpoint development",
-  sessionUuid: "<session-uuid>"    # Activity will display "Agent / Session"
-})
-
-# 4. Submit for verification when done
-chorus_submit_for_verify({ taskUuid: "<task-uuid>", summary: "Implemented API endpoints" })
-
-# 5. Checkout from task
-chorus_session_checkout_task({ sessionUuid: "<session-uuid>", taskUuid: "<task-uuid>" })
-
-# Team Lead closes the session after sub-agent finishes
-```
+Summary: The Team Lead creates one Chorus session per sub-agent, spawns sub-agents with session + task UUIDs in the prompt, and each sub-agent independently manages its own Chorus task lifecycle (checkin → in_progress → report → checkout → submit). The Team Lead monitors completion and closes sessions when done.
 
 ---
 
