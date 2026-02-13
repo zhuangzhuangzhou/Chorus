@@ -13,6 +13,7 @@ import {
   createProposalCommentAction,
 } from "./comment-actions";
 import type { CommentResponse } from "@/services/comment.service";
+import { Streamdown } from "streamdown";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function formatRelativeTime(dateString: string, t: any): string {
@@ -112,9 +113,9 @@ export function ProposalComments({ proposalUuid }: ProposalCommentsProps) {
                     {formatRelativeTime(c.createdAt, t)}
                   </span>
                 </div>
-                <p className="mt-1 text-xs leading-relaxed text-[#2C2C2C]">
-                  {c.content}
-                </p>
+                <div className="mt-1 text-xs leading-relaxed text-[#2C2C2C]">
+                  <Streamdown>{c.content}</Streamdown>
+                </div>
               </div>
             </div>
           ))

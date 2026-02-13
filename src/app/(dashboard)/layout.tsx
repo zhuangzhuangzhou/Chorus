@@ -185,7 +185,7 @@ export default function DashboardLayout({
   return (
     <div className="flex min-h-screen bg-background">
       {/* Sidebar */}
-      <aside className="flex w-[220px] flex-shrink-0 flex-col justify-between border-r border-border bg-card">
+      <aside className="sticky top-0 flex h-screen w-[220px] flex-shrink-0 flex-col justify-between overflow-y-auto border-r border-border bg-card">
         <div className="flex flex-col gap-8 p-6">
           {/* Logo */}
           <div className="flex items-center gap-2.5">

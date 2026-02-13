@@ -468,9 +468,9 @@ export function IdeaDetailPanel({
                               <span className="text-xs font-medium text-[#2C2C2C]">{c.author.name}</span>
                               <span className="text-[10px] text-[#9A9A9A]">{formatRelativeTime(c.createdAt, t)}</span>
                             </div>
-                            <p className="mt-1 text-xs leading-relaxed text-[#2C2C2C]">
-                              {c.content}
-                            </p>
+                            <div className="mt-1 text-xs leading-relaxed text-[#2C2C2C]">
+                              <Streamdown>{c.content}</Streamdown>
+                            </div>
                           </div>
                         </div>
                       ))
