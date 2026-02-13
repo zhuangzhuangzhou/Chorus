@@ -245,9 +245,19 @@
     "docs": "docs",
     "loadingProjects": "Loading projects...",
     "createFailed": "Failed to create project",
+    "activeProjects": "Active projects",
+    "totalTasks": "Total tasks",
+    "openProposals": "Open proposals",
+    "ideasCaptured": "Ideas captured",
+    "taskProgress": "Task progress",
+    "createNewProject": "Create New Project",
+    "createNewProjectDesc": "Start a new project and invite your team",
+    "updated": "Updated",
     "createNew": {
       "title": "Create New Project",
-      "subtitle": "Set up your project and let PM Agent start analyzing",
+      "subtitle": "Set up your project details, then assign ideas to PM Agent later",
+      "gettingStartedTitle": "Getting started",
+      "gettingStartedDesc": "Fill in the basics below. Once created, you can add ideas and assign them to PM Agent for proposal generation.",
       "basicInfo": "Basic Information",
       "projectName": "Project Name",
       "projectNamePlaceholder": "e.g., Project Alpha",
@@ -260,8 +270,8 @@
       "documents": "Documents",
       "documentsDesc": "Upload PRD, technical design, or any reference documents for PM Agent to analyze",
       "dragDrop": "Drag & drop files here, or click to browse",
-      "fileTypes": "Markdown files (.md) up to 10MB",
-      "createAndStart": "Create & Start PM Agent"
+      "fileTypes": "Markdown (.md) documents",
+      "createProject": "Create Project"
     }
   },
   "ideas": {

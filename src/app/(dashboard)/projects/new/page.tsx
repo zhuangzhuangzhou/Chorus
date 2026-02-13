@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Separator } from "@/components/ui/separator";
 import {
   FileText,
   Lightbulb,
@@ -16,7 +17,7 @@ import {
   X,
   Plus,
   Upload,
-  Sparkles,
+  Rocket,
   Bell,
 } from "lucide-react";
 import { createProjectAction } from "./actions";
@@ -81,7 +82,6 @@ export default function NewProjectPage() {
     const newFiles: UploadedFile[] = [];
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
-      // Check file size (10MB limit)
       if (file.size <= 10 * 1024 * 1024) {
         newFiles.push({
           name: file.name,
@@ -109,14 +109,11 @@ export default function NewProjectPage() {
     setLoading(true);
 
     try {
-      // Read uploaded markdown files
       const documents: { name: string; content: string; type: "prd" | "tech_design" | "adr" | "spec" | "guide" }[] = [];
 
       for (const uploadedFile of uploadedFiles) {
-        // Only process .md files
         if (uploadedFile.name.toLowerCase().endsWith(".md")) {
           const content = await uploadedFile.file.text();
-          // Determine document type based on filename
           let type: "prd" | "tech_design" | "adr" | "spec" | "guide" = "spec";
           const lowerName = uploadedFile.name.toLowerCase();
           if (lowerName.includes("prd")) type = "prd";
@@ -140,7 +137,6 @@ export default function NewProjectPage() {
       });
 
       if (result.success && result.projectUuid) {
-        // Save as current project and redirect
         localStorage.setItem("currentProjectUuid", result.projectUuid);
         router.push(`/projects/${result.projectUuid}`);
       } else {
@@ -154,7 +150,7 @@ export default function NewProjectPage() {
   };
 
   return (
-    <div className="min-h-full bg-background">
+    <div className="min-h-full bg-[#FAF8F4]">
       <div className="px-8 py-6">
         {/* Top Bar */}
         <div className="mb-6 flex items-center justify-between">
@@ -191,11 +187,29 @@ export default function NewProjectPage() {
             </div>
           )}
 
-          {/* Basic Information Card */}
-          <Card>
+          {/* Welcome Banner */}
+          <div className="flex items-center gap-4 rounded-2xl border border-[#C67A5230] bg-[#C67A5210] px-6 py-5">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#C67A5220]">
+              <Rocket className="h-[22px] w-[22px] text-[#C67A52]" />
+            </div>
+            <div className="space-y-1">
+              <p className="text-sm font-semibold text-[#C67A52]">
+                {t("projects.createNew.gettingStartedTitle")}
+              </p>
+              <p className="text-xs leading-relaxed text-[#6B6B6B]">
+                {t("projects.createNew.gettingStartedDesc")}
+              </p>
+            </div>
+          </div>
+
+          {/* Step 1: Basic Information Card */}
+          <Card className="overflow-hidden rounded-2xl border-l-3 border-l-[#C67A52] border-t-0 border-r-0 border-b-0 shadow-none">
             <CardHeader className="pb-4">
               <CardTitle className="flex items-center gap-2 text-sm font-medium">
-                <FileText className="h-4 w-4 text-primary" />
+                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#C67A52] text-[11px] font-semibold text-white">
+                  1
+                </span>
+                <FileText className="h-4 w-4 text-[#C67A52]" />
                 {t("projects.createNew.basicInfo")}
               </CardTitle>
             </CardHeader>
@@ -214,6 +228,10 @@ export default function NewProjectPage() {
                 />
               </div>
 
+              <div className="pl-12">
+                <Separator className="bg-[#E5E2DC]" />
+              </div>
+
               <div className="space-y-2">
                 <Label htmlFor="description">{t("projects.createNew.descriptionLabel")}</Label>
                 <Textarea
@@ -229,12 +247,15 @@ export default function NewProjectPage() {
             </CardContent>
           </Card>
 
-          {/* Initial Ideas Card */}
-          <Card>
+          {/* Step 2: Initial Ideas Card */}
+          <Card className="overflow-hidden rounded-2xl border-l-3 border-l-[#C67A52] border-t-0 border-r-0 border-b-0 shadow-none">
             <CardHeader className="pb-4">
               <div className="flex items-center justify-between">
                 <CardTitle className="flex items-center gap-2 text-sm font-medium">
-                  <Lightbulb className="h-4 w-4 text-primary" />
+                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#C67A52] text-[11px] font-semibold text-white">
+                    2
+                  </span>
+                  <Lightbulb className="h-4 w-4 text-[#C67A52]" />
                   {t("projects.createNew.initialIdeas")}
                 </CardTitle>
                 <span className="text-[11px] text-muted-foreground">{t("common.optional")}</span>
@@ -283,12 +304,15 @@ export default function NewProjectPage() {
             </CardContent>
           </Card>
 
-          {/* Documents Card */}
-          <Card>
+          {/* Step 3: Documents Card */}
+          <Card className="overflow-hidden rounded-2xl border-l-3 border-l-[#C67A52] border-t-0 border-r-0 border-b-0 shadow-none">
             <CardHeader className="pb-4">
               <div className="flex items-center justify-between">
                 <CardTitle className="flex items-center gap-2 text-sm font-medium">
-                  <FolderOpen className="h-4 w-4 text-primary" />
+                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#C67A52] text-[11px] font-semibold text-white">
+                    3
+                  </span>
+                  <FolderOpen className="h-4 w-4 text-[#C67A52]" />
                   {t("projects.createNew.documents")}
                 </CardTitle>
                 <span className="text-[11px] text-muted-foreground">{t("common.optional")}</span>
@@ -301,10 +325,10 @@ export default function NewProjectPage() {
 
               {/* Upload Area */}
               <div
-                className={`flex h-[120px] cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border border-dashed transition-colors ${
+                className={`flex h-[120px] cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border border-dashed transition-colors ${
                   dragActive
-                    ? "border-primary bg-primary/5"
-                    : "border-border bg-secondary/50"
+                    ? "border-[#C67A52] bg-[#C67A5210]"
+                    : "border-[#D0CCC4] bg-[#F5F2EC]"
                 }`}
                 onDragEnter={handleDrag}
                 onDragLeave={handleDrag}
@@ -321,10 +345,10 @@ export default function NewProjectPage() {
                   className="hidden"
                 />
                 <Upload className="h-8 w-8 text-muted-foreground" />
-                <span className="text-xs text-muted-foreground">
+                <span className="text-xs text-[#6B6B6B]">
                   {t("projects.createNew.dragDrop")}
                 </span>
-                <span className="text-[11px] text-muted-foreground/70">
+                <span className="text-[11px] text-[#9A9A9A]">
                   {t("projects.createNew.fileTypes")}
                 </span>
               </div>
@@ -335,10 +359,10 @@ export default function NewProjectPage() {
                   {uploadedFiles.map((file, index) => (
                     <div
                       key={index}
-                      className="flex items-center justify-between rounded-lg bg-secondary/50 px-3 py-2.5"
+                      className="flex items-center justify-between rounded-xl border border-[#E5E2DC] bg-[#F5F2EC] px-3 py-2.5"
                     >
                       <div className="flex items-center gap-2">
-                        <FileText className="h-4 w-4 text-primary" />
+                        <FileText className="h-4 w-4 text-[#C67A52]" />
                         <span className="text-[13px] text-foreground">
                           {file.name}
                         </span>
@@ -365,15 +389,20 @@ export default function NewProjectPage() {
           </Card>
 
           {/* Action Bar */}
-          <div className="flex items-center gap-3 py-2">
+          <Separator className="bg-[#E5E2DC]" />
+          <div className="flex items-center justify-end gap-3 py-2">
             <Link href="/projects">
-              <Button type="button" variant="outline">
+              <Button type="button" variant="outline" className="rounded-xl px-6 py-2.5">
                 {t("common.cancel")}
               </Button>
             </Link>
-            <Button type="submit" disabled={loading || !formData.name.trim()}>
-              <Sparkles className="mr-2 h-3.5 w-3.5" />
-              {loading ? t("common.creating") : t("projects.createNew.createAndStart")}
+            <Button
+              type="submit"
+              disabled={loading || !formData.name.trim()}
+              className="rounded-xl bg-[#C67A52] px-6 py-2.5 hover:bg-[#B56A42]"
+            >
+              <Plus className="mr-2 h-3.5 w-3.5" />
+              {loading ? t("common.creating") : t("projects.createNew.createProject")}
             </Button>
           </div>
         </form>

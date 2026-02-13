@@ -125,6 +125,45 @@ export async function deleteProject(uuid: string) {
   return prisma.project.delete({ where: { uuid } });
 }
 
+// 获取公司级别的概览统计（用于 Projects 列表页）
+export async function getCompanyOverviewStats(companyUuid: string) {
+  const [projectCount, taskCount, openProposalCount, ideaCount] = await Promise.all([
+    prisma.project.count({ where: { companyUuid } }),
+    prisma.task.count({ where: { companyUuid } }),
+    prisma.proposal.count({ where: { companyUuid, status: "pending" } }),
+    prisma.idea.count({ where: { companyUuid } }),
+  ]);
+
+  return {
+    projects: projectCount,
+    tasks: taskCount,
+    openProposals: openProposalCount,
+    ideas: ideaCount,
+  };
+}
+
+// 获取项目列表（含任务完成率，用于 Projects 列表页）
+export async function listProjectsWithStats({ companyUuid, skip, take }: ProjectListParams) {
+  const { projects, total } = await listProjects({ companyUuid, skip, take });
+
+  // 批量查询每个项目的已完成任务数
+  const projectUuids = projects.map((p) => p.uuid);
+  const doneCounts = await prisma.task.groupBy({
+    by: ["projectUuid"],
+    where: { companyUuid, projectUuid: { in: projectUuids }, status: "done" },
+    _count: true,
+  });
+  const doneMap = new Map(doneCounts.map((d) => [d.projectUuid, d._count]));
+
+  return {
+    projects: projects.map((p) => ({
+      ...p,
+      tasksDone: doneMap.get(p.uuid) || 0,
+    })),
+    total,
+  };
+}
+
 // 获取项目统计数据（用于 Dashboard）
 export async function getProjectStats(companyUuid: string, projectUuid: string) {
   const [ideasStats, tasksStats, proposalsStats, documentsCount] = await Promise.all([

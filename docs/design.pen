@@ -503,347 +503,17 @@
             },
             {
               "type": "frame",
-              "id": "pYBTX",
-              "name": "Projects Grid",
+              "id": "eAtXm",
+              "name": "Stats Overview",
               "width": "fill_container",
               "gap": 16,
               "children": [
                 {
                   "type": "frame",
-                  "id": "gV3JR",
-                  "name": "Project Card 1",
+                  "id": "aHB0S",
+                  "name": "Stat Card 1",
                   "width": "fill_container",
                   "fill": "#FFFFFF",
-                  "cornerRadius": 16,
-                  "layout": "vertical",
-                  "gap": 12,
-                  "padding": [
-                    20,
-                    18
-                  ],
-                  "children": [
-                    {
-                      "type": "text",
-                      "id": "o0utT",
-                      "name": "metric1Label",
-                      "fill": "#2C2C2C",
-                      "content": "Project Alpha",
-                      "fontFamily": "IBM Plex Sans",
-                      "fontSize": 14,
-                      "fontWeight": "600"
-                    },
-                    {
-                      "type": "text",
-                      "id": "jzYTA",
-                      "name": "metric1Value",
-                      "fill": "#6B6B6B",
-                      "textGrowth": "fixed-width",
-                      "width": "fill_container",
-                      "content": "AI-native project management platform for agent collaboration",
-                      "lineHeight": 1.4,
-                      "fontFamily": "IBM Plex Sans",
-                      "fontSize": 12,
-                      "fontWeight": "normal"
-                    },
-                    {
-                      "type": "frame",
-                      "id": "6Z1l8",
-                      "name": "Project Stats",
-                      "gap": 12,
-                      "alignItems": "center",
-                      "children": [
-                        {
-                          "type": "frame",
-                          "id": "RD1NU",
-                          "gap": 3,
-                          "alignItems": "center",
-                          "children": [
-                            {
-                              "type": "text",
-                              "id": "zXiq5",
-                              "fill": "#2C2C2C",
-                              "content": "12",
-                              "fontFamily": "IBM Plex Sans",
-                              "fontSize": 13,
-                              "fontWeight": "600"
-                            },
-                            {
-                              "type": "text",
-                              "id": "ZBrtn",
-                              "fill": "#9A9A9A",
-                              "content": "tasks",
-                              "fontFamily": "IBM Plex Sans",
-                              "fontSize": 11,
-                              "fontWeight": "normal"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "frame",
-                          "id": "MZkzP",
-                          "gap": 3,
-                          "alignItems": "center",
-                          "children": [
-                            {
-                              "type": "text",
-                              "id": "TRNc9",
-                              "fill": "#C67A52",
-                              "content": "3",
-                              "fontFamily": "IBM Plex Sans",
-                              "fontSize": 13,
-                              "fontWeight": "600"
-                            },
-                            {
-                              "type": "text",
-                              "id": "g6x5m",
-                              "fill": "#9A9A9A",
-                              "content": "proposals",
-                              "fontFamily": "IBM Plex Sans",
-                              "fontSize": 11,
-                              "fontWeight": "normal"
-                            }
-                          ]
-                        }
-                      ]
-                    },
-                    {
-                      "type": "text",
-                      "id": "xxqfg",
-                      "name": "updated1",
-                      "fill": "#9A9A9A",
-                      "content": "Updated 2 hours ago",
-                      "fontFamily": "IBM Plex Sans",
-                      "fontSize": 11,
-                      "fontWeight": "normal"
-                    }
-                  ]
-                },
-                {
-                  "type": "frame",
-                  "id": "2NYMI",
-                  "name": "Project Card 2",
-                  "width": "fill_container",
-                  "fill": "#FFFFFF",
-                  "cornerRadius": 16,
-                  "layout": "vertical",
-                  "gap": 12,
-                  "padding": [
-                    20,
-                    18
-                  ],
-                  "children": [
-                    {
-                      "type": "text",
-                      "id": "3NMXw",
-                      "name": "metric2Label",
-                      "fill": "#2C2C2C",
-                      "content": "E-Commerce Platform",
-                      "fontFamily": "IBM Plex Sans",
-                      "fontSize": 14,
-                      "fontWeight": "600"
-                    },
-                    {
-                      "type": "text",
-                      "id": "uZEtJ",
-                      "name": "metric2Value",
-                      "fill": "#6B6B6B",
-                      "textGrowth": "fixed-width",
-                      "width": "fill_container",
-                      "content": "Next-gen shopping experience with AI recommendations",
-                      "lineHeight": 1.4,
-                      "fontFamily": "IBM Plex Sans",
-                      "fontSize": 12,
-                      "fontWeight": "normal"
-                    },
-                    {
-                      "type": "frame",
-                      "id": "taaIc",
-                      "name": "Project Stats",
-                      "gap": 12,
-                      "alignItems": "center",
-                      "children": [
-                        {
-                          "type": "frame",
-                          "id": "Hza2S",
-                          "gap": 3,
-                          "alignItems": "center",
-                          "children": [
-                            {
-                              "type": "text",
-                              "id": "wlii2",
-                              "fill": "#2C2C2C",
-                              "content": "28",
-                              "fontFamily": "IBM Plex Sans",
-                              "fontSize": 13,
-                              "fontWeight": "600"
-                            },
-                            {
-                              "type": "text",
-                              "id": "H9MiN",
-                              "fill": "#9A9A9A",
-                              "content": "tasks",
-                              "fontFamily": "IBM Plex Sans",
-                              "fontSize": 11,
-                              "fontWeight": "normal"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "frame",
-                          "id": "jfJ9x",
-                          "gap": 3,
-                          "alignItems": "center",
-                          "children": [
-                            {
-                              "type": "text",
-                              "id": "Y2P73",
-                              "fill": "#C67A52",
-                              "content": "1",
-                              "fontFamily": "IBM Plex Sans",
-                              "fontSize": 13,
-                              "fontWeight": "600"
-                            },
-                            {
-                              "type": "text",
-                              "id": "wSkPD",
-                              "fill": "#9A9A9A",
-                              "content": "proposals",
-                              "fontFamily": "IBM Plex Sans",
-                              "fontSize": 11,
-                              "fontWeight": "normal"
-                            }
-                          ]
-                        }
-                      ]
-                    },
-                    {
-                      "type": "text",
-                      "id": "ZosVh",
-                      "name": "updated2",
-                      "fill": "#9A9A9A",
-                      "content": "Updated yesterday",
-                      "fontFamily": "IBM Plex Sans",
-                      "fontSize": 11,
-                      "fontWeight": "normal"
-                    }
-                  ]
-                },
-                {
-                  "type": "frame",
-                  "id": "42jTC",
-                  "name": "Project Card 3",
-                  "width": "fill_container",
-                  "fill": "#FFFFFF",
-                  "cornerRadius": 16,
-                  "layout": "vertical",
-                  "gap": 12,
-                  "padding": [
-                    20,
-                    18
-                  ],
-                  "children": [
-                    {
-                      "type": "text",
-                      "id": "xwsSs",
-                      "name": "metric3Label",
-                      "fill": "#2C2C2C",
-                      "content": "Mobile Banking App",
-                      "fontFamily": "IBM Plex Sans",
-                      "fontSize": 14,
-                      "fontWeight": "600"
-                    },
-                    {
-                      "type": "text",
-                      "id": "IkDUA",
-                      "name": "metric3Value",
-                      "fill": "#6B6B6B",
-                      "textGrowth": "fixed-width",
-                      "width": "fill_container",
-                      "content": "Secure mobile banking with biometric authentication",
-                      "lineHeight": 1.4,
-                      "fontFamily": "IBM Plex Sans",
-                      "fontSize": 12,
-                      "fontWeight": "normal"
-                    },
-                    {
-                      "type": "frame",
-                      "id": "dAFGQ",
-                      "name": "Project Stats",
-                      "gap": 12,
-                      "alignItems": "center",
-                      "children": [
-                        {
-                          "type": "frame",
-                          "id": "BEH5a",
-                          "gap": 3,
-                          "alignItems": "center",
-                          "children": [
-                            {
-                              "type": "text",
-                              "id": "LERWr",
-                              "fill": "#2C2C2C",
-                              "content": "45",
-                              "fontFamily": "IBM Plex Sans",
-                              "fontSize": 13,
-                              "fontWeight": "600"
-                            },
-                            {
-                              "type": "text",
-                              "id": "0qUdX",
-                              "fill": "#9A9A9A",
-                              "content": "tasks",
-                              "fontFamily": "IBM Plex Sans",
-                              "fontSize": 11,
-                              "fontWeight": "normal"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "frame",
-                          "id": "wDhML",
-                          "gap": 3,
-                          "alignItems": "center",
-                          "children": [
-                            {
-                              "type": "text",
-                              "id": "25FFh",
-                              "fill": "#9A9A9A",
-                              "content": "0",
-                              "fontFamily": "IBM Plex Sans",
-                              "fontSize": 13,
-                              "fontWeight": "600"
-                            },
-                            {
-                              "type": "text",
-                              "id": "gRpDF",
-                              "fill": "#9A9A9A",
-                              "content": "proposals",
-                              "fontFamily": "IBM Plex Sans",
-                              "fontSize": 11,
-                              "fontWeight": "normal"
-                            }
-                          ]
-                        }
-                      ]
-                    },
-                    {
-                      "type": "text",
-                      "id": "iBa1L",
-                      "name": "updated3",
-                      "fill": "#9A9A9A",
-                      "content": "Updated 3 days ago",
-                      "fontFamily": "IBM Plex Sans",
-                      "fontSize": 11,
-                      "fontWeight": "normal"
-                    }
-                  ]
-                },
-                {
-                  "type": "frame",
-                  "id": "Fij1m",
-                  "name": "New Project Card",
-                  "width": "fill_container",
-                  "fill": "#F5F2EC",
                   "cornerRadius": 16,
                   "stroke": {
                     "align": "inside",
@@ -851,56 +521,998 @@
                     "fill": "#E5E2DC"
                   },
                   "layout": "vertical",
-                  "gap": 12,
+                  "gap": 6,
                   "padding": [
-                    20,
+                    16,
                     18
                   ],
                   "children": [
                     {
+                      "type": "text",
+                      "id": "GMzMM",
+                      "name": "stat1Val",
+                      "fill": "#2C2C2C",
+                      "content": "3",
+                      "fontFamily": "IBM Plex Sans",
+                      "fontSize": 28,
+                      "fontWeight": "600",
+                      "letterSpacing": -0.5
+                    },
+                    {
+                      "type": "text",
+                      "id": "lEvQA",
+                      "name": "stat1Label",
+                      "fill": "#9A9A9A",
+                      "content": "Active projects",
+                      "fontFamily": "IBM Plex Sans",
+                      "fontSize": 12,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "yPJyA",
+                  "name": "Stat Card 2",
+                  "width": "fill_container",
+                  "fill": "#FFFFFF",
+                  "cornerRadius": 16,
+                  "stroke": {
+                    "align": "inside",
+                    "thickness": 1,
+                    "fill": "#E5E2DC"
+                  },
+                  "layout": "vertical",
+                  "gap": 6,
+                  "padding": [
+                    16,
+                    18
+                  ],
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "e4tDb",
+                      "name": "stat2Val",
+                      "fill": "#C67A52",
+                      "content": "85",
+                      "fontFamily": "IBM Plex Sans",
+                      "fontSize": 28,
+                      "fontWeight": "600",
+                      "letterSpacing": -0.5
+                    },
+                    {
+                      "type": "text",
+                      "id": "nKQik",
+                      "name": "stat2Label",
+                      "fill": "#9A9A9A",
+                      "content": "Total tasks",
+                      "fontFamily": "IBM Plex Sans",
+                      "fontSize": 12,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "Bhxuh",
+                  "name": "Stat Card 3",
+                  "width": "fill_container",
+                  "fill": "#FFFFFF",
+                  "cornerRadius": 16,
+                  "stroke": {
+                    "align": "inside",
+                    "thickness": 1,
+                    "fill": "#E5E2DC"
+                  },
+                  "layout": "vertical",
+                  "gap": 6,
+                  "padding": [
+                    16,
+                    18
+                  ],
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "7EJyd",
+                      "name": "stat3Val",
+                      "fill": "#5A9E6F",
+                      "content": "4",
+                      "fontFamily": "IBM Plex Sans",
+                      "fontSize": 28,
+                      "fontWeight": "600",
+                      "letterSpacing": -0.5
+                    },
+                    {
+                      "type": "text",
+                      "id": "uvT3s",
+                      "name": "stat3Label",
+                      "fill": "#9A9A9A",
+                      "content": "Open proposals",
+                      "fontFamily": "IBM Plex Sans",
+                      "fontSize": 12,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "CBL7c",
+                  "name": "Stat Card 4",
+                  "width": "fill_container",
+                  "fill": "#FFFFFF",
+                  "cornerRadius": 16,
+                  "stroke": {
+                    "align": "inside",
+                    "thickness": 1,
+                    "fill": "#E5E2DC"
+                  },
+                  "layout": "vertical",
+                  "gap": 6,
+                  "padding": [
+                    16,
+                    18
+                  ],
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "zkPxK",
+                      "name": "stat4Val",
+                      "fill": "#2C2C2C",
+                      "content": "18",
+                      "fontFamily": "IBM Plex Sans",
+                      "fontSize": 28,
+                      "fontWeight": "600",
+                      "letterSpacing": -0.5
+                    },
+                    {
+                      "type": "text",
+                      "id": "jmakj",
+                      "name": "stat4Label",
+                      "fill": "#9A9A9A",
+                      "content": "Ideas captured",
+                      "fontFamily": "IBM Plex Sans",
+                      "fontSize": 12,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "pYBTX",
+              "name": "Projects Grid",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": 16,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "pNYuZ",
+                  "name": "Grid Row 1",
+                  "width": "fill_container",
+                  "gap": 16,
+                  "children": [
+                    {
                       "type": "frame",
-                      "id": "re1P9",
-                      "name": "Plus Icon Container",
-                      "width": 32,
-                      "height": 32,
-                      "fill": "#E5E2DC",
-                      "cornerRadius": 8,
-                      "justifyContent": "center",
-                      "alignItems": "center",
+                      "id": "gV3JR",
+                      "name": "Project Card 1",
+                      "width": "fill_container",
+                      "fill": "#FFFFFF",
+                      "cornerRadius": 16,
+                      "stroke": {
+                        "align": "inside",
+                        "thickness": 1,
+                        "fill": "#E5E2DC"
+                      },
+                      "layout": "vertical",
+                      "gap": 14,
+                      "padding": 20,
                       "children": [
                         {
-                          "type": "icon_font",
-                          "id": "q52fD",
-                          "width": 16,
-                          "height": 16,
-                          "iconFontName": "plus",
-                          "iconFontFamily": "lucide",
-                          "fill": "#6B6B6B"
+                          "type": "frame",
+                          "id": "fhhwL",
+                          "name": "Card1 Header",
+                          "width": "fill_container",
+                          "gap": 12,
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "NgEYV",
+                              "name": "Avatar 1",
+                              "width": 40,
+                              "height": 40,
+                              "fill": "#C67A52",
+                              "cornerRadius": 12,
+                              "justifyContent": "center",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "ScGMX",
+                                  "name": "avatarLetter1",
+                                  "fill": "#FFFFFF",
+                                  "content": "PA",
+                                  "fontFamily": "IBM Plex Sans",
+                                  "fontSize": 15,
+                                  "fontWeight": "600"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "fQsrh",
+                              "name": "Card1 Header Info",
+                              "width": "fill_container",
+                              "layout": "vertical",
+                              "gap": 2,
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "o0utT",
+                                  "name": "metric1Label",
+                                  "fill": "#2C2C2C",
+                                  "content": "Project Alpha",
+                                  "fontFamily": "IBM Plex Sans",
+                                  "fontSize": 14,
+                                  "fontWeight": "600"
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "48Ga3",
+                                  "name": "Active Badge 1",
+                                  "fill": "#E8F5E9",
+                                  "cornerRadius": 6,
+                                  "gap": 4,
+                                  "padding": [
+                                    2,
+                                    6
+                                  ],
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "type": "ellipse",
+                                      "id": "oFtOk",
+                                      "name": "activeDot1",
+                                      "fill": "#5A9E6F",
+                                      "width": 6,
+                                      "height": 6
+                                    },
+                                    {
+                                      "type": "text",
+                                      "id": "tu0xs",
+                                      "name": "badgeText1",
+                                      "fill": "#5A9E6F",
+                                      "content": "Active",
+                                      "fontFamily": "IBM Plex Sans",
+                                      "fontSize": 10,
+                                      "fontWeight": "500"
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "text",
+                          "id": "jzYTA",
+                          "name": "metric1Value",
+                          "fill": "#6B6B6B",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "AI-native project management platform for agent collaboration",
+                          "lineHeight": 1.4,
+                          "fontFamily": "IBM Plex Sans",
+                          "fontSize": 12,
+                          "fontWeight": "normal"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "t4c77",
+                          "name": "Progress Section 1",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "gap": 6,
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "NrrQM",
+                              "name": "Prog Header 1",
+                              "width": "fill_container",
+                              "justifyContent": "space_between",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "wlLuV",
+                                  "name": "progLabel1",
+                                  "fill": "#9A9A9A",
+                                  "content": "Task progress",
+                                  "fontFamily": "IBM Plex Sans",
+                                  "fontSize": 11,
+                                  "fontWeight": "normal"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "UEg5y",
+                                  "name": "progPct1",
+                                  "fill": "#C67A52",
+                                  "content": "67%",
+                                  "fontFamily": "IBM Plex Sans",
+                                  "fontSize": 11,
+                                  "fontWeight": "600"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "qKtc1",
+                              "name": "Track 1",
+                              "width": "fill_container",
+                              "height": 6,
+                              "fill": "#F5F2EC",
+                              "cornerRadius": 3,
+                              "children": [
+                                {
+                                  "type": "rectangle",
+                                  "cornerRadius": 3,
+                                  "id": "SAhqf",
+                                  "name": "Bar 1",
+                                  "fill": "#C67A52",
+                                  "width": 340,
+                                  "height": 6
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "6Z1l8",
+                          "name": "Project Stats",
+                          "gap": 12,
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "RD1NU",
+                              "gap": 3,
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "zXiq5",
+                                  "fill": "#2C2C2C",
+                                  "content": "12",
+                                  "fontFamily": "IBM Plex Sans",
+                                  "fontSize": 13,
+                                  "fontWeight": "600"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "ZBrtn",
+                                  "fill": "#9A9A9A",
+                                  "content": "tasks",
+                                  "fontFamily": "IBM Plex Sans",
+                                  "fontSize": 11,
+                                  "fontWeight": "normal"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "MZkzP",
+                              "gap": 3,
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "TRNc9",
+                                  "fill": "#C67A52",
+                                  "content": "3",
+                                  "fontFamily": "IBM Plex Sans",
+                                  "fontSize": 13,
+                                  "fontWeight": "600"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "g6x5m",
+                                  "fill": "#9A9A9A",
+                                  "content": "proposals",
+                                  "fontFamily": "IBM Plex Sans",
+                                  "fontSize": 11,
+                                  "fontWeight": "normal"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "text",
+                          "id": "xxqfg",
+                          "name": "updated1",
+                          "fill": "#9A9A9A",
+                          "content": "Updated 2 hours ago",
+                          "fontFamily": "IBM Plex Sans",
+                          "fontSize": 11,
+                          "fontWeight": "normal"
                         }
                       ]
                     },
                     {
-                      "type": "text",
-                      "id": "XOkKw",
-                      "name": "metric4Label",
-                      "fill": "#6B6B6B",
-                      "content": "Create New Project",
-                      "fontFamily": "IBM Plex Sans",
-                      "fontSize": 14,
-                      "fontWeight": "500"
+                      "type": "frame",
+                      "id": "2NYMI",
+                      "name": "Project Card 2",
+                      "width": "fill_container",
+                      "fill": "#FFFFFF",
+                      "cornerRadius": 16,
+                      "stroke": {
+                        "align": "inside",
+                        "thickness": 1,
+                        "fill": "#E5E2DC"
+                      },
+                      "layout": "vertical",
+                      "gap": 14,
+                      "padding": 20,
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "L6JHA",
+                          "name": "Card2 Header",
+                          "width": "fill_container",
+                          "gap": 12,
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "1l6hi",
+                              "name": "Avatar 2",
+                              "width": 40,
+                              "height": 40,
+                              "fill": "#1976D2",
+                              "cornerRadius": 12,
+                              "justifyContent": "center",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "N0Kcq",
+                                  "name": "avatarLetter2",
+                                  "fill": "#FFFFFF",
+                                  "content": "EC",
+                                  "fontFamily": "IBM Plex Sans",
+                                  "fontSize": 15,
+                                  "fontWeight": "600"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "m8LIU",
+                              "name": "Card2 Header Info",
+                              "width": "fill_container",
+                              "layout": "vertical",
+                              "gap": 2,
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "3NMXw",
+                                  "name": "metric2Label",
+                                  "fill": "#2C2C2C",
+                                  "content": "E-Commerce Platform",
+                                  "fontFamily": "IBM Plex Sans",
+                                  "fontSize": 14,
+                                  "fontWeight": "600"
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "gaiVC",
+                                  "name": "Active Badge 2",
+                                  "fill": "#E8F5E9",
+                                  "cornerRadius": 6,
+                                  "gap": 4,
+                                  "padding": [
+                                    2,
+                                    6
+                                  ],
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "type": "ellipse",
+                                      "id": "NaD0U",
+                                      "name": "activeDot2",
+                                      "fill": "#5A9E6F",
+                                      "width": 6,
+                                      "height": 6
+                                    },
+                                    {
+                                      "type": "text",
+                                      "id": "TmTLM",
+                                      "name": "badgeText2",
+                                      "fill": "#5A9E6F",
+                                      "content": "Active",
+                                      "fontFamily": "IBM Plex Sans",
+                                      "fontSize": 10,
+                                      "fontWeight": "500"
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "text",
+                          "id": "uZEtJ",
+                          "name": "metric2Value",
+                          "fill": "#6B6B6B",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "Next-gen shopping experience with AI recommendations",
+                          "lineHeight": 1.4,
+                          "fontFamily": "IBM Plex Sans",
+                          "fontSize": 12,
+                          "fontWeight": "normal"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "RMNJY",
+                          "name": "Progress Section 2",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "gap": 6,
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "TykuR",
+                              "name": "Prog Header 2",
+                              "width": "fill_container",
+                              "justifyContent": "space_between",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "T7FLk",
+                                  "name": "progLabel2",
+                                  "fill": "#9A9A9A",
+                                  "content": "Task progress",
+                                  "fontFamily": "IBM Plex Sans",
+                                  "fontSize": 11,
+                                  "fontWeight": "normal"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "wbUPI",
+                                  "name": "progPct2",
+                                  "fill": "#C67A52",
+                                  "content": "43%",
+                                  "fontFamily": "IBM Plex Sans",
+                                  "fontSize": 11,
+                                  "fontWeight": "600"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "Jw0VW",
+                              "name": "Track 2",
+                              "width": "fill_container",
+                              "height": 6,
+                              "fill": "#F5F2EC",
+                              "cornerRadius": 3,
+                              "children": [
+                                {
+                                  "type": "rectangle",
+                                  "cornerRadius": 3,
+                                  "id": "QuoPg",
+                                  "name": "Bar 2",
+                                  "fill": "#C67A52",
+                                  "width": 220,
+                                  "height": 6
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "taaIc",
+                          "name": "Project Stats",
+                          "gap": 12,
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "Hza2S",
+                              "gap": 3,
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "wlii2",
+                                  "fill": "#2C2C2C",
+                                  "content": "28",
+                                  "fontFamily": "IBM Plex Sans",
+                                  "fontSize": 13,
+                                  "fontWeight": "600"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "H9MiN",
+                                  "fill": "#9A9A9A",
+                                  "content": "tasks",
+                                  "fontFamily": "IBM Plex Sans",
+                                  "fontSize": 11,
+                                  "fontWeight": "normal"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "jfJ9x",
+                              "gap": 3,
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "Y2P73",
+                                  "fill": "#C67A52",
+                                  "content": "1",
+                                  "fontFamily": "IBM Plex Sans",
+                                  "fontSize": 13,
+                                  "fontWeight": "600"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "wSkPD",
+                                  "fill": "#9A9A9A",
+                                  "content": "proposals",
+                                  "fontFamily": "IBM Plex Sans",
+                                  "fontSize": 11,
+                                  "fontWeight": "normal"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "text",
+                          "id": "ZosVh",
+                          "name": "updated2",
+                          "fill": "#9A9A9A",
+                          "content": "Updated yesterday",
+                          "fontFamily": "IBM Plex Sans",
+                          "fontSize": 11,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "gsAOH",
+                  "name": "Grid Row 2",
+                  "width": "fill_container",
+                  "gap": 16,
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "42jTC",
+                      "name": "Project Card 3",
+                      "width": "fill_container",
+                      "fill": "#FFFFFF",
+                      "cornerRadius": 16,
+                      "stroke": {
+                        "align": "inside",
+                        "thickness": 1,
+                        "fill": "#E5E2DC"
+                      },
+                      "layout": "vertical",
+                      "gap": 14,
+                      "padding": 20,
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "9Ygir",
+                          "name": "Card3 Header",
+                          "width": "fill_container",
+                          "gap": 12,
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "oJdoT",
+                              "name": "Avatar 3",
+                              "width": 40,
+                              "height": 40,
+                              "fill": "#5A9E6F",
+                              "cornerRadius": 12,
+                              "justifyContent": "center",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "UACWE",
+                                  "name": "avatarLetter3",
+                                  "fill": "#FFFFFF",
+                                  "content": "MB",
+                                  "fontFamily": "IBM Plex Sans",
+                                  "fontSize": 15,
+                                  "fontWeight": "600"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "2G0m1",
+                              "name": "Card3 Header Info",
+                              "width": "fill_container",
+                              "layout": "vertical",
+                              "gap": 2,
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "xwsSs",
+                                  "name": "metric3Label",
+                                  "fill": "#2C2C2C",
+                                  "content": "Mobile Banking App",
+                                  "fontFamily": "IBM Plex Sans",
+                                  "fontSize": 14,
+                                  "fontWeight": "600"
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "19NBC",
+                                  "name": "Active Badge 3",
+                                  "fill": "#E8F5E9",
+                                  "cornerRadius": 6,
+                                  "gap": 4,
+                                  "padding": [
+                                    2,
+                                    6
+                                  ],
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "type": "ellipse",
+                                      "id": "ta8Ji",
+                                      "name": "activeDot3",
+                                      "fill": "#5A9E6F",
+                                      "width": 6,
+                                      "height": 6
+                                    },
+                                    {
+                                      "type": "text",
+                                      "id": "Jz7Cn",
+                                      "name": "badgeText3",
+                                      "fill": "#5A9E6F",
+                                      "content": "Active",
+                                      "fontFamily": "IBM Plex Sans",
+                                      "fontSize": 10,
+                                      "fontWeight": "500"
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "text",
+                          "id": "IkDUA",
+                          "name": "metric3Value",
+                          "fill": "#6B6B6B",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "Secure mobile banking with biometric authentication",
+                          "lineHeight": 1.4,
+                          "fontFamily": "IBM Plex Sans",
+                          "fontSize": 12,
+                          "fontWeight": "normal"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "6rkhN",
+                          "name": "Progress Section 3",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "gap": 6,
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "Kj20p",
+                              "name": "Prog Header 3",
+                              "width": "fill_container",
+                              "justifyContent": "space_between",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "7hW45",
+                                  "name": "progLabel3",
+                                  "fill": "#9A9A9A",
+                                  "content": "Task progress",
+                                  "fontFamily": "IBM Plex Sans",
+                                  "fontSize": 11,
+                                  "fontWeight": "normal"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "nC2Y4",
+                                  "name": "progPct3",
+                                  "fill": "#C67A52",
+                                  "content": "22%",
+                                  "fontFamily": "IBM Plex Sans",
+                                  "fontSize": 11,
+                                  "fontWeight": "600"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "Hb09Y",
+                              "name": "Track 3",
+                              "width": "fill_container",
+                              "height": 6,
+                              "fill": "#F5F2EC",
+                              "cornerRadius": 3,
+                              "children": [
+                                {
+                                  "type": "rectangle",
+                                  "cornerRadius": 3,
+                                  "id": "SQ3Dy",
+                                  "name": "Bar 3",
+                                  "fill": "#C67A52",
+                                  "width": 112,
+                                  "height": 6
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "dAFGQ",
+                          "name": "Project Stats",
+                          "gap": 12,
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "BEH5a",
+                              "gap": 3,
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "LERWr",
+                                  "fill": "#2C2C2C",
+                                  "content": "45",
+                                  "fontFamily": "IBM Plex Sans",
+                                  "fontSize": 13,
+                                  "fontWeight": "600"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "0qUdX",
+                                  "fill": "#9A9A9A",
+                                  "content": "tasks",
+                                  "fontFamily": "IBM Plex Sans",
+                                  "fontSize": 11,
+                                  "fontWeight": "normal"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "wDhML",
+                              "gap": 3,
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "25FFh",
+                                  "fill": "#9A9A9A",
+                                  "content": "0",
+                                  "fontFamily": "IBM Plex Sans",
+                                  "fontSize": 13,
+                                  "fontWeight": "600"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "gRpDF",
+                                  "fill": "#9A9A9A",
+                                  "content": "proposals",
+                                  "fontFamily": "IBM Plex Sans",
+                                  "fontSize": 11,
+                                  "fontWeight": "normal"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "text",
+                          "id": "iBa1L",
+                          "name": "updated3",
+                          "fill": "#9A9A9A",
+                          "content": "Updated 3 days ago",
+                          "fontFamily": "IBM Plex Sans",
+                          "fontSize": 11,
+                          "fontWeight": "normal"
+                        }
+                      ]
                     },
                     {
-                      "type": "text",
-                      "id": "L9RF4",
-                      "name": "metric4Value",
-                      "fill": "#9A9A9A",
-                      "textGrowth": "fixed-width",
+                      "type": "frame",
+                      "id": "Fij1m",
+                      "name": "New Project Card",
                       "width": "fill_container",
-                      "content": "Start a new project and invite your team",
-                      "lineHeight": 1.4,
-                      "fontFamily": "IBM Plex Sans",
-                      "fontSize": 12,
-                      "fontWeight": "normal"
+                      "fill": "#F5F2EC",
+                      "cornerRadius": 16,
+                      "stroke": {
+                        "align": "inside",
+                        "thickness": 1,
+                        "fill": "#D0CCC4"
+                      },
+                      "layout": "vertical",
+                      "gap": 12,
+                      "padding": [
+                        32,
+                        20
+                      ],
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "re1P9",
+                          "name": "Plus Icon Container",
+                          "width": 44,
+                          "height": 44,
+                          "fill": "#C67A5220",
+                          "cornerRadius": 12,
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon_font",
+                              "id": "q52fD",
+                              "width": 20,
+                              "height": 20,
+                              "iconFontName": "plus",
+                              "iconFontFamily": "lucide",
+                              "fill": "#C67A52"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "text",
+                          "id": "XOkKw",
+                          "name": "metric4Label",
+                          "fill": "#2C2C2C",
+                          "content": "Create New Project",
+                          "fontFamily": "IBM Plex Sans",
+                          "fontSize": 14,
+                          "fontWeight": "600"
+                        },
+                        {
+                          "type": "text",
+                          "id": "L9RF4",
+                          "name": "metric4Value",
+                          "fill": "#9A9A9A",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "Start a new project and invite your team",
+                          "lineHeight": 1.4,
+                          "fontFamily": "IBM Plex Sans",
+                          "fontSize": 12,
+                          "fontWeight": "normal"
+                        }
+                      ]
                     }
                   ]
                 }
@@ -5489,7 +6101,7 @@
       "y": 616,
       "name": "Chorus - New Project",
       "width": 1440,
-      "height": 1100,
+      "height": 1400,
       "fill": "#FAF8F4",
       "children": [
         {
@@ -5796,7 +6408,7 @@
                       "id": "OlkX1",
                       "name": "pageSubtitle",
                       "fill": "#6B6B6B",
-                      "content": "Set up your project and let PM Agent start analyzing",
+                      "content": "Set up your project details, then assign ideas to PM Agent later",
                       "fontFamily": "IBM Plex Sans",
                       "fontSize": 13,
                       "fontWeight": "normal"
@@ -5815,11 +6427,95 @@
               "children": [
                 {
                   "type": "frame",
+                  "id": "9gdP5",
+                  "name": "Welcome Banner",
+                  "width": "fill_container",
+                  "fill": "#C67A5210",
+                  "cornerRadius": 16,
+                  "stroke": {
+                    "align": "inside",
+                    "thickness": 1,
+                    "fill": "#C67A5230"
+                  },
+                  "gap": 16,
+                  "padding": [
+                    20,
+                    24
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "b3qHu",
+                      "name": "Tip Icon Box",
+                      "width": 44,
+                      "height": 44,
+                      "fill": "#C67A5220",
+                      "cornerRadius": 12,
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon_font",
+                          "id": "v4Zdz",
+                          "name": "tipIcon",
+                          "width": 22,
+                          "height": 22,
+                          "iconFontName": "rocket",
+                          "iconFontFamily": "lucide",
+                          "fill": "#C67A52"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "TSNGr",
+                      "name": "Tip Text",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": 4,
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "hp2yh",
+                          "name": "tipTitle",
+                          "fill": "#C67A52",
+                          "content": "Getting started",
+                          "fontFamily": "IBM Plex Sans",
+                          "fontSize": 14,
+                          "fontWeight": "600"
+                        },
+                        {
+                          "type": "text",
+                          "id": "ePCdt",
+                          "name": "tipDesc",
+                          "fill": "#6B6B6B",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "Fill in the basics below. Once created, you can add ideas and assign them to PM Agent for proposal generation.",
+                          "lineHeight": 1.5,
+                          "fontFamily": "IBM Plex Sans",
+                          "fontSize": 12,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
                   "id": "Hidwp",
                   "name": "Basic Info Card",
                   "width": "fill_container",
                   "fill": "#FFFFFF",
                   "cornerRadius": 16,
+                  "stroke": {
+                    "align": "inside",
+                    "thickness": {
+                      "left": 3
+                    },
+                    "fill": "#C67A52"
+                  },
                   "layout": "vertical",
                   "gap": 20,
                   "padding": 24,
@@ -5831,6 +6527,29 @@
                       "gap": 8,
                       "alignItems": "center",
                       "children": [
+                        {
+                          "type": "frame",
+                          "id": "AGzMq",
+                          "name": "Step 1 Badge",
+                          "width": 24,
+                          "height": 24,
+                          "fill": "#C67A52",
+                          "cornerRadius": 12,
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "YAeAa",
+                              "name": "step1num",
+                              "fill": "#FFFFFF",
+                              "content": "1",
+                              "fontFamily": "IBM Plex Sans",
+                              "fontSize": 11,
+                              "fontWeight": "600"
+                            }
+                          ]
+                        },
                         {
                           "type": "icon_font",
                           "id": "mTwbA",
@@ -5900,6 +6619,28 @@
                     },
                     {
                       "type": "frame",
+                      "id": "xf59y",
+                      "name": "Divider Container 1",
+                      "width": "fill_container",
+                      "padding": [
+                        0,
+                        0,
+                        0,
+                        48
+                      ],
+                      "children": [
+                        {
+                          "type": "rectangle",
+                          "id": "t51CY",
+                          "name": "Divider Line",
+                          "fill": "#E5E2DC",
+                          "width": "fill_container",
+                          "height": 1
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
                       "id": "Cjqzs",
                       "name": "Description Field",
                       "width": "fill_container",
@@ -5953,6 +6694,13 @@
                   "width": "fill_container",
                   "fill": "#FFFFFF",
                   "cornerRadius": 16,
+                  "stroke": {
+                    "align": "inside",
+                    "thickness": {
+                      "left": 3
+                    },
+                    "fill": "#C67A52"
+                  },
                   "layout": "vertical",
                   "gap": 16,
                   "padding": 24,
@@ -5972,6 +6720,29 @@
                           "gap": 8,
                           "alignItems": "center",
                           "children": [
+                            {
+                              "type": "frame",
+                              "id": "YBBBz",
+                              "name": "Step 2 Badge",
+                              "width": 24,
+                              "height": 24,
+                              "fill": "#C67A52",
+                              "cornerRadius": 12,
+                              "justifyContent": "center",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "PTbC8",
+                                  "name": "step2num",
+                                  "fill": "#FFFFFF",
+                                  "content": "2",
+                                  "fontFamily": "IBM Plex Sans",
+                                  "fontSize": 11,
+                                  "fontWeight": "600"
+                                }
+                              ]
+                            },
                             {
                               "type": "icon_font",
                               "id": "xP2U9",
@@ -6090,6 +6861,13 @@
                   "width": "fill_container",
                   "fill": "#FFFFFF",
                   "cornerRadius": 16,
+                  "stroke": {
+                    "align": "inside",
+                    "thickness": {
+                      "left": 3
+                    },
+                    "fill": "#C67A52"
+                  },
                   "layout": "vertical",
                   "gap": 16,
                   "padding": 24,
@@ -6109,6 +6887,29 @@
                           "gap": 8,
                           "alignItems": "center",
                           "children": [
+                            {
+                              "type": "frame",
+                              "id": "c7E9w",
+                              "name": "Step 3 Badge",
+                              "width": 24,
+                              "height": 24,
+                              "fill": "#C67A52",
+                              "cornerRadius": 12,
+                              "justifyContent": "center",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "9NP4j",
+                                  "name": "step3num",
+                                  "fill": "#FFFFFF",
+                                  "content": "3",
+                                  "fontFamily": "IBM Plex Sans",
+                                  "fontSize": 11,
+                                  "fontWeight": "600"
+                                }
+                              ]
+                            },
                             {
                               "type": "icon_font",
                               "id": "Bhzkt",
@@ -6159,12 +6960,12 @@
                       "name": "Upload Area",
                       "width": "fill_container",
                       "height": 120,
-                      "fill": "#FAF8F4",
-                      "cornerRadius": 12,
+                      "fill": "#F5F2EC",
+                      "cornerRadius": 16,
                       "stroke": {
                         "align": "inside",
                         "thickness": 1,
-                        "fill": "#E5E0D8"
+                        "fill": "#D0CCC4"
                       },
                       "layout": "vertical",
                       "gap": 8,
@@ -6196,7 +6997,7 @@
                           "id": "lwSwf",
                           "name": "uploadHint",
                           "fill": "#9A9A9A",
-                          "content": "PDF, Markdown, Word documents up to 10MB",
+                          "content": "Markdown (.md) documents",
                           "fontFamily": "IBM Plex Sans",
                           "fontSize": 11,
                           "fontWeight": "normal"
@@ -6216,8 +7017,13 @@
                           "id": "ORnKA",
                           "name": "File Item",
                           "width": "fill_container",
-                          "fill": "#FAF8F4",
-                          "cornerRadius": 8,
+                          "fill": "#F5F2EC",
+                          "cornerRadius": 12,
+                          "stroke": {
+                            "align": "inside",
+                            "thickness": 1,
+                            "fill": "#E5E2DC"
+                          },
                           "padding": [
                             10,
                             12
@@ -6272,12 +7078,28 @@
                 },
                 {
                   "type": "frame",
+                  "id": "195y9",
+                  "name": "Action Divider",
+                  "width": "fill_container",
+                  "children": [
+                    {
+                      "type": "rectangle",
+                      "id": "FB3lG",
+                      "name": "Divider Line",
+                      "fill": "#E5E2DC",
+                      "width": "fill_container",
+                      "height": 1
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
                   "id": "c0mol",
                   "name": "Action Bar",
                   "width": "fill_container",
                   "gap": 12,
                   "padding": [
-                    8,
+                    16,
                     0
                   ],
                   "alignItems": "center",
@@ -6286,7 +7108,7 @@
                       "type": "frame",
                       "id": "DlQ5b",
                       "name": "Cancel Button",
-                      "cornerRadius": 8,
+                      "cornerRadius": 12,
                       "stroke": {
                         "align": "inside",
                         "thickness": 1,
@@ -6294,8 +7116,8 @@
                       },
                       "gap": 6,
                       "padding": [
-                        10,
-                        20
+                        12,
+                        24
                       ],
                       "alignItems": "center",
                       "children": [
@@ -6316,11 +7138,11 @@
                       "id": "fXe0b",
                       "name": "Create Button",
                       "fill": "#C67A52",
-                      "cornerRadius": 8,
+                      "cornerRadius": 12,
                       "gap": 8,
                       "padding": [
-                        10,
-                        20
+                        12,
+                        24
                       ],
                       "alignItems": "center",
                       "children": [
@@ -6330,7 +7152,7 @@
                           "name": "createIcon",
                           "width": 14,
                           "height": 14,
-                          "iconFontName": "sparkles",
+                          "iconFontName": "plus",
                           "iconFontFamily": "lucide",
                           "fill": "#FFFFFF"
                         },
@@ -6339,7 +7161,7 @@
                           "id": "GtUzV",
                           "name": "createText",
                           "fill": "#FFFFFF",
-                          "content": "Create & Start PM Agent",
+                          "content": "Create Project",
                           "fontFamily": "IBM Plex Sans",
                           "fontSize": 13,
                           "fontWeight": "500"
