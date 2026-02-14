@@ -196,10 +196,13 @@ export async function getProjectStats(companyUuid: string, projectUuid: string) 
   const ideasTotal = ideasStats.reduce((sum, s) => sum + s._count, 0);
   const ideasOpen = ideaStatusMap.get("open") || 0;
 
-  // 解析 Tasks 统计
+  // 解析 Tasks 统计 (per-status for pipeline visualization)
   const taskStatusMap = new Map(tasksStats.map((s) => [s.status, s._count]));
   const tasksTotal = tasksStats.reduce((sum, s) => sum + s._count, 0);
   const tasksInProgress = taskStatusMap.get("in_progress") || 0;
+  const tasksTodo = (taskStatusMap.get("open") || 0) + (taskStatusMap.get("assigned") || 0);
+  const tasksToVerify = taskStatusMap.get("to_verify") || 0;
+  const tasksDone = (taskStatusMap.get("done") || 0) + (taskStatusMap.get("closed") || 0);
 
   // 解析 Proposals 统计
   const proposalStatusMap = new Map(proposalsStats.map((s) => [s.status, s._count]));
@@ -208,7 +211,7 @@ export async function getProjectStats(companyUuid: string, projectUuid: string) 
 
   return {
     ideas: { total: ideasTotal, open: ideasOpen },
-    tasks: { total: tasksTotal, inProgress: tasksInProgress },
+    tasks: { total: tasksTotal, inProgress: tasksInProgress, todo: tasksTodo, toVerify: tasksToVerify, done: tasksDone },
     proposals: { total: proposalsTotal, pending: proposalsPending },
     documents: { total: documentsCount },
   };

@@ -138,7 +138,7 @@ export default function NewProjectPage() {
 
       if (result.success && result.projectUuid) {
         localStorage.setItem("currentProjectUuid", result.projectUuid);
-        router.push(`/projects/${result.projectUuid}`);
+        router.push(`/projects/${result.projectUuid}/dashboard`);
       } else {
         setError(result.error || t("projects.createFailed"));
       }

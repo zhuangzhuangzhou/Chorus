@@ -162,7 +162,7 @@ export default async function ProjectsPage() {
               const initials = getProjectInitials(project.name);
               const avatarColor = getAvatarColor(project.name);
               return (
-                <Link key={project.uuid} href={`/projects/${project.uuid}`}>
+                <Link key={project.uuid} href={`/projects/${project.uuid}/dashboard`}>
                   <Card className="group cursor-pointer rounded-2xl border-[#E5E2DC] p-6 shadow-none transition-all hover:border-[#C67A52] hover:shadow-md">
                     {/* Header: Avatar + Name + Badge */}
                     <div className="mb-3 flex items-start gap-3">

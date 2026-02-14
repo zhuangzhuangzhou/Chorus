@@ -29,9 +29,10 @@ interface TaskViewToggleProps {
   projectUuid: string;
   initialTasks: Task[];
   currentUserUuid: string;
+  initialSelectedTaskUuid?: string | null;
 }
 
-export function TaskViewToggle({ projectUuid, initialTasks, currentUserUuid }: TaskViewToggleProps) {
+export function TaskViewToggle({ projectUuid, initialTasks, currentUserUuid, initialSelectedTaskUuid }: TaskViewToggleProps) {
   const t = useTranslations();
   const [view, setView] = useState<"kanban" | "dag">("kanban");
   const [selectedTaskUuid, setSelectedTaskUuid] = useState<string | null>(null);
@@ -97,6 +98,7 @@ export function TaskViewToggle({ projectUuid, initialTasks, currentUserUuid }: T
           projectUuid={projectUuid}
           initialTasks={initialTasks}
           currentUserUuid={currentUserUuid}
+          initialSelectedTaskUuid={initialSelectedTaskUuid}
         />
       ) : (
         <div className="flex flex-1 flex-col">

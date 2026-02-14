@@ -63,7 +63,7 @@ export async function updateProject(
 
   // Revalidate
   revalidatePath("/projects");
-  revalidatePath(`/projects/${uuid}`);
+  revalidatePath(`/projects/${uuid}/dashboard`);
 
   return { success: true, data: { uuid: project.uuid } };
 }

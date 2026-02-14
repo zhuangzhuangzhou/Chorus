@@ -11,15 +11,17 @@ import { TaskViewToggle } from "./task-view-toggle";
 
 interface PageProps {
   params: Promise<{ uuid: string }>;
+  searchParams: Promise<{ task?: string }>;
 }
 
-export default async function TasksPage({ params }: PageProps) {
+export default async function TasksPage({ params, searchParams }: PageProps) {
   const auth = await getServerAuthContext();
   if (!auth) {
     redirect("/login");
   }
 
   const { uuid: projectUuid } = await params;
+  const { task: initialTaskUuid } = await searchParams;
   const t = await getTranslations();
 
   // 验证项目存在
@@ -61,7 +63,7 @@ export default async function TasksPage({ params }: PageProps) {
       </div>
 
       {/* Task Views: Kanban / DAG */}
-      <TaskViewToggle projectUuid={projectUuid} initialTasks={tasks} currentUserUuid={auth.actorUuid} />
+      <TaskViewToggle projectUuid={projectUuid} initialTasks={tasks} currentUserUuid={auth.actorUuid} initialSelectedTaskUuid={initialTaskUuid} />
     </div>
   );
 }

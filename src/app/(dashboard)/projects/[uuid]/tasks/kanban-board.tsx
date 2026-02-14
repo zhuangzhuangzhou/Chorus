@@ -37,6 +37,7 @@ interface KanbanBoardProps {
   projectUuid: string;
   initialTasks: Task[];
   currentUserUuid: string;
+  initialSelectedTaskUuid?: string | null;
 }
 
 // 状态颜色配置
@@ -67,11 +68,11 @@ const columnConfigs = [
   { id: "done", labelKey: "done", statuses: ["done", "closed"] },
 ];
 
-export function KanbanBoard({ projectUuid, initialTasks, currentUserUuid }: KanbanBoardProps) {
+export function KanbanBoard({ projectUuid, initialTasks, currentUserUuid, initialSelectedTaskUuid }: KanbanBoardProps) {
   const t = useTranslations();
   const router = useRouter();
   const [tasks, setTasks] = useState<Task[]>(initialTasks);
-  const [selectedTaskUuid, setSelectedTaskUuid] = useState<string | null>(null);
+  const [selectedTaskUuid, setSelectedTaskUuid] = useState<string | null>(initialSelectedTaskUuid ?? null);
   const [workerCounts, setWorkerCounts] = useState<Record<string, number>>({});
   useRealtimeRefresh();
 
