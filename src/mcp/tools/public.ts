@@ -469,6 +469,33 @@ export function registerPublicTools(server: McpServer, auth: AgentAuthContext) {
     }
   );
 
+  // chorus_get_unblocked_tasks - 获取已解锁的任务（所有依赖已完成）
+  server.registerTool(
+    "chorus_get_unblocked_tasks",
+    {
+      description: "Get tasks that are ready to start — status is open/assigned and all dependencies are resolved (done/to_verify). Useful for discovering what work can begin next after a task completes.",
+      inputSchema: z.object({
+        projectUuid: z.string().describe("Project UUID"),
+      }),
+    },
+    async ({ projectUuid }) => {
+      // Verify project exists
+      const project = await projectService.getProjectByUuid(auth.companyUuid, projectUuid);
+      if (!project) {
+        return { content: [{ type: "text", text: "项目不存在" }], isError: true };
+      }
+
+      const { tasks, total } = await taskService.getUnblockedTasks({
+        companyUuid: auth.companyUuid,
+        projectUuid,
+      });
+
+      return {
+        content: [{ type: "text", text: JSON.stringify({ tasks, total }, null, 2) }],
+      };
+    }
+  );
+
   // chorus_get_comments - 获取评论列表
   server.registerTool(
     "chorus_get_comments",

@@ -53,8 +53,7 @@ COPY --from=builder /app/package.json /app/pnpm-lock.yaml ./
 COPY --from=builder /app/.next ./.next
 COPY --from=builder /app/public ./public
 
-# Copy skill files to public/skill for serving at /skill/ path
-RUN cp -r ./public/chorus-plugin/skills/chorus-skill ./public/skill
+# public/skill/ already exists as standalone skill docs (served at /skill/ path)
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/prisma.config.ts ./

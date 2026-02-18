@@ -65,11 +65,11 @@ export CHORUS_API_KEY="cho_your_api_key_here"
 
 ### 2. Install Skill + Plugin
 
-See the install instructions in `public/chorus-plugin/skills/chorus-skill/SKILL.md` — the "Install Chorus Plugin" section downloads all files and sets up the local directory structure.
+See the install instructions in `public/chorus-plugin/skills/chorus/SKILL.md` for skill details. The skill is bundled with the plugin and delivered automatically with plugin updates.
 
 For **local development** within this repo, the skill is already symlinked:
 ```
-.claude/skills/chorus-skill → ../../public/chorus-plugin/skills/chorus-skill
+.claude/skills/chorus → ../../public/chorus-plugin/skills/chorus
 ```
 
 ### 3. Load the Plugin
@@ -101,14 +101,14 @@ public/chorus-plugin/                # Plugin root
 │   ├── on-subagent-stop.sh         # SubagentStop: checkout tasks + close + cleanup
 │   ├── on-teammate-idle.sh         # TeammateIdle: heartbeat
 │   └── on-task-completed.sh        # TaskCompleted: checkout via metadata bridge
-├── skills/chorus-skill/             # Skill files
+├── skills/chorus/                   # Skill files
 │   ├── SKILL.md
 │   ├── package.json
 │   └── references/                  # Role-specific workflow docs
 └── .mcp.json
 
 .claude/skills/
-└── chorus-skill → ../../public/chorus-plugin/skills/chorus-skill  (symlink, local dev)
+└── chorus → ../../public/chorus-plugin/skills/chorus  (symlink, local dev)
 
 Runtime state (gitignored):
 .chorus/

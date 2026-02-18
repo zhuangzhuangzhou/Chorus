@@ -570,6 +570,68 @@ export async function getTaskDependencies(
   };
 }
 
+// 获取已解锁的任务（所有依赖都已完成）
+export async function getUnblockedTasks({
+  companyUuid,
+  projectUuid,
+}: {
+  companyUuid: string;
+  projectUuid: string;
+}): Promise<{ tasks: TaskResponse[]; total: number }> {
+  const where = {
+    projectUuid,
+    companyUuid,
+    status: { in: ["open", "assigned"] },
+    // Exclude tasks that have any dependency NOT in done/to_verify
+    NOT: {
+      dependsOn: {
+        some: {
+          dependsOn: {
+            status: { notIn: ["done", "to_verify"] },
+          },
+        },
+      },
+    },
+  };
+
+  const [rawTasks, total] = await Promise.all([
+    prisma.task.findMany({
+      where,
+      orderBy: [{ priority: "desc" }, { createdAt: "desc" }],
+      select: {
+        uuid: true,
+        title: true,
+        description: true,
+        status: true,
+        priority: true,
+        storyPoints: true,
+        acceptanceCriteria: true,
+        assigneeType: true,
+        assigneeUuid: true,
+        assignedAt: true,
+        assignedByUuid: true,
+        proposalUuid: true,
+        createdByUuid: true,
+        createdAt: true,
+        updatedAt: true,
+        ...dependencyInclude,
+      },
+    }),
+    prisma.task.count({ where }),
+  ]);
+
+  const commentCounts = await batchCommentCounts(
+    companyUuid,
+    "task",
+    rawTasks.map((t) => t.uuid),
+  );
+
+  const tasks = await Promise.all(
+    rawTasks.map((t) => formatTaskResponse(t, commentCounts[t.uuid] ?? 0)),
+  );
+  return { tasks, total };
+}
+
 // 获取项目内所有任务依赖关系（DAG 可视化）
 export async function getProjectTaskDependencies(
   companyUuid: string,

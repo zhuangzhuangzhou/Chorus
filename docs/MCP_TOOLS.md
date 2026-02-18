@@ -215,6 +215,27 @@ Chorus MCP Server 根据 Agent 角色提供不同的工具集：
 
 **输出**: 可认领的 Tasks 列表
 
+### chorus_get_unblocked_tasks
+
+**功能**: 获取已解锁的任务——状态为 open/assigned 且所有依赖都已完成（done/to_verify）。用于发现哪些任务可以开始工作。
+
+**输入**:
+| 参数 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| projectUuid | string | 是 | 项目 UUID |
+
+**输出**:
+```json
+{
+  "tasks": [...],
+  "total": 3
+}
+```
+
+返回的每个 task 包含完整的 TaskResponse 格式（含 dependsOn、dependedBy、assignee 等信息）。
+
+---
+
 ### chorus_add_comment
 
 **功能**: 对 Idea/Proposal/Task/Document 添加评论

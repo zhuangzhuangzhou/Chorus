@@ -154,75 +154,26 @@ Rules:
 - If a needed component doesn't exist yet, add it via `npx shadcn@latest add <component>` — do not create custom implementations
 - Follow existing component usage patterns in the codebase for consistency
 
-## Skill Documentation
+## Skill & Plugin Documentation
 
-Files under `public/skill/` are served as static assets and consumed by agents as MCP Skill references. **All skill docs must be written in English.** These include:
-- `SKILL.md` — Main overview and role routing
-- `references/00-common-tools.md` — Shared tools reference
-- `references/01-setup.md` — MCP configuration guide
-- `references/02-pm-workflow.md` — PM Agent workflow
-- `references/03-developer-workflow.md` — Developer Agent workflow
-- `references/04-admin-workflow.md` — Admin Agent workflow
-- `references/05-session-sub-agent.md` — Session & Sub-Agent (Swarm Mode) guide
+Chorus has two sets of skill documentation. **All skill docs must be written in English.**
 
-When adding new MCP tools, update both `docs/MCP_TOOLS.md` (internal reference) and the relevant skill docs under `public/skill/`.
+| Location | Purpose |
+|----------|---------|
+| `public/skill/` | Standalone skill — served as static assets at `/skill/`, consumed by any agent via curl download |
+| `public/chorus-plugin/skills/chorus/` | Plugin-embedded skill — bundled with the Chorus Plugin for Claude Code, includes plugin-specific session automation |
 
-## MCP Tool Roles
+When adding new MCP tools, update:
+1. `docs/MCP_TOOLS.md` (internal reference)
+2. Relevant skill docs in **both** `public/skill/` and `public/chorus-plugin/skills/chorus/`
 
-| Scope | Who | Prefix |
-|-------|-----|--------|
-| Public | All agents | `chorus_get_*`, `chorus_list_*`, `chorus_checkin`, `chorus_add_comment` |
-| Session | All agents | `chorus_create_session`, `chorus_list_sessions`, `chorus_reopen_session`, ... |
-| Developer | developer_agent | `chorus_claim_task`, `chorus_update_task`, `chorus_report_work`, ... |
-| PM | pm_agent | `chorus_pm_create_proposal`, `chorus_pm_create_tasks`, `chorus_claim_idea`, ... |
-| Admin | admin_agent | `chorus_admin_create_project`, `chorus_admin_verify_task`, ... |
+MCP tool roles, agent workflows, session management, and AI-DLC lifecycle are all documented in the skill files — not here. Refer to the skill docs for those details.
 
-## Mandatory Workflow Rules
+## Development Conventions
 
-### 1. Update design.pen on Every Feature
+### Update design.pen on Every Feature
 
 When implementing any user-facing feature or UI change, you **must** update `docs/design.pen` to reflect the new or modified screens/components. Use the Pencil MCP tools (`get_editor_state`, `open_document`, `batch_design`, `get_screenshot`, etc.) to read and write `.pen` files — never use Read/Grep directly on `.pen` files as their contents are encrypted.
-
-### 2. Full Lifecycle Tracking in Chorus
-
-Every requirement — from idea to completion — must be tracked in Chorus through its full lifecycle:
-
-- **Create an Idea** for the requirement (or use an existing one)
-- **Create a Proposal** with document drafts (PRD) and task drafts. **Always set up task dependency DAG** using `dependsOnDraftUuids` in task drafts — e.g., frontend tasks depend on backend API tasks, integration tests depend on both. Tasks without proper dependencies will be worked on in parallel, which may cause failures if there are implicit ordering requirements.
-- **Approve the Proposal** to materialize tasks (dependencies are preserved)
-- **Claim and work on Tasks**, reporting progress with `chorus_report_work`. Respect the DAG — only start a task when its dependencies are done.
-- **Submit for verification** when done, then Admin verifies
-
-For large features, create a **dedicated Chorus Project** to isolate tracking. Use `chorus_admin_create_project` to set one up, then create ideas and proposals within that project scope.
-
-### 3. Developer Sessions are Mandatory
-
-**All Developer agents MUST create a session and checkin to tasks** before starting work. This applies whether running as a single agent or as part of an Agent Team. The UI uses sessions to display which developer is actively working on which task (Kanban board worker badges, Task Detail panel, Settings page).
-
-**Single-agent Developer workflow:**
-- After `chorus_checkin()`, call `chorus_list_sessions` to check for reusable sessions. Reopen with `chorus_reopen_session` or create with `chorus_create_session`.
-- Before working on any task: call `chorus_session_checkin_task` with your sessionUuid.
-- Always pass `sessionUuid` to `chorus_update_task` and `chorus_report_work`.
-- When done with a task: call `chorus_session_checkout_task`.
-- When all work is complete: call `chorus_close_session`.
-
-**Multi-agent (Agent Team) workflow:**
-
-Team Lead responsibilities:
-- **Before spawning sub-agents**: Call `chorus_list_sessions` to check for reusable sessions. Reopen closed sessions with `chorus_reopen_session` instead of creating new ones.
-- **Create sessions**: Each sub-agent gets its own session via `chorus_create_session` with a descriptive name (e.g., "frontend-worker", "backend-worker"). Never share a session across multiple workers.
-- **Assign work**: Pass the Chorus task UUIDs and session UUID to each sub-agent when spawning. After that, **all task management is the sub-agent's responsibility** — the team lead does not checkin, move status, or report work on behalf of sub-agents.
-- **Monitor completion**: The team lead's ongoing role is to check that all Chorus tasks reach `to_verify` / `done` and no tasks are missed. Use `chorus_list_tasks` to verify status.
-- **Close sessions**: When sub-agents finish, close their sessions with `chorus_close_session`.
-
-Sub-Agent responsibilities (each sub-agent manages its own tasks end-to-end):
-- **Checkin to tasks**: When starting work on a task, call `chorus_session_checkin_task` with its own sessionUuid. Checkout when done.
-- **Move task status**: The sub-agent moves its own task through the lifecycle: `assigned → in_progress → to_verify`. The team lead must NOT move tasks on behalf of sub-agents.
-- **Pass sessionUuid**: When calling `chorus_report_work` or `chorus_update_task`, always include the `sessionUuid` parameter so activity is attributed to the correct sub-agent.
-- **Report work**: Call `chorus_report_work` to log progress and `chorus_submit_for_verify` when done.
-- **Heartbeat**: Long-running sub-agents should call `chorus_session_heartbeat` periodically (sessions become inactive after 1 hour without heartbeat).
-
-This ensures every action is traceable to the specific agent/sub-agent that performed it, visible in the Settings page, Kanban board worker badges, and Task Detail panel.
 
 ## Common Pitfalls
 

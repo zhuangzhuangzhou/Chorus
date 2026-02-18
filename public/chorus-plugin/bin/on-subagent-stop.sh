@@ -86,6 +86,43 @@ if [ -n "$AGENT_NAME" ] && [ -f "${SESSIONS_DIR}/${AGENT_NAME}.json" ]; then
   rm -f "${SESSIONS_DIR}/${AGENT_NAME}.json"
 fi
 
+# === Auto-dispatch: discover unblocked tasks ===
+UNBLOCKED_INFO=""
+if [ "$CLOSE_OK" = true ] && [ -n "$SESSION_DETAIL" ]; then
+  # Extract projectUuid from the session's checked-out tasks or session detail
+  PROJECT_UUID=""
+
+  # Try to get projectUuid from the tasks we just checked out
+  FIRST_TASK_UUID=$(echo "$SESSION_DETAIL" | jq -r '
+    (.checkins // .sessionTaskCheckins // [])[] | .taskUuid // empty
+  ' 2>/dev/null | head -1) || true
+
+  if [ -n "$FIRST_TASK_UUID" ]; then
+    TASK_DETAIL=$("$API" mcp-tool "chorus_get_task" "$(printf '{"taskUuid":"%s"}' "$FIRST_TASK_UUID")" 2>/dev/null) || true
+    if [ -n "$TASK_DETAIL" ]; then
+      PROJECT_UUID=$(echo "$TASK_DETAIL" | jq -r '.project.uuid // empty' 2>/dev/null) || true
+    fi
+  fi
+
+  if [ -n "$PROJECT_UUID" ]; then
+    UNBLOCKED_RESULT=$("$API" mcp-tool "chorus_get_unblocked_tasks" "$(printf '{"projectUuid":"%s"}' "$PROJECT_UUID")" 2>/dev/null) || true
+    if [ -n "$UNBLOCKED_RESULT" ]; then
+      UNBLOCKED_COUNT=$(echo "$UNBLOCKED_RESULT" | jq -r '.total // 0' 2>/dev/null) || true
+      if [ "${UNBLOCKED_COUNT:-0}" -gt 0 ]; then
+        UNBLOCKED_SUMMARY=$(echo "$UNBLOCKED_RESULT" | jq -r '
+          .tasks[] | "- [\(.status)] \(.title) (uuid: \(.uuid), priority: \(.priority))"
+        ' 2>/dev/null) || true
+        UNBLOCKED_INFO="
+=== UNBLOCKED TASKS (ready for assignment) ===
+${UNBLOCKED_COUNT} task(s) are now unblocked and ready to be claimed/assigned:
+${UNBLOCKED_SUMMARY}
+
+Use chorus_get_unblocked_tasks for full details. Consider assigning these to available agents."
+      fi
+    fi
+  fi
+fi
+
 # === Output ===
 DISPLAY_NAME="${AGENT_NAME:-${AGENT_ID:0:8}}"
 if [ "$CLOSE_OK" = true ]; then
@@ -93,8 +130,8 @@ if [ "$CLOSE_OK" = true ]; then
   if [ "$CHECKOUT_COUNT" -gt 0 ]; then
     USER_MSG="${USER_MSG} (auto-checkout ${CHECKOUT_COUNT} task(s))"
   fi
-  "$API" hook-output "$USER_MSG" \
-    "Chorus session ${SESSION_UUID} for sub-agent '${DISPLAY_NAME}' closed. ${CHECKOUT_COUNT} task(s) auto-checked-out. State and session file cleaned up."
+  CONTEXT_MSG="Chorus session ${SESSION_UUID} for sub-agent '${DISPLAY_NAME}' closed. ${CHECKOUT_COUNT} task(s) auto-checked-out. State and session file cleaned up.${UNBLOCKED_INFO}"
+  "$API" hook-output "$USER_MSG" "$CONTEXT_MSG"
 else
   "$API" hook-output \
     "Chorus: failed to close session for '${DISPLAY_NAME}'" \

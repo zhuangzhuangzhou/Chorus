@@ -4,6 +4,8 @@
 
 This guide explains how to run **Claude Code Agent Teams** (swarm mode) with Chorus for full work observability. In this setup, a Team Lead agent orchestrates multiple sub-agents, each working on Chorus tasks in parallel, with every action tracked through Chorus Sessions.
 
+The Chorus Plugin **fully automates** session lifecycle — sessions are created/reused on sub-agent spawn, heartbeats sent on idle, and sessions closed on sub-agent exit. The Team Lead focuses on work assignment, not session management.
+
 ### Two-Layer Architecture
 
 Claude Code Agent Teams and Chorus serve different purposes:
@@ -45,28 +47,6 @@ Every agent that works on Chorus tasks **must have its own separate Chorus Sessi
 
 ---
 
-## Two Session Management Modes
-
-Session lifecycle (create, heartbeat, close) can be managed in two ways:
-
-| | Plugin Mode (Recommended) | Manual Mode |
-|---|---|---|
-| **When to use** | Chorus Plugin is installed in Claude Code | No plugin (other tools, or plugin not available) |
-| **Session creation** | Auto by hook (SubagentStart) | Team Lead calls `chorus_create_session` |
-| **Session UUID discovery** | Sub-agent reads `.chorus/sessions/<name>.json` | Team Lead passes UUID in prompt |
-| **Heartbeat** | Auto by hook (TeammateIdle) | Sub-agent calls `chorus_report_work` with sessionUuid |
-| **Session close** | Auto by hook (SubagentStop) | Team Lead calls `chorus_close_session` |
-| **Task checkin/checkout** | Sub-agent does it (same in both modes) | Sub-agent does it (same in both modes) |
-
-**In both modes**, the sub-agent is responsible for:
-- `chorus_session_checkin_task` — before starting work on a task
-- `chorus_update_task` — move task to `in_progress` (with `sessionUuid`)
-- `chorus_report_work` — report progress (with `sessionUuid`)
-- `chorus_session_checkout_task` — when done with a task
-- `chorus_submit_for_verify` — submit for admin verification
-
----
-
 ## MCP Access for Sub-Agents
 
 Sub-agents spawned via Claude Code's `Task` tool can access Chorus MCP tools **if the MCP server is configured at the project level** (in `.claude/settings.json` or `.mcp.json`). This is the recommended setup.
@@ -90,9 +70,9 @@ If MCP is configured at the user level (`~/.claude/settings.json`), sub-agents m
 
 ---
 
-## Complete Workflow — Plugin Mode (Recommended)
+## Complete Workflow
 
-When the Chorus Plugin is installed, **session lifecycle is fully automated**. The Team Lead should focus on work assignment, not session management.
+Session lifecycle is fully automated by the Chorus Plugin. The Team Lead should focus on work assignment, not session management.
 
 ### Phase 1: Team Lead — Plan & Prepare
 
@@ -257,97 +237,6 @@ chorus_list_tasks({ projectUuid: "<project-uuid>" })
 
 ---
 
-## Complete Workflow — Manual Mode (Without Plugin)
-
-When the Chorus Plugin is **not installed** (e.g., using Moltbot or another tool), the Team Lead must manage session lifecycle manually.
-
-### Phase 1: Team Lead — Plan & Prepare
-
-```
-# 1. Check in to Chorus
-chorus_checkin()
-
-# 2. Understand the project and available tasks
-chorus_get_project({ projectUuid: "<project-uuid>" })
-chorus_list_tasks({ projectUuid: "<project-uuid>", status: "assigned" })
-
-# 3. Read task details to plan work distribution
-chorus_get_task({ taskUuid: "<task-A-uuid>" })
-chorus_get_task({ taskUuid: "<task-B-uuid>" })
-
-# 4. MUST check for reusable sessions before creating new ones
-chorus_list_sessions()
-
-# 5. Create one session per sub-agent (or reopen closed ones)
-#    If a session named "frontend-worker" exists and is closed → reopen it:
-chorus_reopen_session({ sessionUuid: "<existing-fe-session-uuid>" })
-#    Only create new if no matching session exists:
-chorus_create_session({ name: "frontend-worker", description: "Frontend component development" })
-# → Returns { uuid: "session-fe-uuid" }
-
-chorus_create_session({ name: "backend-worker", description: "Backend API development" })
-# → Returns { uuid: "session-be-uuid" }
-```
-
-### Phase 2: Team Lead — Create Claude Code Team & Spawn Sub-Agents
-
-In manual mode, session UUIDs must be passed directly in the prompt.
-
-```python
-# 1. Create a Claude Code team
-TeamCreate({ team_name: "feature-x", description: "Implementing feature X" })
-
-# 2. Create internal tasks for tracking
-TaskCreate({ subject: "Frontend: build user form", description: "chorus:task:<task-A-uuid>" })
-TaskCreate({ subject: "Backend: create API endpoints", description: "chorus:task:<task-B-uuid>" })
-
-# 3. Spawn sub-agents — pass BOTH session UUID and task UUID in the prompt
-Task({
-  subagent_type: "general-purpose",
-  team_name: "feature-x",
-  name: "frontend-worker",
-  prompt: """
-    You are a Developer Agent working with Chorus.
-
-    Your Chorus session UUID: session-fe-uuid
-    Your Chorus task UUID: task-A-uuid
-    Project UUID: project-uuid
-
-    IMPORTANT — Chorus workflow (do this FIRST before any coding):
-    1. chorus_session_checkin_task({ sessionUuid: "session-fe-uuid", taskUuid: "task-A-uuid" })
-    2. chorus_update_task({ taskUuid: "task-A-uuid", status: "in_progress", sessionUuid: "session-fe-uuid" })
-
-    Then implement the frontend user form component...
-
-    When done:
-    3. chorus_report_work({ taskUuid: "task-A-uuid", report: "...", sessionUuid: "session-fe-uuid" })
-    4. chorus_session_checkout_task({ sessionUuid: "session-fe-uuid", taskUuid: "task-A-uuid" })
-    5. chorus_submit_for_verify({ taskUuid: "task-A-uuid", summary: "..." })
-  """
-})
-```
-
-### Phase 3: Sub-Agent — Execute Work
-
-Same as Plugin mode, except:
-- Session UUID comes from the prompt (not from a session file)
-- Sub-agent should call `chorus_session_heartbeat` periodically for long-running work (no auto-heartbeat from plugin)
-
-### Phase 4: Team Lead — Monitor & Close
-
-```
-# 1. Periodically check Chorus task status
-chorus_list_tasks({ projectUuid: "<project-uuid>" })
-
-# 2. Close sub-agent sessions manually when they finish
-chorus_close_session({ sessionUuid: "session-fe-uuid" })
-chorus_close_session({ sessionUuid: "session-be-uuid" })
-
-# 3. Clean up Claude Code team
-```
-
----
-
 ## Handling Task Dependencies (DAG)
 
 When Chorus tasks have dependencies (Task B depends on Task A), the Team Lead must coordinate the execution order:
@@ -389,7 +278,7 @@ Task({
 
     For EACH task:
     - chorus_session_checkin_task → chorus_update_task(in_progress) → work → report → checkout → submit
-    - Always pass your sessionUuid (from .chorus/sessions/full-stack-worker.json if plugin, or from prompt if manual)
+    - Always pass your sessionUuid (from .chorus/sessions/full-stack-worker.json)
   """
 })
 ```
@@ -400,21 +289,7 @@ The sub-agent checks in/out of each task as it progresses, making each transitio
 
 ## Session Reuse Across Multiple Runs
 
-If the Team Lead spawns sub-agents multiple times (e.g., after a task is reopened by Admin):
-
-**Plugin mode**: The plugin handles reuse automatically — if a session named "frontend-worker" already exists, the plugin reuses (if active) or reopens (if closed) it instead of creating a new one.
-
-**Manual mode**: The Team Lead must check for existing sessions:
-
-```
-# Check for existing sessions
-chorus_list_sessions()
-
-# If "frontend-worker" session exists but is closed, reopen it
-chorus_reopen_session({ sessionUuid: "<existing-fe-session-uuid>" })
-
-# Pass the same session UUID to the new sub-agent
-```
+If the Team Lead spawns sub-agents multiple times (e.g., after a task is reopened by Admin), the plugin handles reuse automatically — if a session named "frontend-worker" already exists, the plugin reuses (if active) or reopens (if closed) it instead of creating a new one.
 
 This keeps session history clean and makes it easier to trace work across multiple runs in the UI.
 
@@ -433,19 +308,18 @@ This keeps session history clean and makes it easier to trace work across multip
 
 ### Session shows as "inactive" (yellow dot)
 - The sub-agent hasn't sent a heartbeat in over 1 hour
-- Plugin mode: TeammateIdle hook sends heartbeats automatically — if still inactive, the agent may have crashed
-- Manual mode: ensure `chorus_report_work` is called with `sessionUuid` regularly, or call `chorus_session_heartbeat` periodically
+- The TeammateIdle hook sends heartbeats automatically — if still inactive, the agent may have crashed
 
 ### Task stuck in wrong status
 - If a sub-agent crashed before completing, the task may be stuck in `in_progress`
 - Team Lead can: reopen the session, spawn a new sub-agent to continue, or use `chorus_update_task` to reset status
 
-### (Plugin mode) Duplicate sessions created
+### Duplicate sessions created
 - This happens if the Team Lead manually calls `chorus_create_session` while the plugin also creates sessions
 - **Fix**: Do NOT call `chorus_create_session` when the plugin is active — let the plugin handle it
 - If duplicates already exist, close the extra sessions with `chorus_close_session`
 
-### (Plugin mode) Sub-agent can't find session file
+### Sub-agent can't find session file
 - The session file is at `.chorus/sessions/<name>.json` where `<name>` matches the `name` parameter in the `Task` tool call
 - Ensure the `name` parameter is set when spawning (e.g., `name: "frontend-worker"`)
 - The file is created synchronously before the sub-agent starts, so it should always be available
@@ -453,8 +327,6 @@ This keeps session history clean and makes it easier to trace work across multip
 ---
 
 ## Quick Reference
-
-### Plugin Mode
 
 | Step | Who | Claude Code Tool | Chorus Tool |
 |------|-----|-----------------|-------------|
@@ -471,22 +343,4 @@ This keeps session history clean and makes it easier to trace work across multip
 | *(auto)* Heartbeat | Plugin | — | `chorus_session_heartbeat` |
 | Monitor | Team Lead | `TaskList` | `chorus_list_tasks` |
 | *(auto)* Close sessions | Plugin | — | `chorus_close_session` |
-| Shutdown | Team Lead | `SendMessage(shutdown_request)` + `TeamDelete` | — |
-
-### Manual Mode
-
-| Step | Who | Claude Code Tool | Chorus Tool |
-|------|-----|-----------------|-------------|
-| Plan work | Team Lead | — | `chorus_checkin`, `chorus_list_tasks` |
-| Check existing sessions | Team Lead | — | `chorus_list_sessions` |
-| Create/reopen sessions | Team Lead | — | `chorus_create_session` / `chorus_reopen_session` |
-| Create team | Team Lead | `TeamCreate` | — |
-| Spawn workers | Team Lead | `Task` (with session UUID + task UUIDs in prompt) | — |
-| Checkin to task | Sub-Agent | — | `chorus_session_checkin_task` |
-| Start work | Sub-Agent | — | `chorus_update_task(in_progress, sessionUuid)` |
-| Report progress | Sub-Agent | — | `chorus_report_work(sessionUuid)` |
-| Complete task | Sub-Agent | — | `chorus_session_checkout_task` + `chorus_submit_for_verify` |
-| Notify lead | Sub-Agent | `SendMessage` | — |
-| Monitor | Team Lead | `TaskList` | `chorus_list_tasks` |
-| Close sessions | Team Lead | — | `chorus_close_session` |
 | Shutdown | Team Lead | `SendMessage(shutdown_request)` + `TeamDelete` | — |
