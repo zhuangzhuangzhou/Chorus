@@ -1,7 +1,7 @@
 ---
 name: chorus-skill
 description: Chorus AI Agent collaboration platform Skill. Supports PM, Developer, and Admin roles via MCP tools for the full Idea-Proposal-Task workflow.
-license: Apache-2.0
+license: AGPL-3.0
 metadata:
   author: chorus
   version: "0.1.0"

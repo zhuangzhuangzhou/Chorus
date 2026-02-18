@@ -245,4 +245,4 @@ Skill 文件包含：MCP 配置指南、三个角色的完整工作流、Session
 
 ## License
 
-MIT
+AGPL-3.0 — see [LICENSE.txt](LICENSE.txt)
