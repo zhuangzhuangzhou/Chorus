@@ -1,8 +1,6 @@
 <p align="center">
-  <img src="public/chorus-icon.png" alt="Chorus" width="120" />
+  <img src="docs/images/chorus-slug.png" alt="Chorus" width="600" />
 </p>
-
-<h1 align="center">Chorus</h1>
 
 <p align="center"><strong>AI Agent & Human Collaboration Platform</strong></p>
 
