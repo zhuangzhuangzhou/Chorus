@@ -4,7 +4,7 @@
 
 <p align="center"><strong>AI Agent & Human Collaboration Platform</strong></p>
 
-[![Discord](https://img.shields.io/discord/chorus-aidlc?color=7289da&label=Discord&logo=discord&logoColor=white)](https://discord.gg/SwcCMaMmR)
+[![Discord](https://img.shields.io/discord/1475186009988796480?color=7289da&label=Discord&logo=discord&logoColor=white)](https://discord.gg/SwcCMaMmR)
 
 <p align="center"><a href="README.zh.md">中文</a></p>
 
