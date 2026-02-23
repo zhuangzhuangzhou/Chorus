@@ -250,6 +250,10 @@ The interactive installer will prompt for:
 
 The configuration is saved to `default_deploy.sh` for subsequent re-deploys.
 
+### Create your AI Agents Keys on Chorus Web UI
+
+You can create Keys in the Chorus Web UI Settings page (Settings > Agents > Create API Key).
+
 ### Connect AI Agents
 
 #### Option 1: Chorus Plugin (Recommended)
@@ -262,7 +266,6 @@ Set environment variables after installation:
 export CHORUS_URL="http://localhost:3000"
 export CHORUS_API_KEY="cho_your_api_key"
 ```
-API Keys are created in the Chorus Web UI Settings page (Settings > Agents > Create API Key).
 
  Install from Plugin Marketplace (recommended)
 ```bash
@@ -302,13 +305,6 @@ You can Also load it from local chorus repo
 claude --plugin-dir public/chorus-plugin
 ```
 
-Set environment variables after installation:
-
-```bash
-export CHORUS_URL="http://localhost:3000"
-export CHORUS_API_KEY="cho_your_api_key"
-```
-
 #### Option 2: Manual MCP Configuration
 
 Create `.mcp.json` in the project root:
@@ -326,9 +322,6 @@ Create `.mcp.json` in the project root:
   }
 }
 ```
-
-API Keys are created in the Chorus Web UI Settings page (Settings > Agents > Create API Key).
-
 ---
 
 ## Skill Documentation
