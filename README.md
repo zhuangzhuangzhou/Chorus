@@ -258,9 +258,38 @@ The Chorus Plugin provides automated Session management and Skill documentation 
 
 ```bash
 # Install from Plugin Marketplace (recommended)
-claude /plugin marketplace add Chorus-AIDLC/chorus
-claude /plugin install chorus@chorus-plugins
+# Activate Claude Code
+claude
+# Then type the following in order
+/plugin marketplace add Chorus-AIDLC/chorus
+/plugin install chorus@chorus-plugins
+```
 
+You will get something like this if it gets successfully installed/
+
+```bash
+    ✻
+    |
+   ▟█▙     Claude Code v2.1.50
+ ▐▛███▜▌   Opus 4.6 · Claude Max
+▝▜█████▛▘  ~/chorus
+  ▘▘ ▝▝
+
+❯ /plugin marketplace add Chorus-AIDLC/chorus 
+  ⎿  Successfully added marketplace: chorus-plugins
+
+❯ /plugin install chorus@chorus-plugins                             
+  ⎿  ✓ Installed chorus. Restart Claude Code to load new plugins.
+                                                                    
+────────────────────────────────────────────────────────────────────
+❯                                                                   
+────────────────────────────────────────────────────────────────────
+  ? for shortcuts
+```
+
+You can Also load it from local chorus repo
+
+```bash
 # Or load locally (development mode)
 claude --plugin-dir public/chorus-plugin
 ```
