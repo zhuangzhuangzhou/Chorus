@@ -45,6 +45,7 @@ interface ProjectData {
     ideas: number;
     documents: number;
     tasks: number;
+    doneTasks: number;
     proposals: number;
   };
 }
@@ -111,7 +112,9 @@ function ProjectCardContent({ project }: { project: ProjectData }) {
   const formatRelative = useRelativeDate();
   const initials = getProjectInitials(project.name);
   const avatarColor = getAvatarColor(project.name);
-  const progress = 0;
+  const progress = project.counts.tasks > 0
+    ? Math.round((project.counts.doneTasks / project.counts.tasks) * 100)
+    : 0;
 
   return (
     <Card className="group cursor-pointer rounded-2xl border-[#E5E2DC] p-6 shadow-none transition-all hover:border-[#C67A52] hover:shadow-md">

@@ -38,6 +38,10 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
             proposals: true,
           },
         },
+        tasks: {
+          where: { status: "done" },
+          select: { uuid: true },
+        },
       },
     }),
     prisma.project.count({
@@ -57,6 +61,7 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
       ideas: p._count.ideas,
       documents: p._count.documents,
       tasks: p._count.tasks,
+      doneTasks: p.tasks.length,
       proposals: p._count.proposals,
     },
   }));
