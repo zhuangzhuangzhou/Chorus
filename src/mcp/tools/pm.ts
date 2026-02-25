@@ -20,7 +20,7 @@ export function registerPmTools(server: McpServer, auth: AgentAuthContext) {
   server.registerTool(
     "chorus_claim_idea",
     {
-      description: "Claim an Idea (open -> assigned)",
+      description: "Claim an Idea (open -> elaborating). Claiming automatically transitions the Idea to 'elaborating' status. After claiming, start elaboration with chorus_pm_start_elaboration or skip with chorus_pm_skip_elaboration.",
       inputSchema: z.object({
         ideaUuid: z.string().describe("Idea UUID"),
       }),
@@ -115,7 +115,7 @@ export function registerPmTools(server: McpServer, auth: AgentAuthContext) {
   server.registerTool(
     "chorus_update_idea_status",
     {
-      description: "Update Idea status (only assignee can operate)",
+      description: "Update Idea status (only assignee can operate). Valid statuses: open, elaborating, proposal_created, completed, closed. Claiming auto-transitions to elaborating; use this tool for proposal_created (after Proposal submission) or completed (after approval).",
       inputSchema: z.object({
         ideaUuid: z.string().describe("Idea UUID"),
         status: z.enum(["in_progress", "pending_review", "completed"]).describe("New status"),
@@ -246,7 +246,7 @@ export function registerPmTools(server: McpServer, auth: AgentAuthContext) {
   server.registerTool(
     "chorus_pm_submit_proposal",
     {
-      description: "Submit a Proposal for approval (draft -> pending)",
+      description: "Submit a Proposal for approval (draft -> pending). Requires all input Ideas to have elaborationStatus = 'resolved'. Call chorus_pm_start_elaboration or chorus_pm_skip_elaboration first to resolve elaboration before submitting.",
       inputSchema: z.object({
         proposalUuid: z.string().describe("Proposal UUID"),
       }),
@@ -791,7 +791,7 @@ export function registerPmTools(server: McpServer, auth: AgentAuthContext) {
   server.registerTool(
     "chorus_pm_start_elaboration",
     {
-      description: "Start an elaboration round for an Idea. Creates structured questions for the Idea creator/stakeholder to answer, clarifying requirements before proposal creation. IMPORTANT: Do NOT include an 'Other' option — the UI automatically adds a free-text 'Other' option to every question.",
+      description: "Start an elaboration round for an Idea. Creates structured questions for the Idea creator/stakeholder to answer, clarifying requirements before proposal creation. Recommended for every Idea. Structured elaboration improves Proposal quality and reduces rejection cycles. IMPORTANT: Even if the user discusses requirements with you outside of elaboration (e.g., in chat), you should still record key decisions and clarifications as elaboration rounds so they are persisted to the Idea as an audit trail. Do NOT include an 'Other' option — the UI automatically adds a free-text 'Other' option to every question.",
       inputSchema: z.object({
         ideaUuid: z.string().describe("Idea UUID"),
         depth: z.enum(["minimal", "standard", "comprehensive"]).describe("Elaboration depth level"),
@@ -835,7 +835,7 @@ export function registerPmTools(server: McpServer, auth: AgentAuthContext) {
   server.registerTool(
     "chorus_pm_validate_elaboration",
     {
-      description: "Validate answers from an elaboration round. If no issues are found, the elaboration is marked as resolved. If issues exist, optionally provide follow-up questions for a new round.",
+      description: "Validate answers from an elaboration round. If no issues are found, the elaboration is marked as resolved. If issues exist, optionally provide follow-up questions for a new round. IMPORTANT: Before resolving (empty issues), always confirm with the user that they have no remaining concerns or topics to discuss.",
       inputSchema: z.object({
         ideaUuid: z.string().describe("Idea UUID"),
         roundUuid: z.string().describe("Elaboration round UUID"),
@@ -885,7 +885,7 @@ export function registerPmTools(server: McpServer, auth: AgentAuthContext) {
   server.registerTool(
     "chorus_pm_skip_elaboration",
     {
-      description: "Skip elaboration for an Idea (marks as resolved with minimal depth). Use when the Idea is already clear enough to proceed directly to proposal creation.",
+      description: "Skip elaboration for an Idea (marks as resolved with minimal depth). Use only for trivially clear Ideas (e.g., bug fixes with clear reproduction steps). A reason is required and logged in the activity stream. IMPORTANT: You MUST ask the user for permission before skipping — never skip on your own judgment alone. Prefer chorus_pm_start_elaboration for most Ideas.",
       inputSchema: z.object({
         ideaUuid: z.string().describe("Idea UUID"),
         reason: z.string().describe("Reason for skipping elaboration"),

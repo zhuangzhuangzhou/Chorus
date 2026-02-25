@@ -65,7 +65,7 @@ Tools available to all Agents.
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
 | projectUuid | string | Yes | Project UUID |
-| status | string | No | Filter by status: open, assigned, in_progress, pending_review, completed, closed |
+| status | string | No | Filter by status: open, elaborating, proposal_created, completed, closed |
 | page | number | No | Page number (default 1) |
 | pageSize | number | No | Items per page (default 20) |
 
@@ -443,7 +443,7 @@ Available to PM Agent and Admin Agent. Not available to Developer Agent.
 
 ### chorus_claim_idea
 
-**Description**: Claim an Idea (open → assigned)
+**Description**: Claim an Idea (open → elaborating). Claiming automatically transitions the Idea to 'elaborating' status. After claiming, start elaboration with chorus_pm_start_elaboration or skip with chorus_pm_skip_elaboration.
 
 **Input**:
 | Parameter | Type | Required | Description |
@@ -454,7 +454,7 @@ Available to PM Agent and Admin Agent. Not available to Developer Agent.
 
 ### chorus_release_idea
 
-**Description**: Release a claimed Idea (assigned → open)
+**Description**: Release a claimed Idea (elaborating → open)
 
 **Input**:
 | Parameter | Type | Required | Description |
@@ -465,13 +465,13 @@ Available to PM Agent and Admin Agent. Not available to Developer Agent.
 
 ### chorus_update_idea_status
 
-**Description**: Update Idea status (only the assignee can perform this)
+**Description**: Update Idea status (only the assignee can perform this). Valid statuses: open, elaborating, proposal_created, completed, closed. Claiming auto-transitions to elaborating; use this tool for proposal_created (after Proposal submission) or completed (after approval).
 
 **Input**:
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
 | ideaUuid | string | Yes | Idea UUID |
-| status | enum | Yes | New status: in_progress, pending_review, completed |
+| status | enum | Yes | New status: proposal_created, completed |
 
 **Output**: Updated Idea JSON
 
@@ -494,7 +494,7 @@ Available to PM Agent and Admin Agent. Not available to Developer Agent.
 
 ### chorus_pm_submit_proposal
 
-**Description**: Submit a Proposal for approval (draft → pending)
+**Description**: Submit a Proposal for approval (draft → pending). Requires all input Ideas to have elaborationStatus = 'resolved'. Call chorus_pm_start_elaboration or chorus_pm_skip_elaboration first to resolve elaboration before submitting.
 
 **Input**:
 | Parameter | Type | Required | Description |
@@ -717,7 +717,7 @@ Available to PM Agent and Admin Agent. Not available to Developer Agent.
 
 ### chorus_pm_start_elaboration
 
-**Description**: Start an elaboration round for an Idea. Creates structured questions for the Idea creator/stakeholder to answer, clarifying requirements before proposal creation.
+**Description**: Start an elaboration round for an Idea. Creates structured questions for the Idea creator/stakeholder to answer, clarifying requirements before proposal creation. Recommended for every Idea. Structured elaboration improves Proposal quality and reduces rejection cycles.
 
 **Input**:
 | Parameter | Type | Required | Description |
@@ -769,7 +769,7 @@ Available to PM Agent and Admin Agent. Not available to Developer Agent.
 
 ### chorus_pm_skip_elaboration
 
-**Description**: Skip elaboration for an Idea (marks as resolved with minimal depth). Use when the Idea is already clear enough to proceed directly to proposal creation.
+**Description**: Skip elaboration for an Idea (marks as resolved with minimal depth). Use only for trivially clear Ideas (e.g., bug fixes with clear reproduction steps). A reason is required and logged in the activity stream. Prefer chorus_pm_start_elaboration for most Ideas.
 
 **Input**:
 | Parameter | Type | Required | Description |
@@ -1016,8 +1016,8 @@ Therefore, after approval there is **no need** to manually call `chorus_pm_creat
 | 5 | chorus_get_ideas | Get Ideas list | ✅ Pass | Pagination correct |
 | 6 | chorus_get_idea | Get single Idea | ✅ Pass | ⚠️ Returned `id` field (should be hidden) |
 | 7 | chorus_get_available_ideas | Get claimable Ideas | ✅ Pass | |
-| 8 | chorus_claim_idea | Claim Idea | ✅ Pass | open → assigned |
-| 9 | chorus_update_idea_status | Update Idea status | ✅ Pass | assigned → in_progress |
+| 8 | chorus_claim_idea | Claim Idea | ✅ Pass | open → elaborating |
+| 9 | chorus_update_idea_status | Update Idea status | ✅ Pass | (status transitions) |
 | 10 | chorus_get_my_assignments | Get my assignments | ✅ Pass | ideas and tasks lists |
 | 11 | chorus_add_comment (idea) | Comment on Idea | ✅ Pass | |
 | 12 | chorus_get_comments | Get comments list | ✅ Pass | |

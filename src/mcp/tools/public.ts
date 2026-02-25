@@ -45,7 +45,7 @@ export function registerPublicTools(server: McpServer, auth: AgentAuthContext) {
       description: "Get the list of Ideas for a project",
       inputSchema: z.object({
         projectUuid: z.string().describe("Project UUID"),
-        status: z.string().optional().describe("Filter by status: open, assigned, in_progress, pending_review, completed, closed"),
+        status: z.string().optional().describe("Filter by status: open, elaborating, proposal_created, completed, closed"),
         page: z.number().optional().default(1).describe("Page number"),
         pageSize: z.number().optional().default(20).describe("Items per page"),
       }),
@@ -604,7 +604,7 @@ export function registerPublicTools(server: McpServer, auth: AgentAuthContext) {
   server.registerTool(
     "chorus_answer_elaboration",
     {
-      description: "Answer elaboration questions for an Idea. Submits answers for a specific elaboration round. When all required questions are answered, the round moves to validation.",
+      description: "Answer elaboration questions for an Idea. Submits answers for a specific elaboration round. When all required questions are answered, the round moves to validation. Also use this to record decisions made outside the formal elaboration flow — if the user clarified requirements in conversation, capture those decisions here as answers so they are persisted to the Idea as an audit trail.",
       inputSchema: z.object({
         ideaUuid: z.string().describe("Idea UUID"),
         roundUuid: z.string().describe("Elaboration round UUID"),

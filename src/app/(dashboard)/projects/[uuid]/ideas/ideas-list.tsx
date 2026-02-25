@@ -22,6 +22,7 @@ interface IdeaItem {
   title: string;
   content: string | null;
   status: string;
+  elaborationStatus?: string;
   assignee: {
     type: string;
     uuid: string;
@@ -46,18 +47,16 @@ interface IdeasListProps {
 // Status badge styles: dot color + badge variant className
 const statusBadgeStyles: Record<string, { dot: string; className: string }> = {
   open: { dot: "bg-[#2563EB]", className: "bg-[#DBEAFE] text-[#1D4ED8] border-transparent" },
-  assigned: { dot: "bg-[#1976D2]", className: "bg-[#E3F2FD] text-[#1976D2] border-transparent" },
-  in_progress: { dot: "bg-[#5A9E6F]", className: "bg-[#E8F5E9] text-[#2E7D32] border-transparent" },
-  pending_review: { dot: "bg-[#FF9800]", className: "bg-[#FFF3E0] text-[#E65100] border-transparent" },
+  elaborating: { dot: "bg-[#1976D2]", className: "bg-[#E3F2FD] text-[#1976D2] border-transparent" },
+  proposal_created: { dot: "bg-[#FF9800]", className: "bg-[#FFF3E0] text-[#E65100] border-transparent" },
   completed: { dot: "bg-[#4CAF50]", className: "bg-[#E8F5E9] text-[#2E7D32] border-transparent" },
   closed: { dot: "bg-[#9A9A9A]", className: "bg-[#F5F5F5] text-[#6B6B6B] border-transparent" },
 };
 
 const statusI18nKeys: Record<string, string> = {
   open: "open",
-  assigned: "assigned",
-  in_progress: "inProgress",
-  pending_review: "pendingReview",
+  elaborating: "elaborating",
+  proposal_created: "proposal_created",
   completed: "completed",
   closed: "closed",
 };

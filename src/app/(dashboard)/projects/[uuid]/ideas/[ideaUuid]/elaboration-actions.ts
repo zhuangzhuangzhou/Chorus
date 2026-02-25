@@ -5,6 +5,7 @@ import { getServerAuthContext } from "@/lib/auth-server";
 import {
   getElaboration,
   answerElaboration,
+  skipElaboration,
 } from "@/services/elaboration.service";
 import { prisma } from "@/lib/prisma";
 import type {
@@ -69,6 +70,41 @@ export async function submitElaborationAnswersAction(
     return {
       success: false,
       error: error instanceof Error ? error.message : "Failed to submit answers",
+    };
+  }
+}
+
+export async function skipElaborationAction(
+  ideaUuid: string,
+  reason: string
+): Promise<{ success: boolean; error?: string }> {
+  const auth = await getServerAuthContext();
+  if (!auth) {
+    return { success: false, error: "Unauthorized" };
+  }
+
+  try {
+    await skipElaboration({
+      companyUuid: auth.companyUuid,
+      ideaUuid,
+      actorUuid: auth.actorUuid,
+      actorType: auth.type,
+      reason,
+    });
+
+    // Revalidate the ideas page so the panel refreshes
+    const idea = await prisma.idea.findFirst({ where: { uuid: ideaUuid, companyUuid: auth.companyUuid } });
+    if (idea) {
+      revalidatePath(`/projects/${idea.projectUuid}/ideas/${ideaUuid}`);
+      revalidatePath(`/projects/${idea.projectUuid}/ideas`);
+    }
+
+    return { success: true };
+  } catch (error) {
+    console.error("Failed to skip elaboration:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to skip elaboration",
     };
   }
 }

@@ -7,9 +7,9 @@ PM Agent is responsible for **analyzing Ideas, producing Proposals (with PRD doc
 ### Your MCP Tools
 
 **Idea Management:**
-- `chorus_claim_idea` - Claim an open idea (open -> assigned)
-- `chorus_release_idea` - Release a claimed idea (assigned -> open)
-- `chorus_update_idea_status` - Update idea status (in_progress / pending_review / completed)
+- `chorus_claim_idea` - Claim an open idea (open -> elaborating). Claiming auto-transitions to elaborating.
+- `chorus_release_idea` - Release a claimed idea (elaborating -> open)
+- `chorus_update_idea_status` - Update idea status (proposal_created / completed)
 
 **Requirements Elaboration:**
 - `chorus_pm_start_elaboration` - Start an elaboration round with structured questions for an Idea
@@ -68,19 +68,17 @@ chorus_get_my_assignments()
 
 ### Step 3: Claim an Idea
 
-Pick an idea and claim it:
+Pick an idea and claim it. Claiming automatically transitions the Idea to `elaborating` status:
 
 ```
 chorus_claim_idea({ ideaUuid: "<idea-uuid>" })
 ```
 
-Then mark it as in-progress:
+### Step 4: Elaborate on the Idea
 
-```
-chorus_update_idea_status({ ideaUuid: "<idea-uuid>", status: "in_progress" })
-```
+**Every Idea should go through elaboration.** Skip only when requirements are completely unambiguous (e.g., bug fix with clear steps). Elaboration improves Proposal quality and reduces rejection cycles.
 
-### Step 4: Analyze the Idea
+First, gather context:
 
 Gather context before writing a proposal:
 
@@ -110,12 +108,10 @@ Gather context before writing a proposal:
    chorus_get_comments({ targetType: "idea", targetUuid: "<idea-uuid>" })
    ```
 
-### Step 4b: Requirements Elaboration
-
-After analyzing the Idea, determine if clarification is needed before creating a Proposal.
+After gathering context, determine if structured elaboration is needed or can be skipped.
 
 **Simple Ideas** (bug fixes, small changes with clear requirements):
-Skip elaboration and proceed directly to Step 5:
+You may skip elaboration, but **you MUST ask the user for permission first** via AskUserQuestion before calling `chorus_pm_skip_elaboration`. Never skip on your own judgment alone.
 
 ```
 chorus_pm_skip_elaboration({
@@ -215,6 +211,9 @@ Start an elaboration round to clarify requirements:
    - **Choose "Other" (free text)**: `selectedOptionId: null, customText: "your answer"` — customText is required when no option is selected
 
 5. **Validate the answers:**
+
+   Before marking elaboration as resolved (empty issues), **ALWAYS ask the user first**: "Is there anything else you'd like to discuss or clarify before we proceed to creating a proposal?" Only call validate with empty issues after the user confirms.
+
    ```
    chorus_pm_validate_elaboration({
      ideaUuid: "<idea-uuid>",
@@ -256,6 +255,8 @@ Start an elaboration round to clarify requirements:
    ```
 
 7. Once all rounds are resolved, proceed to Step 5 (Create Proposal). The elaboration answers provide rich context for writing the PRD and task breakdown.
+
+**Elaboration as audit trail:** Even if the user discusses requirements with you outside the formal elaboration flow (e.g., in casual conversation), you should still record key decisions and clarifications as elaboration rounds on the Idea. This ensures all requirement decisions are persisted, traceable, and visible to the team — not lost in chat history. Create a round with the decisions as pre-answered questions if needed.
 
 **Question categories:** `functional`, `non_functional`, `business_context`, `technical_context`, `user_scenario`, `scope`
 
@@ -390,10 +391,10 @@ chorus_add_comment({
 
 ### Step 10: Update Idea Status
 
-Mark the idea as pending review:
+Mark the idea as proposal_created:
 
 ```
-chorus_update_idea_status({ ideaUuid: "<idea-uuid>", status: "pending_review" })
+chorus_update_idea_status({ ideaUuid: "<idea-uuid>", status: "proposal_created" })
 ```
 
 ### Step 11: Handle Feedback

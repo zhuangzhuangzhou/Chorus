@@ -218,14 +218,15 @@ Based on your role from checkin, follow the appropriate workflow:
 9. **Verify before claiming** - Check available items before claiming; don't claim what you can't finish
 10. **Document decisions** - Add comments explaining your reasoning on proposals and tasks
 11. **Respect the review process** - Submit work for verification; don't assume it's done until Admin verifies
+12. **Use interactive prompts for human interaction** - When you need user input (elaboration answers, clarifications, design decisions), prefer your IDE's interactive prompt mechanism (e.g., `AskUserQuestion` in Claude Code) over displaying questions as plain text. Interactive prompts provide a better user experience.
 
 ## Status Lifecycle Reference
 
 ### Idea Status Flow
 ```
-open --> assigned --> in_progress --> pending_review --> completed
-  \                                                       /
-   \--> closed <-----------------------------------------/
+open --> elaborating --> proposal_created --> completed
+  \                                            /
+   \--> closed <------------------------------/
 ```
 
 ### Task Status Flow

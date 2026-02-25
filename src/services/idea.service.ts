@@ -59,20 +59,33 @@ export interface IdeaResponse {
   updatedAt: string;
 }
 
-// Idea status transition rules (ARCHITECTURE.md §7.3)
+// Idea status transition rules — simplified AI-DLC lifecycle
+// open → elaborating → proposal_created → completed → closed
 export const IDEA_STATUS_TRANSITIONS: Record<string, string[]> = {
-  open: ["assigned", "closed"],
-  assigned: ["open", "in_progress", "closed"],
-  in_progress: ["elaborating", "pending_review", "closed"],
-  elaborating: ["elaborating", "in_progress", "pending_review", "closed"],
-  pending_review: ["completed", "in_progress", "closed"],
+  open: ["elaborating", "closed"],
+  elaborating: ["proposal_created", "closed"],
+  proposal_created: ["completed", "elaborating", "closed"],
   completed: ["closed"],
   closed: [],
 };
 
+// Map legacy statuses to current ones (for backward compatibility with historical data)
+export function normalizeIdeaStatus(status: string): string {
+  switch (status) {
+    case "assigned":
+    case "in_progress":
+      return "elaborating";
+    case "pending_review":
+      return "proposal_created";
+    default:
+      return status;
+  }
+}
+
 // Validate whether a status transition is valid
 export function isValidIdeaStatusTransition(from: string, to: string): boolean {
-  const allowed = IDEA_STATUS_TRANSITIONS[from] || [];
+  const normalizedFrom = normalizeIdeaStatus(from);
+  const allowed = IDEA_STATUS_TRANSITIONS[normalizedFrom] || [];
   return allowed.includes(to);
 }
 
@@ -108,7 +121,7 @@ async function formatIdeaResponse(
     title: idea.title,
     content: idea.content,
     attachments: idea.attachments,
-    status: idea.status,
+    status: normalizeIdeaStatus(idea.status),
     assignee,
     ...(idea.project && { project: idea.project }),
     ...(idea.elaborationStatus != null && { elaborationStatus: idea.elaborationStatus }),
@@ -279,7 +292,7 @@ export async function claimIdea({
   const idea = await prisma.idea.update({
     where: { uuid: ideaUuid },
     data: {
-      status: "assigned",
+      status: "elaborating",
       assigneeType,
       assigneeUuid,
       assignedAt: new Date(),
@@ -311,8 +324,8 @@ export async function assignIdea({
     throw new Error("Cannot assign a completed or closed Idea");
   }
 
-  // If currently open, move to assigned; otherwise keep current status
-  const newStatus = existing.status === "open" ? "assigned" : existing.status;
+  // If currently open, move to elaborating; otherwise keep current status
+  const newStatus = existing.status === "open" ? "elaborating" : existing.status;
 
   const idea = await prisma.idea.update({
     where: { uuid: ideaUuid },

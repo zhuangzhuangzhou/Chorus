@@ -15,22 +15,14 @@ import { batchCommentCounts } from "@/services/comment.service";
 import { IdeaCreateForm } from "./idea-create-form";
 import { IdeasList } from "./ideas-list";
 
-// Status color configuration
-const statusColors: Record<string, string> = {
-  open: "bg-[#FFF3E0] text-[#E65100]",
-  assigned: "bg-[#E3F2FD] text-[#1976D2]",
-  in_progress: "bg-[#E8F5E9] text-[#5A9E6F]",
-  pending_review: "bg-[#F3E5F5] text-[#7B1FA2]",
-  completed: "bg-[#E0F2F1] text-[#00796B]",
-  closed: "bg-[#F5F5F5] text-[#9A9A9A]",
-};
+// Filter tab statuses (simplified lifecycle)
+const filterStatuses = ["open", "elaborating", "proposal_created"] as const;
 
 // Status to i18n key mapping
 const statusI18nKeys: Record<string, string> = {
   open: "open",
-  assigned: "assigned",
-  in_progress: "inProgress",
-  pending_review: "pendingReview",
+  elaborating: "elaborating",
+  proposal_created: "proposal_created",
   completed: "completed",
   closed: "closed",
 };
@@ -140,9 +132,8 @@ export default async function IdeasPage({ params, searchParams }: PageProps) {
             {t("ideas.assignedToMe")} ({myIdeas.length})
           </Button>
         </Link>
-        {Object.keys(statusColors).map((status) => {
+        {filterStatuses.map((status) => {
           const count = statusCounts[status] || 0;
-          if (count === 0 && status !== "open") return null;
           return (
             <Link key={status} href={`/projects/${projectUuid}/ideas?status=${status}${isAssignedToMeFilter ? "&assignedToMe=true" : ""}`}>
               <Button variant={filter === status ? "default" : "ghost"} size="sm">

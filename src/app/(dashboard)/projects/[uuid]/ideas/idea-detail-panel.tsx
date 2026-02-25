@@ -35,7 +35,7 @@ import type { CommentResponse } from "@/services/comment.service";
 import { Streamdown } from "streamdown";
 import { AssignIdeaModal } from "./assign-idea-modal";
 import { ElaborationPanel } from "@/components/elaboration-panel";
-import { getElaborationAction } from "./[ideaUuid]/elaboration-actions";
+import { getElaborationAction, skipElaborationAction } from "./[ideaUuid]/elaboration-actions";
 import { useRealtimeEvent } from "@/contexts/realtime-context";
 import type { ElaborationResponse } from "@/types/elaboration";
 
@@ -44,6 +44,7 @@ interface Idea {
   title: string;
   content: string | null;
   status: string;
+  elaborationStatus?: string;
   assignee: {
     type: string;
     uuid: string;
@@ -66,18 +67,16 @@ interface IdeaDetailPanelProps {
 // Status color configuration
 const statusColors: Record<string, string> = {
   open: "bg-[#FFF3E0] text-[#E65100]",
-  assigned: "bg-[#E3F2FD] text-[#1976D2]",
-  in_progress: "bg-[#E8F5E9] text-[#5A9E6F]",
-  pending_review: "bg-[#F3E5F5] text-[#7B1FA2]",
+  elaborating: "bg-[#E3F2FD] text-[#1976D2]",
+  proposal_created: "bg-[#F3E5F5] text-[#7B1FA2]",
   completed: "bg-[#E0F2F1] text-[#00796B]",
   closed: "bg-[#F5F5F5] text-[#9A9A9A]",
 };
 
 const statusI18nKeys: Record<string, string> = {
   open: "open",
-  assigned: "assigned",
-  in_progress: "inProgress",
-  pending_review: "pendingReview",
+  elaborating: "elaborating",
+  proposal_created: "proposal_created",
   completed: "completed",
   closed: "closed",
 };
@@ -169,6 +168,12 @@ export function IdeaDetailPanel({
   // Subscribe to SSE events to refresh elaboration in real-time
   useRealtimeEvent(reloadElaboration);
 
+  // Skip elaboration state
+  const [showSkipDialog, setShowSkipDialog] = useState(false);
+  const [skipReason, setSkipReason] = useState("");
+  const [isSkipping, setIsSkipping] = useState(false);
+  const [skipError, setSkipError] = useState<string | null>(null);
+
   // Edit mode state
   const [isEditing, setIsEditing] = useState(false);
   const [editTitle, setEditTitle] = useState(idea.title);
@@ -178,10 +183,15 @@ export function IdeaDetailPanel({
   const [isDeleting, setIsDeleting] = useState(false);
 
   const canAssign = idea.status !== "completed" && idea.status !== "closed";
+  const elaborationResolved = idea.elaborationStatus === "resolved";
   const canCreateProposal =
-    idea.assignee?.uuid === currentUserUuid &&
-    (idea.status === "assigned" || idea.status === "in_progress" || idea.status === "elaborating") &&
+    idea.status === "elaborating" &&
+    elaborationResolved &&
     !isUsedInProposal;
+  const canSkipElaboration =
+    idea.status === "elaborating" &&
+    (!idea.elaborationStatus || idea.elaborationStatus !== "resolved") &&
+    (idea.assignee?.uuid === currentUserUuid);
   const canEdit = idea.status !== "completed" && idea.status !== "closed";
 
   useEffect(() => {
@@ -278,6 +288,28 @@ export function IdeaDetailPanel({
       onDeleted?.();
       onClose();
       router.refresh();
+    }
+  };
+
+  const handleSkipElaboration = async () => {
+    if (!skipReason.trim()) {
+      setSkipError(t("elaboration.skipReasonRequired"));
+      return;
+    }
+
+    setIsSkipping(true);
+    setSkipError(null);
+
+    const result = await skipElaborationAction(idea.uuid, skipReason.trim());
+
+    setIsSkipping(false);
+
+    if (result.success) {
+      setShowSkipDialog(false);
+      setSkipReason("");
+      router.refresh();
+    } else {
+      setSkipError(result.error || t("common.genericError"));
     }
   };
 
@@ -593,6 +625,19 @@ export function IdeaDetailPanel({
                     {idea.assignee ? t("common.reassign") : t("common.assign")}
                   </Button>
                 )}
+                {canSkipElaboration && (
+                  <Button
+                    variant="outline"
+                    className="border-[#E5E0D8]"
+                    onClick={() => {
+                      setSkipReason("");
+                      setSkipError(null);
+                      setShowSkipDialog(true);
+                    }}
+                  >
+                    {t("elaboration.skipButton")}
+                  </Button>
+                )}
                 {canCreateProposal && (
                   <Link href={`/projects/${projectUuid}/proposals/new?ideaUuid=${idea.uuid}`}>
                     <Button className="bg-[#C67A52] hover:bg-[#B56A42] text-white">
@@ -600,6 +645,11 @@ export function IdeaDetailPanel({
                       {t("proposals.createProposal")}
                     </Button>
                   </Link>
+                )}
+                {idea.status === "elaborating" && !elaborationResolved && !canSkipElaboration && (
+                  <div className="text-xs text-[#9A9A9A]">
+                    {t("elaboration.elaborationRequiredHint")}
+                  </div>
                 )}
                 {idea.status === "completed" || idea.status === "closed" ? (
                   <div className="text-sm text-[#9A9A9A] text-center w-full">
@@ -649,6 +699,57 @@ export function IdeaDetailPanel({
           </div>
         </div>
       </div>
+
+      {/* Skip Elaboration Dialog */}
+      <AlertDialog open={showSkipDialog} onOpenChange={setShowSkipDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t("elaboration.skipConfirmTitle")}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {t("elaboration.skipConfirmDescription")}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="space-y-2 py-2">
+            <Label htmlFor="skip-reason" className="text-[13px] font-medium text-[#2C2C2C]">
+              {t("elaboration.skipReasonLabel")}
+            </Label>
+            <Input
+              id="skip-reason"
+              value={skipReason}
+              onChange={(e) => {
+                setSkipReason(e.target.value);
+                if (skipError) setSkipError(null);
+              }}
+              placeholder={t("elaboration.skipReasonPlaceholder")}
+              className="border-[#E5E0D8] text-sm focus-visible:ring-[#C67A52]"
+              autoFocus
+            />
+            {skipError && (
+              <p className="text-xs text-destructive">{skipError}</p>
+            )}
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isSkipping}>{t("common.cancel")}</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => {
+                e.preventDefault();
+                handleSkipElaboration();
+              }}
+              disabled={isSkipping || !skipReason.trim()}
+              className="bg-[#C67A52] hover:bg-[#B56A42] text-white"
+            >
+              {isSkipping ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  {t("common.processing")}
+                </>
+              ) : (
+                t("elaboration.skipButton")
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Assign Idea Modal */}
       {showAssignModal && (

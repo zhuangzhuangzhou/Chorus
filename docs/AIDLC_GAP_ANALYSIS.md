@@ -398,23 +398,21 @@ These gaps determine whether Chorus is a "record-keeper" or an "orchestrator."
 
 #### 3. Structured Inception Process (Clarification Loops + Multi-Stage Gates)
 
-**Current state**: Ideas are free-form text. Comments on Ideas are unstructured prose. The only human gate is Proposal approval (a single binary gate covering all inception artifacts at once).
+**Current state**: ✅ Largely implemented. Chorus now has a full Requirements Elaboration system:
 
-**AI-DLC standard**: Every inception stage has:
-- A structured clarification process with multiple-choice questions in dedicated files
-- Contradiction/ambiguity detection before proceeding
-- Iterative clarification rounds until all ambiguities resolve
-- An explicit human approval gate before advancing to the next stage
-- An audit trail logging every user input with ISO 8601 timestamps
+**What's implemented**:
+- **Structured Q&A on Ideas**: PM Agents create multiple-choice questions categorized by type (functional, scope, technical, etc.). Stored in dedicated `ElaborationRound` + `ElaborationQuestion` tables.
+- **Iterative clarification rounds**: PM validates answers, detects contradictions/ambiguities, and creates follow-up rounds. Up to 5 rounds per Idea.
+- **Elaboration gate**: Proposals cannot be submitted until all input Ideas have `elaborationStatus = 'resolved'` (via Q&A or explicit skip with reason).
+- **Simplified Idea lifecycle**: `open → elaborating → proposal_created → completed → closed`. Claim auto-transitions to `elaborating`. Proposal submit/approve auto-transitions Idea status.
+- **Dual-channel answering**: CC terminal (AskUserQuestion) + Web UI (radio buttons on Idea detail page)
+- **Adaptive depth**: minimal / standard / comprehensive, determined by PM Agent
+- **Activity + Notification**: All elaboration events logged and pushed via SSE
 
-**What Chorus would need**:
-- **Structured clarification on Ideas**: When a PM Agent claims an Idea and starts elaboration, guide the process through structured questions (not free-form chat). This could be a new "Elaboration" sub-entity on Ideas with question-answer pairs.
-- **Multi-stage gates within Proposal creation**: Instead of one gate (Proposal approve/reject), introduce checkpoints: requirements validated → user stories approved → design approved → task breakdown approved. This could be modeled as Proposal "phases" or a checklist within the existing Proposal entity.
-- **Adaptive depth**: Tag Ideas with complexity (low/medium/high) and adjust the expected artifact set accordingly. A bug fix Idea should not require the same Proposal depth as a system migration Idea.
-
-**Impact**: Without structured clarification, AI agents may produce Proposals based on incomplete understanding of requirements. The quality of Inception outputs depends on the rigor of the process. This is the gap between "Chorus has the right entities" and "Chorus enforces the right process."
-
-**Implementation scope**: Medium. Could start with a lightweight "Idea Elaboration Questions" feature (structured Q&A on Ideas before Proposal creation), then expand to multi-stage Proposal gates.
+**Still missing**:
+- Multi-stage gates within Proposal creation (requirements → design → task breakdown as separate checkpoints)
+- INVEST-compliant user story validation
+- Automated contradiction detection (PM validates manually)
 
 #### 4. Execution Metrics (Agent Hours)
 
@@ -523,23 +521,23 @@ These gaps determine whether Chorus is a "record-keeper" or an "orchestrator."
 | **Values & Principles** | | | |
 | Reversed Conversation | AI proposes, human verifies | ✅ Proposal approval flow | — |
 | Human-AI Collaboration | Structured, repeatable collaboration | ✅ Role-based workflow (PM/Dev/Admin) | — |
-| Collective Intelligence | Multi-stakeholder input | ⚠️ Comments + SSE notifications | Needs elaboration process (P1) |
+| Collective Intelligence | Multi-stakeholder input | ✅ Elaboration Q&A + SSE notifications | — |
 | **Inception Phase** | | | |
-| Structured Clarification | Multi-choice questions, contradiction detection, iterative loops | ⚠️ Free-form comments on Ideas | P1 (see deep dive) |
-| Requirements Analysis | AI-led requirement gathering with adaptive depth | ⚠️ Idea → Proposal flow (no depth adaptation) | Process gap (P1) |
+| Structured Clarification | Multi-choice questions, contradiction detection, iterative loops | ✅ ElaborationRound + ElaborationQuestion tables | — |
+| Requirements Analysis | AI-led requirement gathering with adaptive depth | ✅ Elaboration gate + adaptive depth (minimal/standard/comprehensive) | — |
 | User Stories + Personas | INVEST-compliant stories with persona definitions | ❌ No first-class entity | P2 |
 | Application Design | Components, methods, services, dependency matrix | ✅ Proposal documentDrafts (tech_design) | — |
 | Units of Work Decomposition | Parallelizable task breakdown with dependency matrix | ✅ Proposal taskDrafts with DAG | — |
 | Workflow / Execution Plan | Structured execution plan with Mermaid diagram | ❌ No explicit execution plan artifact | P2 |
-| Multi-Stage Approval Gates | Human gate at every inception stage | ⚠️ Single gate at Proposal approval | P1 |
-| Adaptive Depth | Minimal/Standard/Comprehensive based on complexity | ❌ All Ideas treated equally | P2 |
-| Audit Trail | All raw user inputs logged with ISO 8601 timestamps | ⚠️ Activity stream logs actions, not raw inputs | P2 |
+| Multi-Stage Approval Gates | Human gate at every inception stage | ⚠️ Elaboration gate + Proposal gate (2 gates) | P2 (more gates possible) |
+| Adaptive Depth | Minimal/Standard/Comprehensive based on complexity | ✅ PM determines depth per Idea | — |
+| Audit Trail | All raw user inputs logged with ISO 8601 timestamps | ✅ ElaborationQuestion stores all Q&A with timestamps | — |
 | Risk Assessment | Complexity evaluation (Low→Critical) | ❌ No risk/complexity scoring | P2 |
 | **Construction Phase** | | | |
 | Task DAG | Dependency graph | ✅ Modeled + rendered | — |
 | Task Auto-Scheduling | Event-driven dispatch | ⚠️ Query + plugin hook | Needs event push (P0) |
 | Parallel Execution | Multi-agent concurrent | ✅ Swarm mode + Plugin | ⚠️ Auto-dispatch partial |
-| Mob Elaboration | Real-time team verification of plans | ⚠️ Comments + SSE notifications exist | Needs structured elaboration process (P1) |
+| Mob Elaboration | Real-time team verification of plans | ✅ Elaboration Q&A + SSE + dual-channel | — |
 | Mob Construction | Real-time verification of outputs | ⚠️ to_verify flow + notifications exist | Needs expanded notification types |
 | Agent Hours | Core measurement unit | ❌ Only storyPoints field (unused) | P1 |
 | Bolt Cycles | Hour/day iterations | ❌ No iteration concept | P2 (see notes below) |
@@ -563,19 +561,18 @@ These gaps determine whether Chorus is a "record-keeper" or an "orchestrator."
 ```
 Phase / Area         Coverage    Score    Notes
 ─────────────────────────────────────────────────────────
-Inception (outputs)  ████████░░  8/10     Idea→Proposal→Task with DAG well-modeled
-Inception (process)  ████░░░░░░  4/10     No structured clarification, no multi-stage gates,
-                                          no adaptive depth, no audit trail
+Inception (outputs)  █████████░  9/10     Idea→Elaboration→Proposal→Task with DAG
+Inception (process)  ████████░░  8/10     Structured Q&A, elaboration gate, adaptive depth,
+                                          audit trail via ElaborationQuestion table
 Construction Phase   ██████░░░░  6/10     Flow + notifications exist; lacks scheduling, metrics
 Operations Phase     ░░░░░░░░░░  0/10     Not in current scope
-Core Mechanisms      ███████░░░  7/10     Reversed Conversation strong; notifications up;
-                                          Mob Elaboration needs structured process
+Core Mechanisms      ████████░░  8/10     Reversed Conversation + Mob Elaboration + notifications
 ─────────────────────────────────────────────────────────
-Overall (excl. Ops)              ~6/10
-Overall (incl. Ops)              ~4.5/10
+Overall (excl. Ops)              ~7.5/10
+Overall (incl. Ops)              ~5.5/10
 ```
 
-**Summary**: Chorus maps AI-DLC Inception **outputs** well (requirements become documents, units become tasks with DAG), but largely skips the Inception **process** (structured clarification loops, multi-stage human gates, adaptive depth). The notification system is now production-ready (SSE + EventBus + Redis), raising Construction and Core Mechanism scores. The remaining critical gaps are **structured elaboration process** (P1) and **task auto-scheduling** (P0). Addressing these would raise the score from ~6 to ~8 (excluding Operations).
+**Summary**: Chorus now covers AI-DLC Inception phase well — structured Q&A elaboration with iterative rounds, elaboration gate enforcing clarification before Proposal creation, adaptive depth, and a simplified Idea lifecycle (`open → elaborating → proposal_created → completed`). The remaining critical gap is **task auto-scheduling** (P0) for the Construction phase. Addressing this would raise the score to ~8.5 (excluding Operations).
 
 ---
 
@@ -592,13 +589,13 @@ Implementing P0 (scheduler + notifications) effectively enables Bolt-style veloc
 
 ## Recommended Implementation Order
 
-1. **Task auto-scheduling** (P0) — Most impactful remaining feature. Transforms Chorus from record-keeper to orchestrator. Add `task_unblocked` notification type to existing NotificationListener; add event-driven push when task dependencies resolve.
-2. **Structured inception process** (P1) — "Requirements Elaboration" (structured Q&A on Ideas). See [DESIGN_REQUIREMENTS_ELABORATION.md](./DESIGN_REQUIREMENTS_ELABORATION.md) for full design. Highest-leverage Inception improvement; builds on existing notification infrastructure for dual-channel (CC + UI) answering.
-3. **Expand notification types** (P1) — Add missing notification types: `task_unblocked`, `elaboration_started`, `elaboration_answered`, `session_expired`. Small changes to `notification-listener.ts`.
+1. **Task auto-scheduling** (P0) — Most impactful remaining feature. Transforms Chorus from record-keeper to orchestrator. Add `task_unblocked` notification type; event-driven push when task dependencies resolve.
+2. ~~**Structured inception process** (P1)~~ — ✅ **DONE**. Requirements Elaboration implemented with structured Q&A, elaboration gate, simplified Idea lifecycle, dual-channel answering.
+3. ~~**Expand notification types** (P1)~~ — ✅ **DONE**. Elaboration notification types added (`elaboration_started`, `elaboration_answered`, `elaboration_followup`, `elaboration_resolved`). Remaining: `task_unblocked`, `session_expired`.
 4. **Session auto-expiry** (P1) — Quick win. Cron job + status update. Add `session_expired` notification type.
 5. **Proposal state validation** (P2) — Quick win. Mirror Idea/Task pattern. Small engineering effort.
 6. **Execution metrics** (P1) — Add timestamps to status transitions, build aggregation later. Enables Agent Hours measurement.
-7. **Proposal granular review** (P1) — Larger scope, design carefully. Enables true Mob Elaboration on plans.
+7. **Proposal granular review** (P1) — Larger scope, design carefully. Multi-stage gates within Proposal creation.
 8. **Checkin context density** (P2) — Incremental enrichment of checkin response. Improves Context Continuity.
 9. **Webhook delivery channel** (P2) — Add webhook as an additional notification delivery channel alongside SSE. Enables Slack, email, and external tool integrations.
 10. **Operations phase integration** (P2) — Long-term. Webhook-based integration with external CI/CD and monitoring tools.

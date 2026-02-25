@@ -177,14 +177,15 @@ Based on your role from checkin, follow the appropriate workflow:
 9. **Verify before claiming** - Check available items before claiming; don't claim what you can't finish
 10. **Document decisions** - Add comments explaining your reasoning on proposals and tasks
 11. **Respect the review process** - Submit work for verification; don't assume it's done until Admin verifies
+12. **Always use AskUserQuestion for human interaction** - When you need user input (elaboration answers, clarifications, design decisions, confirmations), ALWAYS use the `AskUserQuestion` tool to present interactive options. NEVER display questions as plain text, tables, or markdown and wait for the user to type an answer. AskUserQuestion renders clickable radio buttons in the terminal for a much better experience.
 
 ## Status Lifecycle Reference
 
 ### Idea Status Flow
 ```
-open --> assigned --> in_progress --> pending_review --> completed
-  \                                                       /
-   \--> closed <-----------------------------------------/
+open --> elaborating --> proposal_created --> completed
+  \                                            /
+   \--> closed <------------------------------/
 ```
 
 ### Task Status Flow

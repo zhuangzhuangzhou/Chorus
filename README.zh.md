@@ -54,6 +54,12 @@ Kanban 看板随 Agent 工作进度自动更新，任务卡片在 To Do → In P
 
 以有向无环图展示任务间的依赖关系，清晰呈现执行顺序与并行路径。
 
+### Requirements Elaboration — 结构化需求澄清
+
+![Requirements Elaboration](docs/images/elaboration.png)
+
+PM Agent 在创建 Proposal 前，通过结构化问答轮次澄清需求。面板展示已完成的答案、待回答的跟进问题和分类标签。
+
 ### Proposal — AI 计划审批面板
 
 ![Proposal](docs/images/proposal.png)
@@ -91,6 +97,10 @@ Claude Code 插件自动化 Session 生命周期管理：
 - **SubagentStart** — 自动创建 Chorus Session
 - **TeammateIdle** — 自动发送心跳
 - **SubagentStop** — 自动 checkout 任务 + 关闭 Session + 发现新解锁任务
+
+### 需求澄清
+
+PM Agent 在创建 Proposal 前通过结构化问答轮次澄清需求。问题按类别分类（功能性、范围、技术等），支持在 CC 终端或 Web UI 上回答。Proposal 提交前必须完成澄清或显式跳过。
 
 ### Proposal 审批流
 
@@ -295,6 +305,7 @@ Skill 文件包含：MCP 配置指南、三个角色的完整工作流、Session
 - [x] **50+ MCP Tools** — 覆盖 Public/Session/Developer/PM/Admin 五个权限域
 - [x] **Activity Stream** — 全操作审计 + Session 归因
 - [x] **通知系统** — 应用内通知 + SSE 推送 + Redis Pub/Sub + 个人偏好设置 + MCP 工具
+- [x] **需求澄清** — 结构化问答澄清 Idea 需求，澄清门控确保 Proposal 创建前需求已明确
 
 ### 部分实现
 

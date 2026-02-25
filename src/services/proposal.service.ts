@@ -469,6 +469,17 @@ export async function approveProposal(
 
   eventBus.emitChange({ companyUuid: proposal.companyUuid, projectUuid: proposal.projectUuid, entityType: "proposal", entityUuid: proposalUuid, action: "updated" });
 
+  // Auto-complete input Ideas when proposal is approved
+  if (proposal.inputType === "idea") {
+    const inputUuids = (proposal.inputUuids as string[]) || [];
+    if (inputUuids.length > 0) {
+      await prisma.idea.updateMany({
+        where: { uuid: { in: inputUuids }, companyUuid, status: "proposal_created" },
+        data: { status: "completed" },
+      });
+    }
+  }
+
   return formatProposalResponse(updatedProposal);
 }
 
@@ -540,6 +551,24 @@ export async function submitProposal(
     throw new Error("Only draft proposals can be submitted for review");
   }
 
+  // Elaboration gate: if proposal is linked to Ideas, all must have elaborationStatus = 'resolved'
+  if (proposal.inputType === "idea") {
+    const inputUuids = (proposal.inputUuids as string[]) || [];
+    if (inputUuids.length > 0) {
+      const ideas = await prisma.idea.findMany({
+        where: { uuid: { in: inputUuids }, companyUuid },
+        select: { uuid: true, title: true, elaborationStatus: true },
+      });
+      const unresolved = ideas.filter((i) => i.elaborationStatus !== "resolved");
+      if (unresolved.length > 0) {
+        const names = unresolved.map((i) => `"${i.title}"`).join(", ");
+        throw new Error(
+          `Cannot submit proposal: Idea requirements must be clarified first. Unresolved: ${names}. Call chorus_pm_start_elaboration or chorus_pm_skip_elaboration on each Idea.`
+        );
+      }
+    }
+  }
+
   const updated = await prisma.proposal.update({
     where: { uuid: proposalUuid },
     data: {
@@ -549,6 +578,17 @@ export async function submitProposal(
       project: { select: { uuid: true, name: true } },
     },
   });
+
+  // Auto-transition input Ideas to proposal_created
+  if (proposal.inputType === "idea") {
+    const inputUuids = (proposal.inputUuids as string[]) || [];
+    if (inputUuids.length > 0) {
+      await prisma.idea.updateMany({
+        where: { uuid: { in: inputUuids }, companyUuid, status: "elaborating" },
+        data: { status: "proposal_created" },
+      });
+    }
+  }
 
   eventBus.emitChange({ companyUuid: updated.companyUuid, projectUuid: updated.projectUuid, entityType: "proposal", entityUuid: updated.uuid, action: "updated" });
 

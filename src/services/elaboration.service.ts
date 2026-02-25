@@ -45,9 +45,9 @@ export async function startElaboration({
   if (idea.assigneeUuid !== actorUuid) {
     throw new Error("Only the assigned agent can start elaboration");
   }
-  if (!["in_progress", "elaborating"].includes(idea.status)) {
+  if (idea.status !== "elaborating") {
     throw new Error(
-      `Cannot start elaboration from status '${idea.status}'. Idea must be in 'in_progress' or 'elaborating'.`
+      `Cannot start elaboration from status '${idea.status}'. Idea must be in 'elaborating' status (claim it first).`
     );
   }
 
@@ -426,7 +426,7 @@ export async function skipElaboration({
   if (idea.assigneeUuid !== actorUuid) {
     throw new Error("Only the assigned agent can skip elaboration");
   }
-  if (!["in_progress", "elaborating"].includes(idea.status)) {
+  if (idea.status !== "elaborating") {
     throw new Error(
       `Cannot skip elaboration from status '${idea.status}'`
     );

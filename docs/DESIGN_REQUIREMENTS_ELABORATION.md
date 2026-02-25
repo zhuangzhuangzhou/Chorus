@@ -184,29 +184,37 @@ interface ValidationIssue {
 }
 ```
 
-## New Idea Status Flow
+## Idea Status Flow (Simplified)
 
 ```
-open → assigned → in_progress → elaborating → pending_review → completed
-                                    │    ▲
-                                    │    │ (follow-up round needed)
-                                    ▼    │
-                               [PM asks questions]
-                               [Human answers]
-                               [PM validates]
-                                    │
-                                    ▼
-                              [All resolved] → PM creates Proposal → pending_review
+open → elaborating → proposal_created → completed
+          │    ▲
+          │    │ (follow-up round needed)
+          ▼    │
+     [PM asks questions]
+     [Human answers]
+     [PM validates]
+          │
+          ▼
+    [All resolved] → PM creates Proposal → proposal_created
 ```
 
-New status: **`elaborating`** — sits between `in_progress` and `pending_review`. Indicates the Idea is undergoing structured requirements analysis.
+Claiming an Idea automatically transitions it to **`elaborating`**. The simplified lifecycle removes `assigned`, `in_progress`, and `pending_review` in favor of a streamlined flow:
 
-Status transition additions:
+- **`open`** — Idea is available for claiming
+- **`elaborating`** — PM has claimed the Idea and is clarifying requirements (auto-set on claim)
+- **`proposal_created`** — Elaboration resolved, Proposal submitted
+- **`completed`** — Proposal approved, tasks created
+- **`closed`** — Admin closed the Idea
+
+Status transitions:
 ```
-in_progress → elaborating    (PM starts elaboration)
+open → elaborating           (PM claims the Idea — auto-transition)
 elaborating → elaborating    (new round of questions)
-elaborating → in_progress    (PM decides to skip/cancel elaboration)
-elaborating → pending_review (elaboration complete, proposal created)
+elaborating → open           (PM releases the Idea)
+elaborating → proposal_created (elaboration resolved, proposal submitted)
+proposal_created → completed (proposal approved)
+any → closed                 (admin closes)
 ```
 
 ## MCP Tools
