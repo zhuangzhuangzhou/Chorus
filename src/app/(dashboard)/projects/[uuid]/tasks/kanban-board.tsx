@@ -13,7 +13,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { moveTaskToColumnAction } from "./actions";
 import { TaskDetailPanel } from "./task-detail-panel";
-import { getTaskSessionsAction } from "./session-actions";
+import { getBatchWorkerCountsAction } from "./session-actions";
 import { useRealtimeRefresh } from "@/contexts/realtime-context";
 
 interface Task {
@@ -88,21 +88,14 @@ export function KanbanBoard({ projectUuid, initialTasks, currentUserUuid, initia
     }
   }, [initialSelectedTaskUuid]);
 
-  // Fetch active worker counts for in-progress tasks
+  // Fetch active worker counts in a single batch query instead of N individual calls
   useEffect(() => {
     if (initialTasks.length === 0) return;
 
-    Promise.all(
-      initialTasks.map(async (task) => {
-        const result = await getTaskSessionsAction(task.uuid);
-        return { uuid: task.uuid, count: result.data?.length || 0 };
-      })
-    ).then((results) => {
-      const counts: Record<string, number> = {};
-      results.forEach((r) => {
-        if (r.count > 0) counts[r.uuid] = r.count;
-      });
-      setWorkerCounts(counts);
+    getBatchWorkerCountsAction(initialTasks.map((t) => t.uuid)).then((result) => {
+      if (result.success && result.data) {
+        setWorkerCounts(result.data);
+      }
     });
   }, [initialTasks]);
 

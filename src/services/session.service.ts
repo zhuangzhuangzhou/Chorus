@@ -346,6 +346,30 @@ export async function reopenSession(
   return formatSessionResponse(updated);
 }
 
+// Batch get active worker counts for multiple tasks (1 groupBy query instead of N individual queries)
+export async function batchGetWorkerCountsForTasks(
+  companyUuid: string,
+  taskUuids: string[]
+): Promise<Record<string, number>> {
+  if (taskUuids.length === 0) return {};
+
+  const checkins = await prisma.sessionTaskCheckin.groupBy({
+    by: ["taskUuid"],
+    where: {
+      taskUuid: { in: taskUuids },
+      checkoutAt: null,
+      session: { companyUuid, status: { in: ["active", "inactive"] } },
+    },
+    _count: { taskUuid: true },
+  });
+
+  const result: Record<string, number> = {};
+  for (const checkin of checkins) {
+    result[checkin.taskUuid] = checkin._count.taskUuid;
+  }
+  return result;
+}
+
 // Batch mark inactive sessions (no heartbeat for 1 hour)
 export async function markInactiveSessions(): Promise<number> {
   const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);

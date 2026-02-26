@@ -35,13 +35,30 @@ export function RealtimeProvider({ projectUuid, children }: RealtimeProviderProp
     let es: EventSource | null = null;
     let debounceTimer: NodeJS.Timeout;
 
+    let lastNotifyTime = 0;
+    const THROTTLE_MS = 3000;  // At most 1 refresh every 3 seconds
+    const DEBOUNCE_MS = 1000;  // Wait 1s of silence before refreshing
+
     function connect() {
       // Close any existing connection before opening a new one
       disconnect();
       es = new EventSource(`/api/events?projectUuid=${projectUuid}`);
       es.onmessage = () => {
         clearTimeout(debounceTimer);
-        debounceTimer = setTimeout(notify, 500);
+        const now = Date.now();
+        const elapsed = now - lastNotifyTime;
+
+        if (elapsed >= THROTTLE_MS) {
+          // Enough time has passed — refresh immediately
+          lastNotifyTime = now;
+          notify();
+        } else {
+          // Too soon — schedule a deferred refresh
+          debounceTimer = setTimeout(() => {
+            lastNotifyTime = Date.now();
+            notify();
+          }, Math.max(DEBOUNCE_MS, THROTTLE_MS - elapsed));
+        }
       };
       es.onerror = () => {
         // Browser EventSource auto-reconnects on error

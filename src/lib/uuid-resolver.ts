@@ -149,6 +149,72 @@ export async function formatReview(
   };
 }
 
+// Batch get actor names - 2 queries total instead of N individual queries
+export async function batchGetActorNames(
+  actors: Array<{ type: string; uuid: string }>
+): Promise<Map<string, string>> {
+  const result = new Map<string, string>();
+  if (actors.length === 0) return result;
+
+  // Deduplicate by uuid per type
+  const userUuids = [...new Set(actors.filter(a => a.type === "user").map(a => a.uuid))];
+  const agentUuids = [...new Set(actors.filter(a => a.type === "agent").map(a => a.uuid))];
+
+  const [users, agents] = await Promise.all([
+    userUuids.length > 0
+      ? prisma.user.findMany({ where: { uuid: { in: userUuids } }, select: { uuid: true, name: true, email: true } })
+      : [],
+    agentUuids.length > 0
+      ? prisma.agent.findMany({ where: { uuid: { in: agentUuids } }, select: { uuid: true, name: true } })
+      : [],
+  ]);
+
+  for (const user of users) {
+    result.set(user.uuid, user.name || user.email || "Unknown");
+  }
+  for (const agent of agents) {
+    result.set(agent.uuid, agent.name);
+  }
+
+  return result;
+}
+
+// Batch format createdBy - tries users first, then agents for unmatched UUIDs
+export async function batchFormatCreatedBy(
+  createdByUuids: string[]
+): Promise<Map<string, { type: string; uuid: string; name: string }>> {
+  const result = new Map<string, { type: string; uuid: string; name: string }>();
+  if (createdByUuids.length === 0) return result;
+
+  const unique = [...new Set(createdByUuids)];
+
+  // Try users first
+  const users = await prisma.user.findMany({
+    where: { uuid: { in: unique } },
+    select: { uuid: true, name: true, email: true },
+  });
+
+  const foundUuids = new Set<string>();
+  for (const user of users) {
+    foundUuids.add(user.uuid);
+    result.set(user.uuid, { type: "user", uuid: user.uuid, name: user.name || user.email || "Unknown" });
+  }
+
+  // Then try agents for unmatched
+  const remaining = unique.filter(uuid => !foundUuids.has(uuid));
+  if (remaining.length > 0) {
+    const agents = await prisma.agent.findMany({
+      where: { uuid: { in: remaining } },
+      select: { uuid: true, name: true },
+    });
+    for (const agent of agents) {
+      result.set(agent.uuid, { type: "agent", uuid: agent.uuid, name: agent.name });
+    }
+  }
+
+  return result;
+}
+
 // Get Session name by UUID
 export async function getSessionName(sessionUuid: string): Promise<string | null> {
   const session = await prisma.agentSession.findUnique({

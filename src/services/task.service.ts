@@ -3,7 +3,7 @@
 // UUID-Based Architecture: All operations use UUIDs
 
 import { prisma } from "@/lib/prisma";
-import { formatAssigneeComplete, formatCreatedBy } from "@/lib/uuid-resolver";
+import { formatAssigneeComplete, formatCreatedBy, batchGetActorNames, batchFormatCreatedBy } from "@/lib/uuid-resolver";
 import { eventBus } from "@/lib/event-bus";
 import { AlreadyClaimedError, NotClaimedError, isPrismaNotFound } from "@/lib/errors";
 import { batchCommentCounts } from "@/services/comment.service";
@@ -162,6 +162,112 @@ async function formatTaskResponse(
   };
 }
 
+// Batch format multiple tasks - 2 batch queries instead of N * (3-4) individual queries
+type RawTaskForBatch = {
+  uuid: string;
+  title: string;
+  description: string | null;
+  status: string;
+  priority: string;
+  storyPoints: number | null;
+  acceptanceCriteria: string | null;
+  assigneeType: string | null;
+  assigneeUuid: string | null;
+  assignedAt: Date | null;
+  assignedByUuid: string | null;
+  proposalUuid: string | null;
+  createdByUuid: string;
+  createdAt: Date;
+  updatedAt: Date;
+  project?: { uuid: string; name: string };
+  dependsOn?: Array<{ dependsOn: { uuid: string; title: string; status: string } }>;
+  dependedBy?: Array<{ task: { uuid: string; title: string; status: string } }>;
+};
+
+async function formatTaskResponsesBatch(
+  tasks: RawTaskForBatch[],
+  commentCounts: Record<string, number>,
+): Promise<TaskResponse[]> {
+  if (tasks.length === 0) return [];
+
+  // Collect all unique actors for batch resolution
+  const actors: Array<{ type: string; uuid: string }> = [];
+  const createdByUuids: string[] = [];
+
+  for (const task of tasks) {
+    if (task.assigneeType && task.assigneeUuid) {
+      actors.push({ type: task.assigneeType, uuid: task.assigneeUuid });
+    }
+    if (task.assignedByUuid) {
+      actors.push({ type: "user", uuid: task.assignedByUuid });
+    }
+    createdByUuids.push(task.createdByUuid);
+  }
+
+  // 2 batch queries instead of N * (3-4) individual queries
+  const [actorNames, createdByMap] = await Promise.all([
+    batchGetActorNames(actors),
+    batchFormatCreatedBy(createdByUuids),
+  ]);
+
+  // Build responses synchronously from lookup maps
+  return tasks.map((task) => {
+    let assignee: TaskResponse["assignee"] = null;
+    if (task.assigneeType && task.assigneeUuid) {
+      const assigneeName = actorNames.get(task.assigneeUuid);
+      if (assigneeName) {
+        let assignedBy: { type: string; uuid: string; name: string } | null = null;
+        if (task.assignedByUuid) {
+          const assignedByName = actorNames.get(task.assignedByUuid);
+          if (assignedByName) {
+            assignedBy = { type: "user", uuid: task.assignedByUuid, name: assignedByName };
+          }
+        }
+        assignee = {
+          type: task.assigneeType,
+          uuid: task.assigneeUuid,
+          name: assigneeName,
+          assignedAt: task.assignedAt?.toISOString() ?? null,
+          assignedBy,
+        };
+      }
+    }
+
+    const createdBy = createdByMap.get(task.createdByUuid) ?? null;
+
+    const dependsOn: TaskDependencyInfo[] = (task.dependsOn || []).map((d) => ({
+      uuid: d.dependsOn.uuid,
+      title: d.dependsOn.title,
+      status: d.dependsOn.status,
+    }));
+
+    const dependedBy: TaskDependencyInfo[] = (task.dependedBy || []).map((d) => ({
+      uuid: d.task.uuid,
+      title: d.task.title,
+      status: d.task.status,
+    }));
+
+    return {
+      uuid: task.uuid,
+      title: task.title,
+      description: task.description,
+      status: task.status,
+      priority: task.priority,
+      storyPoints: task.storyPoints,
+      acceptanceCriteria: task.acceptanceCriteria,
+      assignee,
+      proposalUuid: task.proposalUuid,
+      ...(task.project && { project: task.project }),
+      createdBy,
+      dependsOn,
+      dependedBy,
+      commentCount: commentCounts[task.uuid] ?? 0,
+      createdAt: task.createdAt.toISOString(),
+      updatedAt: task.updatedAt.toISOString(),
+    };
+  });
+}
+
 // ===== Dependency relation include template =====
 
 const dependencyInclude = {
@@ -230,9 +336,8 @@ export async function listTasks({
     rawTasks.map((t) => t.uuid),
   );
 
-  const tasks = await Promise.all(
-    rawTasks.map((t) => formatTaskResponse(t, commentCounts[t.uuid] ?? 0)),
-  );
+  // Batch format: 2 queries total instead of N * (3-4)
+  const tasks = await formatTaskResponsesBatch(rawTasks, commentCounts);
   return { tasks, total };
 }
 
@@ -713,9 +818,8 @@ export async function getUnblockedTasks({
     rawTasks.map((t) => t.uuid),
   );
 
-  const tasks = await Promise.all(
-    rawTasks.map((t) => formatTaskResponse(t, commentCounts[t.uuid] ?? 0)),
-  );
+  // Batch format: 2 queries total instead of N * (3-4)
+  const tasks = await formatTaskResponsesBatch(rawTasks, commentCounts);
   return { tasks, total };
 }
 
