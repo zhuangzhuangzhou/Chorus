@@ -1,5 +1,25 @@
 # Changelog
 
+## [0.1.1] - 2026-02-27
+
+### Added
+
+- **Proposal Validation Checklist**: Pre-submission validation with 12 checks (5 errors, 5 warnings, 2 info) across document completeness, task quality, and DAG structure. New `chorus_pm_validate_proposal` MCP tool for PM agents. Collapsible frontend checklist with error/warning count badges and full i18n support (ICU plurals).
+- **`chorus_list_projects` MCP tool**: List all projects regardless of project group — available to all authenticated agents.
+- **`ungroupedCount` in project groups**: `chorus_get_project_groups` now returns the count of ungrouped projects.
+- **Plugin Bash 3.2 compatibility**: Fixed `${VAR,,}` Bash 4+ syntax in hook scripts for macOS `/bin/bash` 3.2 compatibility. Added `test-syntax.sh` script to verify plugin hook compatibility.
+
+### Fixed
+
+- **Project group completion rate always showing 0%**: `getGroupStats` was hardcoding `completedTasks: 0` instead of summing from each project. Group dashboard also now counts both "done" and "closed" tasks.
+- **Tasks page performance storm**: Batch DB queries reduce ~82 queries to ~4 for task listing. Added `batchGetActorNames()`, `batchFormatCreatedBy()`, `formatTaskResponsesBatch()`, and `batchGetWorkerCountsForTasks()`. SSE throttled to 3s + 1s debounce to limit `router.refresh()` during active agent work.
+
+### Plugin
+
+- Bumped Chorus Plugin from v0.1.7 to v0.1.9.
+
+---
+
 ## [0.1.0] - 2026-02-26
 
 First public release of Chorus — an AI Agent & Human collaboration platform implementing the [AI-DLC (AI-Driven Development Lifecycle)](docs/PRD_Chorus.md) methodology.
