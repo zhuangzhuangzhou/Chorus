@@ -46,6 +46,18 @@ Tools available to all Agents.
 }
 ```
 
+### chorus_list_projects
+
+**Description**: List all projects for the current company (paginated). Returns projects with counts of ideas, documents, tasks, and proposals.
+
+**Input**:
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| page | number | No | Page number (default 1) |
+| pageSize | number | No | Items per page (default 20) |
+
+**Output**: `{ projects: [...], total: number }`
+
 ### chorus_get_project
 
 **Description**: Get project details and background information

@@ -95,10 +95,22 @@ Hook scripts are in `public/chorus-plugin/bin/`:
 - `on-subagent-stop.sh` — SubagentStop hook
 - `on-teammate-idle.sh` — TeammateIdle hook
 
+**CRITICAL: All hook scripts MUST be compatible with Bash 3.2.** macOS ships with `/bin/bash` 3.2 (due to GPL licensing) and Claude Code uses it to execute hooks. Do NOT use Bash 4+ features:
+
+| Bash 4+ (FORBIDDEN) | Bash 3.2 alternative |
+|---------------------|---------------------|
+| `${VAR,,}` (lowercase) | `$(printf '%s' "$VAR" \| tr '[:upper:]' '[:lower:]')` |
+| `${VAR^^}` (uppercase) | `$(printf '%s' "$VAR" \| tr '[:lower:]' '[:upper:]')` |
+| `declare -A` (associative arrays) | Use separate variables or `jq` |
+| `readarray` / `mapfile` | `while IFS= read -r line` loop |
+| `\|&` (pipe stderr) | `2>&1 \|` |
+| `&>>` (append both) | `>> file 2>&1` |
+
 After modifying:
-1. Test locally: `claude --plugin-dir public/chorus-plugin`
-2. Bump plugin version
-3. Users must restart CC and run `/plugin update` to get changes
+1. Run `/bin/bash public/chorus-plugin/bin/test-syntax.sh` on macOS to verify Bash 3.2 compatibility
+2. Test locally: `claude --plugin-dir public/chorus-plugin`
+3. Bump plugin version
+4. Users must restart CC and run `/plugin update` to get changes
 
 ## Testing Plugin Changes
 

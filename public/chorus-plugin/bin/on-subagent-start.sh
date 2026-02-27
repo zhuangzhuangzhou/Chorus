@@ -43,7 +43,7 @@ AGENT_ID=$(echo "$EVENT" | jq -r '.agent_id // .agentId // empty' 2>/dev/null) |
 AGENT_TYPE=$(echo "$EVENT" | jq -r '.agent_type // .agentType // empty' 2>/dev/null) || true
 
 # Skip non-worker agent types (read-only agents don't need sessions)
-case "${AGENT_TYPE,,}" in
+case "$(printf '%s' "$AGENT_TYPE" | tr '[:upper:]' '[:lower:]')" in
   explore|plan|haiku|claude-code-guide|statusline-setup)
     exit 0
     ;;

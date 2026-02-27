@@ -49,6 +49,7 @@ Projects can be organized into **Project Groups** — a single-level grouping fo
 
 | Tool | Purpose |
 |------|---------|
+| `chorus_list_projects` | List all projects for the current company (paginated). Returns projects with counts of ideas, documents, tasks, and proposals. |
 | `chorus_get_project` | Get project details and background information |
 | `chorus_get_activity` | Get project activity stream (paginated) |
 

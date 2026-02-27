@@ -174,7 +174,7 @@ export async function getProjectGroup(
 
 export async function listProjectGroups(
   companyUuid: string
-): Promise<{ groups: ProjectGroupResponse[]; total: number }> {
+): Promise<{ groups: ProjectGroupResponse[]; total: number; ungroupedCount: number }> {
   const groups = await prisma.projectGroup.findMany({
     where: { companyUuid },
     orderBy: { createdAt: "asc" },
@@ -204,7 +204,12 @@ export async function listProjectGroups(
     updatedAt: g.updatedAt.toISOString(),
   }));
 
-  return { groups: result, total: groups.length };
+  // Count ungrouped projects
+  const ungroupedCount = await prisma.project.count({
+    where: { companyUuid, groupUuid: null },
+  });
+
+  return { groups: result, total: groups.length, ungroupedCount };
 }
 
 // ============================================================

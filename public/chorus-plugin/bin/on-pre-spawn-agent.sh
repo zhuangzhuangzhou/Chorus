@@ -32,7 +32,7 @@ if [ -n "$EVENT" ]; then
 fi
 
 # Skip non-worker types — no need to remind for Explore/Plan agents
-case "${AGENT_TYPE,,}" in
+case "$(printf '%s' "$AGENT_TYPE" | tr '[:upper:]' '[:lower:]')" in
   explore|plan|haiku|claude-code-guide|statusline-setup)
     exit 0
     ;;

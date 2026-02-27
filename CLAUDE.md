@@ -192,3 +192,5 @@ When implementing any user-facing feature or UI change, you **must** update `doc
 7. **design.pen is encrypted**: The `docs/design.pen` file can only be read/written through the Pencil MCP tools. Never use Read/Grep on `.pen` files.
 
 8. **Server Components vs Client Components**: Default to Server Components. Only add `"use client"` when you need interactivity (useState, useEffect, event handlers). Server Actions (`"use server"`) are used for mutations called from client components.
+
+9. **Plugin shell scripts must be Bash 3.2 compatible**: macOS ships with Bash 3.2 (`/bin/bash`) and Claude Code uses it to run hooks. Do NOT use Bash 4+ features in `public/chorus-plugin/bin/*.sh`. Common traps: `${VAR,,}` (use `tr '[:upper:]' '[:lower:]'`), `${VAR^^}` (use `tr '[:lower:]' '[:upper:]'`), `declare -A` (associative arrays), `readarray`/`mapfile`, `|&`, `&>>`. Run `/bin/bash public/chorus-plugin/bin/test-syntax.sh` on macOS to verify.

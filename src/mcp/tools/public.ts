@@ -40,6 +40,29 @@ export function registerPublicTools(server: McpServer, auth: AgentAuthContext) {
     }
   );
 
+  // chorus_list_projects - List all projects
+  server.registerTool(
+    "chorus_list_projects",
+    {
+      description: "List all projects for the current company. Returns projects with counts of ideas, documents, tasks, and proposals.",
+      inputSchema: z.object({
+        page: z.number().default(1).describe("Page number"),
+        pageSize: z.number().default(20).describe("Items per page"),
+      }),
+    },
+    async ({ page, pageSize }) => {
+      const skip = (page - 1) * pageSize;
+      const result = await projectService.listProjects({
+        companyUuid: auth.companyUuid,
+        skip,
+        take: pageSize,
+      });
+      return {
+        content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
+      };
+    }
+  );
+
   // chorus_get_ideas - Get Ideas list
   server.registerTool(
     "chorus_get_ideas",
