@@ -141,6 +141,27 @@ async function resolveProjectName(projectUuid: string): Promise<string> {
   return project?.name ?? "Unknown Project";
 }
 
+// Resolve the owner of an agent. If the actor is a user, return the user directly.
+// If the actor is an agent, return the agent's human owner (if set).
+async function resolveAgentOwner(
+  actorType: string,
+  actorUuid: string
+): Promise<Recipient | null> {
+  if (actorType === "user") {
+    return { type: "user", uuid: actorUuid };
+  }
+  if (actorType === "agent") {
+    const agent = await prisma.agent.findUnique({
+      where: { uuid: actorUuid },
+      select: { ownerUuid: true },
+    });
+    if (agent?.ownerUuid) {
+      return { type: "user", uuid: agent.ownerUuid };
+    }
+  }
+  return null;
+}
+
 // ===== Recipient resolution per notification type =====
 
 async function resolveRecipients(
@@ -148,6 +169,7 @@ async function resolveRecipients(
   targetType: string,
   targetUuid: string,
   companyUuid: string,
+  actorType: string,
   actorUuid: string
 ): Promise<Recipient[]> {
   switch (notificationType) {
@@ -185,20 +207,17 @@ async function resolveRecipients(
     }
 
     case "task_submitted_for_verify": {
-      // Notify all admin agents in the company
-      const adminAgents = await prisma.agent.findMany({
-        where: {
-          companyUuid,
-          roles: { has: "admin_agent" },
-        },
-        select: { uuid: true },
-      });
+      // Notify the actor's owner (human) + task creator
+      const recipients: Recipient[] = [];
+      const ownerRecipient = await resolveAgentOwner(actorType, actorUuid);
+      if (ownerRecipient) {
+        recipients.push(ownerRecipient);
+      }
       // Also notify task creator
       const submittedTask = await prisma.task.findUnique({
         where: { uuid: targetUuid },
         select: { createdByUuid: true },
       });
-      const recipients: Recipient[] = adminAgents.map((a) => ({ type: "agent" as const, uuid: a.uuid }));
       if (submittedTask) {
         const creatorType = await resolveActorType(submittedTask.createdByUuid);
         if (creatorType) {
@@ -262,25 +281,19 @@ async function resolveRecipients(
     }
 
     case "elaboration_requested": {
-      // Notify Idea creator (user) + project admin agents
+      // Notify Idea creator (user) + actor's owner (if actor is an agent)
       const reqIdea = await prisma.idea.findUnique({
         where: { uuid: targetUuid },
-        select: { createdByUuid: true, projectUuid: true },
+        select: { createdByUuid: true },
       });
       if (!reqIdea) return [];
       const reqRecipients: Recipient[] = [];
       // Idea creator is always a user
       reqRecipients.push({ type: "user", uuid: reqIdea.createdByUuid });
-      // Project admin agents
-      const reqAdminAgents = await prisma.agent.findMany({
-        where: {
-          companyUuid,
-          roles: { has: "admin_agent" },
-        },
-        select: { uuid: true },
-      });
-      for (const a of reqAdminAgents) {
-        reqRecipients.push({ type: "agent", uuid: a.uuid });
+      // Actor's owner (if actor is an agent, notify the human owner)
+      const ownerRecipient = await resolveAgentOwner(actorType, actorUuid);
+      if (ownerRecipient) {
+        reqRecipients.push(ownerRecipient);
       }
       return reqRecipients;
     }
@@ -456,6 +469,7 @@ async function handleActivity(event: ActivityEvent): Promise<void> {
       event.targetType,
       event.targetUuid,
       event.companyUuid,
+      event.actorType,
       event.actorUuid
     );
 
