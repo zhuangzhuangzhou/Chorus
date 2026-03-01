@@ -110,8 +110,19 @@ export async function createAgent({
   });
 }
 
-// Update Agent (by UUID)
-export async function updateAgent(uuid: string, data: AgentUpdateParams) {
+// Update Agent (by UUID, optionally scoped by company)
+export async function updateAgent(uuid: string, data: AgentUpdateParams, companyUuid?: string) {
+  // If companyUuid provided, verify agent belongs to company first
+  if (companyUuid) {
+    const agent = await prisma.agent.findFirst({
+      where: { uuid, companyUuid },
+      select: { uuid: true },
+    });
+    if (!agent) {
+      throw new Error("Agent not found");
+    }
+  }
+
   return prisma.agent.update({
     where: { uuid },
     data,
@@ -125,6 +136,14 @@ export async function updateAgent(uuid: string, data: AgentUpdateParams) {
       lastActiveAt: true,
       createdAt: true,
     },
+  });
+}
+
+// Sync API key names when agent name changes
+export async function syncApiKeyNames(agentUuid: string, name: string) {
+  return prisma.apiKey.updateMany({
+    where: { agentUuid, revokedAt: null },
+    data: { name },
   });
 }
 

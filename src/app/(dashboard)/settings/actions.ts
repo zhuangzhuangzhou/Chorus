@@ -9,6 +9,7 @@ import {
   deleteAgent,
   getApiKey,
   updateAgent,
+  syncApiKeyNames,
 } from "@/services/agent.service";
 import {
   listAgentSessions,
@@ -45,7 +46,7 @@ export async function getApiKeysAction(): Promise<{
     const data = apiKeys.map((key) => ({
       uuid: key.uuid,
       keyPrefix: key.keyPrefix,
-      name: key.name,
+      name: key.agent?.name || key.name,
       lastUsed: null,
       expiresAt: key.expiresAt?.toISOString() || null,
       createdAt: key.createdAt.toISOString(),
@@ -201,7 +202,11 @@ export async function updateAgentAction(input: UpdateAgentInput): Promise<{
       name: input.name,
       roles: input.roles,
       persona: input.persona,
-    });
+    }, auth.companyUuid);
+
+    // Sync API key names to match the updated agent name
+    await syncApiKeyNames(input.agentUuid, input.name);
+
     return { success: true };
   } catch (error) {
     console.error("Failed to update agent:", error);

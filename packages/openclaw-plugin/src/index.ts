@@ -68,7 +68,7 @@ const plugin = {
     const hooksToken = api.config?.hooks?.token ?? "";
 
     logger.info(
-      `Chorus plugin initializing — ${config.chorusUrl} (${config.projectUuids.length || "all"} projects)`
+      `Chorus plugin initializing — ${config.chorusUrl} (${config.projectUuids?.length || "all"} projects)`
     );
 
     // --- MCP Client ---
