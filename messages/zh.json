@@ -585,7 +585,13 @@
     "creating": "创建中...",
     "confirmDelete": "确定要删除此 API 密钥吗？",
     "confirmDeleteTitle": "删除 API 密钥",
-    "confirmDeleteDesc": "确定要删除此 API 密钥吗？此操作无法撤销。"
+    "confirmDeleteDesc": "确定要删除此 API 密钥吗？此操作无法撤销。",
+    "editAgent": "编辑智能体",
+    "saveChanges": "保存更改",
+    "saving": "保存中...",
+    "editAgentDesc": "更新此智能体的名称、角色和人设。",
+    "updateSuccess": "智能体更新成功",
+    "updateFailed": "更新智能体失败"
   },
   "login": {
     "title": "Chorus",

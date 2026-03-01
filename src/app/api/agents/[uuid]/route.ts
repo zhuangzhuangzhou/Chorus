@@ -112,13 +112,18 @@ export const PATCH = withErrorHandler<{ uuid: string }>(
     }
 
     if (body.roles !== undefined) {
-      const validRoles = ["pm", "developer"];
+      const validRoles = ["pm_agent", "developer_agent", "admin_agent"];
       for (const role of body.roles) {
         if (!validRoles.includes(role)) {
           return errors.validationError({
-            roles: "Roles must be pm or developer",
+            roles: "Roles must be pm_agent, developer_agent, or admin_agent",
           });
         }
+      }
+      if (body.roles.length === 0) {
+        return errors.validationError({
+          roles: "At least one role is required",
+        });
       }
       updateData.roles = body.roles;
     }

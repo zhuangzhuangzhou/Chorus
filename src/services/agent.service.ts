@@ -148,7 +148,7 @@ export async function listApiKeys(companyUuid: string, skip: number, take: numbe
       take,
       orderBy: { createdAt: "desc" },
       include: {
-        agent: { select: { uuid: true, name: true, roles: true } },
+        agent: { select: { uuid: true, name: true, roles: true, persona: true } },
       },
     }),
     prisma.apiKey.count({ where }),

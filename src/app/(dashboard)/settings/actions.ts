@@ -8,6 +8,7 @@ import {
   createApiKey,
   deleteAgent,
   getApiKey,
+  updateAgent,
 } from "@/services/agent.service";
 import {
   listAgentSessions,
@@ -25,6 +26,7 @@ interface ApiKeyResponse {
   createdAt: string;
   roles: string[];
   agentUuid: string;
+  persona: string | null;
 }
 
 export async function getApiKeysAction(): Promise<{
@@ -49,6 +51,7 @@ export async function getApiKeysAction(): Promise<{
       createdAt: key.createdAt.toISOString(),
       roles: key.agent?.roles || [],
       agentUuid: key.agent?.uuid || "",
+      persona: key.agent?.persona || null,
     }));
 
     return { success: true, data };
@@ -174,5 +177,34 @@ export async function reopenSessionAction(sessionUuid: string): Promise<{
   } catch (error) {
     console.error("Failed to reopen session:", error);
     return { success: false, error: "Failed to reopen session" };
+  }
+}
+
+interface UpdateAgentInput {
+  agentUuid: string;
+  name: string;
+  roles: string[];
+  persona: string | null;
+}
+
+export async function updateAgentAction(input: UpdateAgentInput): Promise<{
+  success: boolean;
+  error?: string;
+}> {
+  const auth = await getServerAuthContext();
+  if (!auth) {
+    return { success: false, error: "Unauthorized" };
+  }
+
+  try {
+    await updateAgent(input.agentUuid, {
+      name: input.name,
+      roles: input.roles,
+      persona: input.persona,
+    });
+    return { success: true };
+  } catch (error) {
+    console.error("Failed to update agent:", error);
+    return { success: false, error: "Failed to update agent" };
   }
 }

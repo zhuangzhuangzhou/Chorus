@@ -584,7 +584,13 @@
     "creating": "Creating...",
     "confirmDelete": "Are you sure you want to delete this API key?",
     "confirmDeleteTitle": "Delete API Key",
-    "confirmDeleteDesc": "Are you sure you want to delete this API key? This action cannot be undone."
+    "confirmDeleteDesc": "Are you sure you want to delete this API key? This action cannot be undone.",
+    "editAgent": "Edit Agent",
+    "saveChanges": "Save Changes",
+    "saving": "Saving...",
+    "editAgentDesc": "Update this agent's name, roles, and persona.",
+    "updateSuccess": "Agent updated successfully",
+    "updateFailed": "Failed to update agent"
   },
   "login": {
     "title": "Chorus",
