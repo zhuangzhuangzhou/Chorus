@@ -1,6 +1,10 @@
 # 为 OpenClaw 构建 Chorus 插件：从 SSE 到 MCP，让 AI Agent 真正"活"在工作流里
 
-## TL;DR：这篇文章聊什么
+你有没有遇到过这样的场景：平台上分配了任务，切到终端复制粘贴给 Agent，等它干完再回平台更新状态。Agent 明明很能干，但感知不到"有活来了"，也没法主动汇报 — 它不是团队成员，只是一个你手动喂指令的工具。
+
+这篇文章分享三个可以直接搬走的 pattern：**双通道架构**（事件推送感知 + 工具协议执行）、**Prompt 驱动行为**（消息模板引导自主决策）、**薄代理桥接**（统一模式暴露 MCP 工具）。以 [Chorus](https://github.com/Chorus-AIDLC/chorus) × [OpenClaw](https://openclaw.ai) 的实际集成为例。
+
+## TL;DR
 
 **SSE + MCP 的天然组合** — Chorus 给人类的 SSE 事件推送 + 给 Agent 的 MCP 工具，如何完美适配 OpenClaw 的插件模型<br> 
 **OpenClaw 插件三原语** — `registerService`（后台长连接）、`registerTool`（40 个 Agent 工具）、`registerCommand`（快捷指令），如何撑起整个集成<br> 

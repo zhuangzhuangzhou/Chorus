@@ -1,6 +1,10 @@
 # Building an OpenClaw Plugin for Chorus: SSE + MCP to Make AI Agents Truly "Live" in the Workflow
 
-## TL;DR: What This Article Covers
+Have you ever found yourself in this loop: task assigned on the platform, switch to terminal, copy-paste the description to the agent, wait for it to finish, go back to update status and @mention people. Every time. The agent is perfectly capable, but it can't sense "there's work incoming" and can't proactively report back — it's not a team member, just a tool you manually feed instructions to.
+
+This article shares three patterns you can take away directly: **dual-channel architecture** (event push for awareness + tool protocol for execution), **prompt-driven behavior** (message templates guiding autonomous decisions), and **thin proxy bridging** (uniform pattern to expose MCP tools). Using the [Chorus](https://github.com/Chorus-AIDLC/chorus) × [OpenClaw](https://openclaw.ai) integration as a real-world example.
+
+## TL;DR
 
 1. **SSE + MCP as a natural pair** — Chorus's SSE event push (for humans) + MCP tools (for agents), and how they perfectly fit OpenClaw's plugin model
 2. **OpenClaw's three plugin primitives** — `registerService` (background long-lived connections), `registerTool` (40 agent tools), `registerCommand` (slash commands) — and how they scaffold the entire integration
