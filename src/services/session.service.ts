@@ -395,13 +395,21 @@ export async function getSessionName(sessionUuid: string): Promise<string | null
 }
 
 /**
- * Get all active sessions that have active checkins to tasks in a given project.
- * Returns up to 5 unique sessions (for PixelCanvas slots).
+ * Get all active workers for a project's PixelCanvas.
+ * Returns up to 5 unique workers (for PixelCanvas slots).
+ *
+ * Sources (merged, session-based workers listed first):
+ * 1. Session-based: each unique session with active checkins = one sub-agent worker
+ * 2. Sessionless: agents with in_progress tasks that have NO active session checkin
+ *    on those tasks = the main agent working directly (e.g. OpenClaw single-agent mode).
+ *    Even if the same agent has sessions on other tasks, the main agent still counts
+ *    as a separate worker when it works on tasks without delegating to a session.
  */
 export async function getActiveSessionsForProject(
   companyUuid: string,
   projectUuid: string
 ): Promise<TaskSessionInfo[]> {
+  // 1. Session-based workers: each unique session = one sub-agent worker
   const checkins = await prisma.sessionTaskCheckin.findMany({
     where: {
       checkoutAt: null,
@@ -422,20 +430,76 @@ export async function getActiveSessionsForProject(
   });
 
   // Deduplicate by session UUID, keep first checkin per session
-  const seen = new Set<string>();
-  const unique: TaskSessionInfo[] = [];
+  const seenSessions = new Set<string>();
+  const results: TaskSessionInfo[] = [];
+  // Collect task UUIDs that have active session checkins
+  const tasksWithCheckins = new Set<string>();
   for (const c of checkins) {
-    if (seen.has(c.session.uuid)) continue;
-    seen.add(c.session.uuid);
-    unique.push({
+    tasksWithCheckins.add(c.taskUuid);
+    if (seenSessions.has(c.session.uuid)) continue;
+    seenSessions.add(c.session.uuid);
+    results.push({
       sessionUuid: c.session.uuid,
       sessionName: c.session.name,
       agentUuid: c.session.agentUuid,
       agentName: c.session.agent.name,
       checkinAt: c.checkinAt.toISOString(),
     });
-    if (unique.length >= 5) break;
+    if (results.length >= 7) return results;
   }
 
-  return unique;
+  // 2. Sessionless workers: agents doing in_progress tasks without a session
+  //    (the main agent working directly, not via a sub-agent session)
+  const sessionlessTasks = await prisma.task.findMany({
+    where: {
+      projectUuid,
+      companyUuid,
+      status: "in_progress",
+      assigneeType: "agent",
+      assigneeUuid: { not: null },
+      // Exclude tasks that already have active session checkins
+      ...(tasksWithCheckins.size > 0
+        ? { uuid: { notIn: [...tasksWithCheckins] } }
+        : {}),
+    },
+    select: {
+      uuid: true,
+      assigneeUuid: true,
+      updatedAt: true,
+    },
+    orderBy: { updatedAt: "asc" },
+  });
+
+  // Deduplicate by agent UUID — one entry per "main agent" working directly
+  const seenDirectAgents = new Set<string>();
+  const uniqueAgentTasks: typeof sessionlessTasks = [];
+  for (const task of sessionlessTasks) {
+    if (!task.assigneeUuid || seenDirectAgents.has(task.assigneeUuid)) continue;
+    seenDirectAgents.add(task.assigneeUuid);
+    uniqueAgentTasks.push(task);
+    if (results.length + uniqueAgentTasks.length >= 7) break;
+  }
+
+  if (uniqueAgentTasks.length > 0) {
+    // Batch-fetch agent names
+    const agents = await prisma.agent.findMany({
+      where: { uuid: { in: uniqueAgentTasks.map((t) => t.assigneeUuid!) } },
+      select: { uuid: true, name: true },
+    });
+    const agentMap = new Map(agents.map((a) => [a.uuid, a.name]));
+
+    for (const task of uniqueAgentTasks) {
+      const agentName = agentMap.get(task.assigneeUuid!);
+      if (!agentName) continue;
+      results.push({
+        sessionUuid: "",
+        sessionName: agentName,
+        agentUuid: task.assigneeUuid!,
+        agentName,
+        checkinAt: task.updatedAt.toISOString(),
+      });
+    }
+  }
+
+  return results;
 }
