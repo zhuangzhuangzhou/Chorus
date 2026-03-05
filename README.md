@@ -2,7 +2,7 @@
   <img src="docs/images/chorus-slug.png" alt="Chorus" width="240" />
 </p>
 
-<p align="center"><strong>AI Agent & Human Collaboration Platform</strong></p>
+<p align="center"><strong>The Agent Harness for AI-Human Collaboration</strong></p>
 
 <p align="center">
   <a href="https://discord.gg/SwcCMaMmR">
@@ -12,14 +12,15 @@
 
 <p align="center"><a href="README.zh.md">中文</a></p>
 
-Chorus implements the **AI-DLC (AI-Driven Development Lifecycle)** methodology, enabling multiple AI Agents (PM, Developer, Admin) and humans to collaborate on a shared platform through the full workflow from requirements to delivery.
+Chorus is an agent harness — the infrastructure that wraps around LLM agents to manage session lifecycle, task state, sub-agent orchestration, observability, and failure recovery. It lets multiple AI Agents (PM, Developer, Admin) and humans collaborate on a shared platform through the full workflow from requirements to delivery.
 
-Core philosophy: **Reversed Conversation** — AI proposes, humans verify.
+Inspired by the **[AI-DLC (AI-Driven Development Lifecycle)](https://aws.amazon.com/blogs/devops/ai-driven-development-life-cycle/)** methodology. Core philosophy: **Reversed Conversation** — AI proposes, humans verify.
 
 ---
 
 ## Table of Contents
 
+- [Why Agent Harness](#why-agent-harness)
 - [AI-DLC Workflow](#ai-dlc-workflow)
 - [Screenshots](#screenshots)
 - [Features](#features)
@@ -30,6 +31,26 @@ Core philosophy: **Reversed Conversation** — AI proposes, humans verify.
 - [Progress](#progress)
 - [Documentation](#documentation)
 - [License](#license)
+
+## Why Agent Harness
+
+An AI agent is only as reliable as the system around it. The model handles reasoning — but session boundaries, task state, context handoff, sub-agent coordination, and failure recovery all happen outside the model. That surrounding system is the **agent harness**.
+
+Without a harness, agents drift across long tasks, lose context between sessions, duplicate work, and fail silently. A well-designed harness solves these problems:
+
+| Harness Capability | The Problem It Solves | How Chorus Handles It |
+|---|---|---|
+| **Session Lifecycle** | Agents lose track of work across restarts | Every agent gets a persistent session with heartbeats; the plugin auto-creates and closes sessions on spawn/exit |
+| **Task State Machine** | No single source of truth for what's done | Tasks flow through a strict lifecycle — claimed, in progress, submitted, verified — visible to everyone in real time |
+| **Context Continuity** | Fresh context windows start from zero | Each check-in restores the agent's persona, current assignments, and project state so it can resume without re-discovery |
+| **Sub-Agent Orchestration** | Multi-agent work is chaotic without coordination | Lifecycle hooks wire up sub-agents automatically — sessions, context, and unblocked task discovery are handled, not hand-coded |
+| **Observability** | Can't debug what you can't see | Every action is logged with session attribution; Kanban and worker badges show who is doing what, live |
+| **Failure Recovery** | Stuck tasks block the entire pipeline | Idle sessions expire, orphaned tasks are released back to the pool, and any agent can pick them up again |
+| **Planning & Decomposition** | Agents jump into coding without a plan | A PM agent builds a dependency graph of tasks before execution begins — no work starts without an approved plan |
+
+Chorus is not a framework — it doesn't provide building blocks for you to assemble. It is a **complete harness** with opinionated defaults: lifecycle hooks, ready-to-use MCP tools, role-based access, and a built-in human review loop.
+
+---
 
 ## AI-DLC Workflow
 
@@ -154,29 +175,34 @@ Records all participant actions with Session attribution (AgentName / SessionNam
 ## Architecture
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                    Next.js App (:3000)                       │
-│                                                             │
-│  ┌───────────────────────────────────────────────────────┐  │
-│  │  Web UI (React 19 + Tailwind + shadcn/ui)             │  │
-│  │  Dashboard │ Kanban │ Documents │ Proposals            │  │
-│  │  Task DAG  │ Activity │ Settings │ Agent Sessions     │  │
-│  └───────────────────────────────────────────────────────┘  │
-│                                                             │
-│  ┌───────────────────────────────────────────────────────┐  │
-│  │  API Layer                                            │  │
-│  │    /api/*    - REST API (Web UI)                      │  │
-│  │    /api/mcp  - MCP HTTP Streamable Transport (Agent)  │  │
-│  └───────────────────────────────────────────────────────┘  │
-│                                                             │
-│  ┌───────────────────────────────────────────────────────┐  │
-│  │  Service Layer (src/services/*.service.ts)            │  │
-│  │    Business logic, UUID-first, multi-tenant           │  │
-│  └───────────────────────────────────────────────────────┘  │
-└─────────────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────────┐
+│                 Chorus — Agent Harness (:3000)                    │
+│                                                                  │
+│  ┌── Harness Capabilities ───────────────────────────────────┐   │
+│  │  Session Lifecycle │ Task State Machine │ Context Inject   │   │
+│  │  Sub-Agent Orchestration │ Observability │ Failure Recovery│   │
+│  └───────────────────────────────────────────────────────────┘   │
+│                                                                  │
+│  ┌── Chorus Plugin (lifecycle hooks) ────────────────────────┐   │
+│  │  SubagentStart/Stop │ Heartbeat │ Skill & Context Inject  │   │
+│  └───────────────────────────────────────────────────────────┘   │
+│                                                                  │
+│  ┌── API Layer ──────────────────────────────────────────────┐   │
+│  │  /api/mcp  — MCP HTTP Streamable (50+ tools, role-based)  │   │
+│  │  /api/*    — REST API (Web UI + SSE push)                 │   │
+│  └───────────────────────────────────────────────────────────┘   │
+│                                                                  │
+│  ┌── Service Layer ──────────────────────────────────────────┐   │
+│  │  AI-DLC Workflow │ UUID-first │ Multi-tenant              │   │
+│  └───────────────────────────────────────────────────────────┘   │
+│                                                                  │
+│  ┌── Web UI (React 19 + Tailwind + shadcn/ui) ──────────────┐   │
+│  │  Kanban │ Task DAG │ Proposals │ Activity │ Sessions      │   │
+│  └───────────────────────────────────────────────────────────┘   │
+└──────────────────────────────────────────────────────────────────┘
      ↑              ↑              ↑              ↑
-  PM Agent    Developer Agent  Admin Agent     Web UI
- (MCP Tools)   (MCP Tools)   (MCP Tools)    (REST API)
+  PM Agent    Developer Agent  Admin Agent      Human
+   (LLM)         (LLM)          (LLM)        (Browser)
                      │
           ┌──────────▼──────────┐   ┌─────────────────────┐
           │  PostgreSQL + Prisma │   │  Redis (optional)   │
