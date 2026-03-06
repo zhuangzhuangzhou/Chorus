@@ -1,5 +1,31 @@
 # Changelog
 
+## [0.3.0] - 2026-03-06
+
+### Added
+- **Move Idea Across Projects**: New `chorus_move_idea` MCP tool and UI support to move ideas between projects.
+- **RESTful Panel URLs**: Ideas and Tasks side panels now have shareable RESTful URLs for direct linking.
+- **Code Syntax Highlighting**: Comments now render code blocks with syntax highlighting.
+- **Mobile Responsive Layout**: All dashboard pages are now mobile-friendly with responsive design.
+- **Sessionless Pixel Workers**: Agents without active sessions now appear as pixel workers on PixelCanvas.
+- **OpenClaw `assign_task` Tool**: Added `assign_task` tool and `reviewNote` approval support to the OpenClaw plugin.
+
+### Changed
+- **Chorus Repositioned as Agent Harness**: Updated documentation to reposition Chorus as an Agent Harness platform.
+
+### Fixed
+- **Code Block Scroll/Buttons**: Fixed code block overflow scrolling and button display in proposal document view.
+- **Detail Panel Flash**: Prevented detail panel flash on comment submit.
+- **Wide Content Overflow**: Fixed wide content overflow in comments.
+- **Agent Edit Name Persistence**: Agent edit now persists name correctly and keeps API key valid.
+- **OpenClaw Plugin entityUuid**: Include `entityUuid` in OpenClaw plugin notification messages.
+- **MCP String-encoded Array Params**: Coerce string-encoded array params in MCP tools.
+
+### Plugin
+- Bumped plugin versions for `chorus_move_idea` support.
+
+---
+
 ## [0.2.0] - 2026-03-01
 
 ### Added
