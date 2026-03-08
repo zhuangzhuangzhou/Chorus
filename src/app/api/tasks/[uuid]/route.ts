@@ -2,7 +2,7 @@
 // Tasks API - Detail, Update, Delete (ARCHITECTURE.md §5.1, §7.2)
 // UUID-Based Architecture: All operations use UUIDs
 
-import { NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { withErrorHandler, parseBody } from "@/lib/api-handler";
 import { success, errors } from "@/lib/api-response";
 import { getAuthContext, isUser, isAssignee } from "@/lib/auth";
@@ -12,7 +12,9 @@ import {
   updateTask,
   deleteTask,
   isValidTaskStatusTransition,
+  checkDependenciesResolved,
 } from "@/services/task.service";
+import { createActivity } from "@/services/activity.service";
 
 type RouteContext = { params: Promise<{ uuid: string }> };
 
@@ -57,6 +59,7 @@ export const PATCH = withErrorHandler<{ uuid: string }>(
       status?: string;
       priority?: string;
       storyPoints?: number | null;
+      force?: boolean;
     }>(request);
 
     // Build update data
@@ -113,6 +116,41 @@ export const PATCH = withErrorHandler<{ uuid: string }>(
       if (!isUser(auth)) {
         if (!isAssignee(auth, task.assigneeType, task.assigneeUuid)) {
           return errors.permissionDenied("Only assignee can update status");
+        }
+      }
+
+      // Dependency check when moving to in_progress
+      if (body.status === "in_progress") {
+        const depResult = await checkDependenciesResolved(task.uuid);
+        if (!depResult.resolved) {
+          // force is only accepted from user or super_admin
+          if (body.force && (auth.type === "user" || auth.type === "super_admin")) {
+            // Log force status change activity
+            await createActivity({
+              companyUuid: auth.companyUuid,
+              projectUuid: task.projectUuid,
+              targetType: "task",
+              targetUuid: task.uuid,
+              actorType: auth.type,
+              actorUuid: auth.actorUuid,
+              action: "force_status_change",
+              value: JSON.stringify({
+                from: task.status,
+                to: body.status,
+                blockers: depResult.blockers,
+              }),
+            });
+          } else {
+            return NextResponse.json(
+              {
+                success: false,
+                error: "Dependencies not resolved",
+                blocked: true,
+                blockers: depResult.blockers,
+              },
+              { status: 409 }
+            );
+          }
         }
       }
 

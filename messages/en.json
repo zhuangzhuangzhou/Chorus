@@ -403,7 +403,16 @@
     "kanbanView": "Kanban",
     "dagView": "DAG",
     "listView": "List",
-    "allStatuses": "All"
+    "allStatuses": "All",
+    "dependencyBlocked": "Dependencies Not Resolved",
+    "dependencyBlockedDescription": "This task has unresolved dependencies. Moving it to In Progress may cause issues.",
+    "forceMove": "Force Move",
+    "forceMoveConfirm": "Are you sure you want to move this task to In Progress? Its dependencies have not been completed yet.",
+    "blockerList": "Blocking Tasks",
+    "blockedTooltip": "Blocked by {count} unresolved {count, plural, one {dependency} other {dependencies}}",
+    "blockedBy": "Blocked by: {tasks}",
+    "noActiveSession": "No active session",
+    "forceStatusChange": "Force status change"
   },
   "proposals": {
     "pageTitle": "Proposals",

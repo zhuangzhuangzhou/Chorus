@@ -213,12 +213,13 @@ export function registerAdminTools(server: McpServer, auth: AgentAuthContext) {
   server.registerTool(
     "chorus_admin_reopen_task",
     {
-      description: "Reopen a Task (to_verify -> in_progress, used when verification fails)",
+      description: "Reopen a Task (to_verify -> in_progress, used when verification fails). If the task has unresolved dependencies, use force=true to bypass the dependency check.",
       inputSchema: z.object({
         taskUuid: z.string().describe("Task UUID"),
+        force: z.boolean().optional().describe("Force status change, bypassing dependency check"),
       }),
     },
-    async ({ taskUuid }) => {
+    async ({ taskUuid, force }) => {
       const task = await taskService.getTaskByUuid(auth.companyUuid, taskUuid);
       if (!task) {
         return { content: [{ type: "text", text: "Task not found" }], isError: true };
@@ -228,7 +229,39 @@ export function registerAdminTools(server: McpServer, auth: AgentAuthContext) {
         return { content: [{ type: "text", text: `Can only reopen Tasks in to_verify status, current status: ${task.status}` }], isError: true };
       }
 
+      // Check dependencies unless force is true
+      if (force !== true) {
+        const depCheck = await taskService.checkDependenciesResolved(task.uuid);
+        if (!depCheck.resolved) {
+          return {
+            content: [{
+              type: "text",
+              text: JSON.stringify({
+                error: "blocked_by_dependencies",
+                message: `Task is blocked by ${depCheck.blockers.length} unresolved dependency(ies). Use force=true to bypass.`,
+                blockers: depCheck.blockers,
+              }),
+            }],
+            isError: true,
+          };
+        }
+      }
+
       const updated = await taskService.updateTask(task.uuid, { status: "in_progress" });
+
+      // Log force_status_change activity when force is used
+      if (force === true) {
+        await activityService.createActivity({
+          companyUuid: auth.companyUuid,
+          projectUuid: task.projectUuid,
+          targetType: "task",
+          targetUuid: task.uuid,
+          actorType: "agent",
+          actorUuid: auth.actorUuid,
+          action: "force_status_change",
+          value: { status: "in_progress", force: true },
+        });
+      }
 
       await activityService.createActivity({
         companyUuid: auth.companyUuid,

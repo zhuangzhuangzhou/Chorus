@@ -404,7 +404,16 @@
     "kanbanView": "看板",
     "dagView": "DAG",
     "listView": "列表",
-    "allStatuses": "全部"
+    "allStatuses": "全部",
+    "dependencyBlocked": "依赖未完成",
+    "dependencyBlockedDescription": "此任务有未完成的前置依赖。在依赖未完成时开始工作可能会导致问题。",
+    "forceMove": "强制移动",
+    "forceMoveConfirm": "确定要将此任务移动到进行中吗？其前置依赖尚未完成。",
+    "blockerList": "阻塞任务",
+    "blockedTooltip": "被 {count} 个未完成的依赖阻塞",
+    "blockedBy": "阻塞于：{tasks}",
+    "noActiveSession": "无活跃会话",
+    "forceStatusChange": "强制状态变更"
   },
   "proposals": {
     "pageTitle": "提案",

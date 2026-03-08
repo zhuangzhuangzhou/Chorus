@@ -94,7 +94,7 @@ Projects can be organized into **Project Groups** — a single-level grouping th
 | `chorus_list_tasks` | List project Tasks (filterable by status/priority, paginated) |
 | `chorus_get_task` | Get a single Task's details and context |
 | `chorus_get_available_tasks` | Get claimable Tasks (status=open) |
-| `chorus_get_unblocked_tasks` | Get tasks ready to start — all dependencies resolved (done/to_verify) |
+| `chorus_get_unblocked_tasks` | Get tasks ready to start — all dependencies resolved (done/closed). `to_verify` is NOT considered resolved. |
 
 ---
 

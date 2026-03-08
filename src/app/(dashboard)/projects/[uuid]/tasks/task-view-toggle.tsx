@@ -27,6 +27,7 @@ interface Task {
     assignedAt: string | null;
     assignedBy: { type: string; uuid: string; name: string } | null;
   } | null;
+  dependsOn?: { uuid: string; title: string; status: string }[];
 }
 
 interface TaskViewToggleProps {

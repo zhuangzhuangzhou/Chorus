@@ -21,7 +21,7 @@ export function registerDevTools(api: any, mcpClient: ChorusMcpClient) {
 
   api.registerTool({
     name: "chorus_update_task",
-    description: "Update task status (only the assignee can operate)",
+    description: "Update task status (only the assignee can operate). Moving to in_progress requires all dependsOn tasks to be done or closed — otherwise the request is rejected with blocker details. Use chorus_get_unblocked_tasks to find tasks ready to start.",
     parameters: {
       type: "object",
       properties: {

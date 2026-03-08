@@ -191,14 +191,13 @@ SendMessage({ type: "message", recipient: "team-lead", content: "Task complete",
 
 ### Phase 4: Team Lead — Monitor & Close
 
-The Team Lead monitors until all Chorus tasks reach `to_verify` or `done`, then closes sessions manually.
+The Team Lead monitors until all Chorus tasks reach `to_verify` or `done`. **Task verification (to_verify → done) is an Admin responsibility** — see the Admin workflow for the verify & unblock loop. Close sessions when sub-agents finish.
 
 ```
 # 1. Periodically check Chorus task status
 chorus_list_tasks({ projectUuid: "<project-uuid>" })
-# Verify: all tasks should be in to_verify / done
 
-# 2. Close sub-agent sessions manually when they finish
+# 2. Close sub-agent sessions when they finish
 chorus_close_session({ sessionUuid: "session-fe-uuid" })
 chorus_close_session({ sessionUuid: "session-be-uuid" })
 
@@ -210,27 +209,20 @@ chorus_close_session({ sessionUuid: "session-be-uuid" })
 
 ## Handling Task Dependencies (DAG)
 
-When Chorus tasks have dependencies (Task B depends on Task A), the Team Lead must coordinate the execution order:
+When Chorus tasks have dependencies (Task B depends on Task A), the Team Lead must coordinate the execution order.
 
-**Option A: Sequential spawning**
-- Spawn Sub-Agent A for Task A first
-- Wait for Task A to reach `to_verify` / `done`
-- Then spawn Sub-Agent B for Task B
+> **Server-side enforcement**: `chorus_update_task(status: "in_progress")` will automatically reject if any `dependsOn` task is not `done` or `closed`. The error includes detailed blocker info (title, status, assignee, active session). Sub-agents do NOT need to manually poll dependency status — the server enforces it.
 
-**Option B: Spawn all, let sub-agents wait**
+**Recommended: Wave-based sequential spawning**
+- Use `chorus_get_unblocked_tasks` to find tasks ready to start (all deps resolved)
+- Spawn sub-agents only for unblocked tasks (Wave 1)
+- When Wave 1 tasks complete, check for newly unblocked tasks (Wave 2)
+- Repeat until all tasks are done
+
+**Alternative: Spawn all, server rejects blocked ones**
 - Spawn all sub-agents immediately
-- In the prompt for Sub-Agent B, instruct it to poll `chorus_get_task` on its dependency and wait until it's done before starting work:
-
-```
-Before starting your task, check that your dependency is complete:
-  chorus_get_task({ taskUuid: "<task-A-uuid>" })
-  If status is not "done" or "to_verify", wait and check again.
-```
-
-**Option C: Team lead orchestrates via messaging**
-- Spawn all sub-agents
-- Sub-Agent B starts with non-dependent preparation work
-- Team Lead sends a message to Sub-Agent B when Task A completes
+- Sub-agents that try to move blocked tasks to `in_progress` will receive a clear error with blocker details
+- Those sub-agents can then use `chorus_get_unblocked_tasks` to find other work, or wait and retry
 
 ---
 

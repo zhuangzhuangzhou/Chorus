@@ -239,7 +239,13 @@ Evaluate:
 chorus_admin_verify_task({ taskUuid: "<task-uuid>" })
 ```
 
-This changes the task status to `done`.
+This changes the task status to `done`. **Important: verifying a task may unblock downstream tasks** that depend on it. After verifying, check for newly unblocked tasks:
+
+```
+chorus_get_unblocked_tasks({ projectUuid: "<project-uuid>" })
+```
+
+If new tasks are now unblocked, assign them or notify the relevant developers/agents so they can begin work.
 
 **If the work needs fixes - Reopen:**
 

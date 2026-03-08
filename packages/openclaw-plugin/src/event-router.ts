@@ -120,6 +120,12 @@ export class ChorusEventRouter {
         case "idea_claimed":
           this.handleIdeaClaimed(notification);
           break;
+        case "task_verified":
+          this.handleTaskVerified(notification);
+          break;
+        case "task_reopened":
+          this.handleTaskReopened(notification);
+          break;
         default:
           this.logger.info(`Unhandled notification action: "${notification.action}"`);
           break;
@@ -214,6 +220,24 @@ export class ChorusEventRouter {
       `Use chorus_get_idea to review the idea, then chorus_claim_idea to start elaboration.\n` +
       mentionGuidance,
       { notificationUuid: n.uuid, action: "idea_claimed", entityUuid: n.entityUuid, projectUuid: n.projectUuid }
+    );
+  }
+
+  private handleTaskVerified(n: NotificationDetail): void {
+    this.triggerAgent(
+      `[Chorus] Task '${n.entityTitle}' has been verified and is now done (taskUuid: ${n.entityUuid}, projectUuid: ${n.projectUuid}). ` +
+      `Check if this unblocks other tasks: use chorus_get_unblocked_tasks with projectUuid "${n.projectUuid}" to find tasks that are now ready to start.`,
+      { notificationUuid: n.uuid, action: "task_verified", entityUuid: n.entityUuid, projectUuid: n.projectUuid }
+    );
+  }
+
+  private handleTaskReopened(n: NotificationDetail): void {
+    const mentionGuidance = this.buildMentionGuidance(n, "task");
+
+    this.triggerAgent(
+      `[Chorus] Task '${n.entityTitle}' has been reopened and needs rework (taskUuid: ${n.entityUuid}, projectUuid: ${n.projectUuid}). ` +
+      `Use chorus_get_task to review the task and chorus_get_comments to see verification feedback, then fix the issues.\n${mentionGuidance}`,
+      { notificationUuid: n.uuid, action: "task_reopened", entityUuid: n.entityUuid, projectUuid: n.projectUuid }
     );
   }
 

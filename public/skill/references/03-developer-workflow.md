@@ -164,6 +164,8 @@ Then mark the task as in-progress (always pass `sessionUuid`):
 chorus_update_task({ taskUuid: "<task-uuid>", status: "in_progress", sessionUuid: "<session-uuid>" })
 ```
 
+> **Dependency enforcement**: If this task has unresolved dependencies (dependsOn tasks not in `done` or `closed` status), the call will be rejected with a detailed error listing each blocker's title, status, assignee, and active session. Use `chorus_get_unblocked_tasks` to find tasks you can start now. Only admin can force-bypass this check.
+
 Now begin your implementation work (writing code, running tests, etc.).
 
 ### Step 6: Report Progress

@@ -260,7 +260,7 @@ export function registerCommonTools(api: any, mcpClient: ChorusMcpClient) {
 
   api.registerTool({
     name: "chorus_get_unblocked_tasks",
-    description: "Get tasks that are ready to start — status is open/assigned and all dependencies are resolved (done/to_verify).",
+    description: "Get tasks that are ready to start — status is open/assigned and all dependencies are resolved (done/closed). Note: to_verify is NOT considered resolved.",
     parameters: {
       type: "object",
       properties: {

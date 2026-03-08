@@ -774,12 +774,12 @@ export async function getUnblockedTasks({
     projectUuid,
     companyUuid,
     status: { in: ["open", "assigned"] },
-    // Exclude tasks that have any dependency NOT in done/to_verify
+    // Exclude tasks that have any dependency NOT in done/closed
     NOT: {
       dependsOn: {
         some: {
           dependsOn: {
-            status: { notIn: ["done", "to_verify"] },
+            status: { notIn: ["done", "closed"] },
           },
         },
       },
@@ -821,6 +821,96 @@ export async function getUnblockedTasks({
   // Batch format: 2 queries total instead of N * (3-4)
   const tasks = await formatTaskResponsesBatch(rawTasks, commentCounts);
   return { tasks, total };
+}
+
+// Blocker info for unresolved dependencies
+export interface BlockerInfo {
+  uuid: string;
+  title: string;
+  status: string;
+  assignee: { type: string; uuid: string; name: string } | null;
+  sessionCheckin: { sessionUuid: string; sessionName: string } | null;
+}
+
+// Check if all dependencies of a task are resolved (done or closed)
+export async function checkDependenciesResolved(
+  taskUuid: string
+): Promise<{ resolved: boolean; blockers: BlockerInfo[] }> {
+  const deps = await prisma.taskDependency.findMany({
+    where: { taskUuid },
+    select: {
+      dependsOn: {
+        select: {
+          uuid: true,
+          title: true,
+          status: true,
+          assigneeType: true,
+          assigneeUuid: true,
+        },
+      },
+    },
+  });
+
+  if (deps.length === 0) {
+    return { resolved: true, blockers: [] };
+  }
+
+  const unresolvedDeps = deps.filter(
+    (d) => d.dependsOn.status !== "done" && d.dependsOn.status !== "closed"
+  );
+
+  if (unresolvedDeps.length === 0) {
+    return { resolved: true, blockers: [] };
+  }
+
+  // Get assignee names and session checkins for unresolved deps
+  const unresolvedUuids = unresolvedDeps.map((d) => d.dependsOn.uuid);
+
+  const [checkins, actorNames] = await Promise.all([
+    prisma.sessionTaskCheckin.findMany({
+      where: {
+        taskUuid: { in: unresolvedUuids },
+        checkoutAt: null,
+      },
+      select: {
+        taskUuid: true,
+        sessionUuid: true,
+        session: { select: { name: true } },
+      },
+    }),
+    batchGetActorNames(
+      unresolvedDeps
+        .filter((d) => d.dependsOn.assigneeType && d.dependsOn.assigneeUuid)
+        .map((d) => ({ type: d.dependsOn.assigneeType!, uuid: d.dependsOn.assigneeUuid! }))
+    ),
+  ]);
+
+  // Build checkin lookup by taskUuid
+  const checkinMap = new Map<string, { sessionUuid: string; sessionName: string }>();
+  for (const c of checkins) {
+    checkinMap.set(c.taskUuid, { sessionUuid: c.sessionUuid, sessionName: c.session.name });
+  }
+
+  const blockers: BlockerInfo[] = unresolvedDeps.map((d) => {
+    const task = d.dependsOn;
+    let assignee: BlockerInfo["assignee"] = null;
+    if (task.assigneeType && task.assigneeUuid) {
+      const name = actorNames.get(task.assigneeUuid);
+      if (name) {
+        assignee = { type: task.assigneeType, uuid: task.assigneeUuid, name };
+      }
+    }
+
+    return {
+      uuid: task.uuid,
+      title: task.title,
+      status: task.status,
+      assignee,
+      sessionCheckin: checkinMap.get(task.uuid) ?? null,
+    };
+  });
+
+  return { resolved: false, blockers };
 }
 
 // Get all task dependencies within a project (for DAG visualization)

@@ -2,7 +2,8 @@
 
 import { revalidatePath } from "next/cache";
 import { getServerAuthContext } from "@/lib/auth-server";
-import { updateTask, getTaskByUuid, getProjectTaskDependencies } from "@/services/task.service";
+import { updateTask, getTaskByUuid, getProjectTaskDependencies, checkDependenciesResolved } from "@/services/task.service";
+import { createActivity } from "@/services/activity.service";
 
 // Map column IDs to task statuses
 const columnToStatusMap: Record<string, string> = {
@@ -35,6 +36,14 @@ export async function moveTaskToColumnAction(
       return { success: false, error: "Invalid column" };
     }
 
+    // Dependency check when moving to in_progress
+    if (newStatus === "in_progress") {
+      const depResult = await checkDependenciesResolved(taskUuid);
+      if (!depResult.resolved) {
+        return { success: false, error: "Dependencies not resolved", blocked: true, blockers: depResult.blockers };
+      }
+    }
+
     // Don't allow moving to done directly for non-verified tasks
     // Done column should only be reached through verify action
     if (newStatus === "done" && task.status !== "to_verify") {
@@ -52,6 +61,44 @@ export async function moveTaskToColumnAction(
   } catch (error) {
     console.error("Failed to move task:", error);
     return { success: false, error: "Failed to move task" };
+  }
+}
+
+export async function forceMoveTaskToColumnAction(
+  taskUuid: string,
+  status: string
+) {
+  const auth = await getServerAuthContext();
+  if (!auth) {
+    return { success: false, error: "Unauthorized" };
+  }
+
+  try {
+    const task = await getTaskByUuid(auth.companyUuid, taskUuid);
+    if (!task) {
+      return { success: false, error: "Task not found" };
+    }
+
+    await updateTask(taskUuid, { status });
+
+    await createActivity({
+      companyUuid: auth.companyUuid,
+      projectUuid: task.projectUuid,
+      targetType: "task",
+      targetUuid: task.uuid,
+      actorType: auth.type,
+      actorUuid: auth.actorUuid,
+      action: "force_status_change",
+      value: JSON.stringify({
+        from: task.status,
+        to: status,
+      }),
+    });
+
+    return { success: true };
+  } catch (error) {
+    console.error("Failed to force move task:", error);
+    return { success: false, error: "Failed to force move task" };
   }
 }
 

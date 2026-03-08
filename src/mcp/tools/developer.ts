@@ -151,6 +151,31 @@ export function registerDeveloperTools(server: McpServer, auth: AgentAuthContext
         };
       }
 
+      // Check dependencies are resolved before moving to in_progress
+      if (status === "in_progress") {
+        const depCheck = await taskService.checkDependenciesResolved(task.uuid);
+        if (!depCheck.resolved) {
+          const blockerLines = depCheck.blockers.map((b, i) => {
+            const assigneeStr = b.assignee
+              ? `${b.assignee.name} [${b.assignee.type}]`
+              : "none";
+            const sessionStr = b.sessionCheckin
+              ? `session: ${b.sessionCheckin.sessionName}`
+              : "no active session";
+            return `${i + 1}. "${b.title}" (status: ${b.status}, assignee: ${assigneeStr}, ${sessionStr})`;
+          });
+          const msg = [
+            `Cannot move to in_progress: ${depCheck.blockers.length} dependencies not resolved.`,
+            "",
+            "Blockers:",
+            ...blockerLines,
+            "",
+            "Tip: Use chorus_get_unblocked_tasks to find tasks you can start now.",
+          ].join("\n");
+          return { content: [{ type: "text", text: msg }], isError: true };
+        }
+      }
+
       const updated = await taskService.updateTask(task.uuid, { status });
 
       await activityService.createActivity({

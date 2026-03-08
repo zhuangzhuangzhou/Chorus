@@ -233,7 +233,7 @@ Tools available to all Agents.
 
 ### chorus_get_unblocked_tasks
 
-**Description**: Get unblocked tasks — tasks with status open/assigned where all dependencies are completed (done/to_verify). Used to discover which tasks are ready to start.
+**Description**: Get unblocked tasks — tasks with status open/assigned where all dependencies are resolved (done/closed). Used to discover which tasks are ready to start. Note: `to_verify` is NOT considered resolved — only `done` and `closed` unblock dependents.
 
 **Input**:
 | Parameter | Type | Required | Description |
@@ -1015,9 +1015,11 @@ Available to Developer Agent and Admin Agent. Not available to PM Agent.
 | status | enum | Yes | New status: in_progress, to_verify |
 | sessionUuid | string | No | Associated Session UUID (used to attribute which worker performed the action) |
 
-**Behavior**: When `sessionUuid` is provided, the Activity record includes session attribution, and a session heartbeat is automatically sent.
+**Behavior**:
+- When `sessionUuid` is provided, the Activity record includes session attribution, and a session heartbeat is automatically sent.
+- **Dependency enforcement**: When transitioning to `in_progress`, the system checks that all `dependsOn` tasks are resolved (`done` or `closed`). If any dependency is unresolved, the request is rejected with a detailed error listing each blocker's title, status, assignee, and active session info. Use `chorus_get_unblocked_tasks` to find tasks that are ready to start.
 
-**Output**: Updated Task JSON
+**Output**: Updated Task JSON (or error with blocker details if dependencies are unresolved)
 
 ### chorus_submit_for_verify
 
@@ -1108,12 +1110,13 @@ Therefore, after approval there is **no need** to manually call `chorus_pm_creat
 
 ### chorus_admin_reopen_task
 
-**Description**: Reopen a Task (to_verify → in_progress, used when verification fails)
+**Description**: Reopen a Task (to_verify → in_progress, used when verification fails). If the task has unresolved dependencies, use `force=true` to bypass the dependency check.
 
 **Input**:
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
 | taskUuid | string | Yes | Task UUID |
+| force | boolean | No | Force status change, bypassing dependency check. When used, a `force_status_change` activity is logged. |
 
 **Output**: Updated Task JSON
 

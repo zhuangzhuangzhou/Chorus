@@ -9,9 +9,19 @@ import {
   Draggable,
   DropResult,
 } from "@hello-pangea/dnd";
+import { Lock, TriangleAlert, Monitor } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { moveTaskToColumnAction } from "./actions";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { moveTaskToColumnAction, forceMoveTaskToColumnAction } from "./actions";
 import { TaskDetailPanel } from "./task-detail-panel";
 import { getBatchWorkerCountsAction } from "./session-actions";
 import { useRealtimeRefresh } from "@/contexts/realtime-context";
@@ -31,6 +41,15 @@ interface Task {
     assignedAt: string | null;
     assignedBy: { type: string; uuid: string; name: string } | null;
   } | null;
+  dependsOn?: { uuid: string; title: string; status: string }[];
+}
+
+interface BlockerInfo {
+  uuid: string;
+  title: string;
+  status: string;
+  assignee: { type: string; uuid: string; name: string } | null;
+  sessionCheckin: { sessionUuid: string; sessionName: string } | null;
 }
 
 interface KanbanBoardProps {
@@ -62,6 +81,14 @@ const statusI18nKeys: Record<string, string> = {
   closed: "closed",
 };
 
+// Blocker status badge colors
+const blockerStatusColors: Record<string, string> = {
+  in_progress: "bg-[#FFF3E0] text-[#E65100]",
+  assigned: "bg-[#E8F5E9] text-[#2E7D32]",
+  open: "bg-[#F5F5F5] text-[#6B6B6B]",
+  to_verify: "bg-[#E3F2FD] text-[#1565C0]",
+};
+
 // Kanban column configuration
 const columnConfigs = [
   { id: "todo", labelKey: "todo", statuses: ["open", "assigned"] },
@@ -70,11 +97,29 @@ const columnConfigs = [
   { id: "done", labelKey: "done", statuses: ["done", "closed"] },
 ];
 
+function isTaskBlocked(task: Task): boolean {
+  if (!task.dependsOn || task.dependsOn.length === 0) return false;
+  return task.dependsOn.some(
+    (dep) => dep.status !== "done" && dep.status !== "closed"
+  );
+}
+
+function getUnresolvedDeps(task: Task): { uuid: string; title: string; status: string }[] {
+  if (!task.dependsOn) return [];
+  return task.dependsOn.filter(
+    (dep) => dep.status !== "done" && dep.status !== "closed"
+  );
+}
+
 export function KanbanBoard({ projectUuid, initialTasks, currentUserUuid, selectedTaskUuid, onTaskSelect, onPanelClose }: KanbanBoardProps) {
   const t = useTranslations();
   const router = useRouter();
   const [tasks, setTasks] = useState<Task[]>(initialTasks);
   const [workerCounts, setWorkerCounts] = useState<Record<string, number>>({});
+  const [forceDialogOpen, setForceDialogOpen] = useState(false);
+  const [forceDialogTask, setForceDialogTask] = useState<Task | null>(null);
+  const [forceDialogBlockers, setForceDialogBlockers] = useState<BlockerInfo[]>([]);
+  const [forceMoving, setForceMoving] = useState(false);
   useRealtimeRefresh();
 
   // Sync local state when server data changes (after router.refresh())
@@ -158,7 +203,22 @@ export function KanbanBoard({ projectUuid, initialTasks, currentUserUuid, select
     const result2 = await moveTaskToColumnAction(taskUuid, newColumnId, projectUuid);
 
     if (!result2.success) {
-      // Revert on error
+      // Check if blocked by dependencies
+      if ("blocked" in result2 && result2.blocked && "blockers" in result2) {
+        // Revert optimistic update
+        setTasks((prev) =>
+          prev.map((t) =>
+            t.uuid === taskUuid ? { ...t, status: task.status } : t
+          )
+        );
+        // Show force move dialog
+        setForceDialogTask(task);
+        setForceDialogBlockers(result2.blockers as BlockerInfo[]);
+        setForceDialogOpen(true);
+        return;
+      }
+
+      // Revert on other errors
       setTasks((prev) =>
         prev.map((t) =>
           t.uuid === taskUuid ? { ...t, status: task.status } : t
@@ -169,6 +229,33 @@ export function KanbanBoard({ projectUuid, initialTasks, currentUserUuid, select
       // Refresh to get the latest data
       router.refresh();
     }
+  };
+
+  const handleForceMove = async () => {
+    if (!forceDialogTask) return;
+    setForceMoving(true);
+    try {
+      const result = await forceMoveTaskToColumnAction(
+        forceDialogTask.uuid,
+        "in_progress"
+      );
+      if (result.success) {
+        setForceDialogOpen(false);
+        setForceDialogTask(null);
+        setForceDialogBlockers([]);
+        router.refresh();
+      } else {
+        console.error("Failed to force move task:", result.error);
+      }
+    } finally {
+      setForceMoving(false);
+    }
+  };
+
+  const handleForceMoveCancel = () => {
+    setForceDialogOpen(false);
+    setForceDialogTask(null);
+    setForceDialogBlockers([]);
   };
 
   return (
@@ -225,7 +312,12 @@ export function KanbanBoard({ projectUuid, initialTasks, currentUserUuid, select
                         {t("tasks.noTasks")}
                       </div>
                     ) : (
-                      columnTasks.map((task, index) => (
+                      columnTasks.map((task, index) => {
+                        const blocked = isTaskBlocked(task);
+                        const unresolvedDeps = blocked ? getUnresolvedDeps(task) : [];
+                        const blockerNames = unresolvedDeps.map((d) => d.title).join(", ");
+
+                        return (
                         <Draggable
                           key={task.uuid}
                           draggableId={task.uuid}
@@ -249,7 +341,11 @@ export function KanbanBoard({ projectUuid, initialTasks, currentUserUuid, select
                                   </div>
                                 )}
                               <Card
-                                className={`cursor-pointer border-[#E5E0D8] bg-white p-4 transition-all hover:border-[#C67A52] hover:shadow-sm ${
+                                className={`cursor-pointer p-4 transition-all ${
+                                  blocked
+                                    ? "border-dashed border-[#D1D1D1] opacity-60"
+                                    : "border-[#E5E0D8] hover:border-[#C67A52]"
+                                } bg-white hover:shadow-sm ${
                                   snapshot.isDragging
                                     ? "shadow-lg rotate-2"
                                     : ""
@@ -292,6 +388,17 @@ export function KanbanBoard({ projectUuid, initialTasks, currentUserUuid, select
                                     {task.description}
                                   </p>
                                 )}
+
+                                {/* Blocked banner */}
+                                {blocked && (
+                                  <div className="mb-2 flex items-center gap-1.5 rounded-md bg-[#FFF3E0] px-2 py-1">
+                                    <Lock className="h-3 w-3 shrink-0 text-[#E65100]" />
+                                    <span className="text-[9px] font-medium leading-tight text-[#E65100] line-clamp-1">
+                                      {t("tasks.blockedBy", { tasks: blockerNames })}
+                                    </span>
+                                  </div>
+                                )}
+
                                 <div className="flex items-center justify-between text-xs text-[#9A9A9A]">
                                   {task.assignee ? (
                                     <span className="flex items-center gap-1">
@@ -335,7 +442,8 @@ export function KanbanBoard({ projectUuid, initialTasks, currentUserUuid, select
                             </div>
                           )}
                         </Draggable>
-                      ))
+                      );
+                      })
                     )}
                     {provided.placeholder}
                   </div>
@@ -356,6 +464,72 @@ export function KanbanBoard({ projectUuid, initialTasks, currentUserUuid, select
         onClose={onPanelClose}
       />
     )}
+
+    {/* Force Move Dialog */}
+    <Dialog open={forceDialogOpen} onOpenChange={(open) => { if (!open) handleForceMoveCancel(); }}>
+      <DialogContent className="max-w-md rounded-2xl">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <TriangleAlert className="h-5 w-5 text-[#E65100]" />
+            {t("tasks.dependencyBlocked")}
+          </DialogTitle>
+          <DialogDescription>
+            {t("tasks.dependencyBlockedDescription")}
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="rounded-lg bg-[#FAF8F4] p-3">
+          <p className="mb-2 text-xs font-medium text-[#6B6B6B]">
+            {t("tasks.blockerList")}
+          </p>
+          <div className="space-y-2">
+            {forceDialogBlockers.map((blocker) => (
+              <div
+                key={blocker.uuid}
+                className="flex items-center justify-between rounded-lg border border-[#E5E0D8] bg-white p-3"
+              >
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-medium text-[#2C2C2C]">
+                    {blocker.title}
+                  </p>
+                  <div className="mt-1 flex items-center gap-2">
+                    {blocker.assignee && (
+                      <span className="text-xs text-[#6B6B6B]">
+                        {blocker.assignee.name}
+                      </span>
+                    )}
+                    {blocker.sessionCheckin && (
+                      <span className="flex items-center gap-1 text-xs text-[#6B6B6B]">
+                        <Monitor className="h-3 w-3" />
+                        {blocker.sessionCheckin.sessionName}
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <Badge
+                  className={`shrink-0 ${blockerStatusColors[blocker.status] || "bg-[#F5F5F5] text-[#6B6B6B]"}`}
+                >
+                  {t(`status.${statusI18nKeys[blocker.status] || blocker.status}`)}
+                </Badge>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <DialogFooter className="gap-2 sm:gap-0">
+          <Button variant="outline" onClick={handleForceMoveCancel}>
+            {t("common.cancel")}
+          </Button>
+          <Button
+            className="bg-[#E65100] hover:bg-[#BF4400] text-white"
+            onClick={handleForceMove}
+            disabled={forceMoving}
+          >
+            {forceMoving ? t("common.processing") : t("tasks.forceMove")}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
 
     </>
   );
