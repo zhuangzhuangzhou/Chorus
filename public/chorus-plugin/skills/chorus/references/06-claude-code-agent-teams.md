@@ -197,8 +197,7 @@ The Team Lead monitors until all Chorus tasks reach `to_verify` or `done`. **Tas
 # 1. Periodically check Chorus task status
 chorus_list_tasks({ projectUuid: "<project-uuid>" })
 
-# 2. DO NOT call chorus_close_session — the plugin closes sessions
-#    automatically when sub-agents are shut down (SubagentStop hook).
+# 2. Sessions are closed automatically by the plugin (SubagentStop hook).
 
 # 3. Clean up Claude Code team
 # Send shutdown requests to sub-agents, then TeamDelete
@@ -273,12 +272,12 @@ This keeps session history clean and makes it easier to trace work across multip
 
 ### Task stuck in wrong status
 - If a sub-agent crashed before completing, the task may be stuck in `in_progress`
-- Team Lead can: reopen the session, spawn a new sub-agent to continue, or use `chorus_update_task` to reset status
+- Team Lead can: spawn a new sub-agent with the same name (plugin auto-reopens the session), or use `chorus_update_task` to reset status
 
 ### Duplicate sessions created
-- This happens if the Team Lead manually calls `chorus_create_session` while the plugin also creates sessions
-- **Fix**: Do NOT call `chorus_create_session` when the plugin is active — let the plugin handle it
-- If duplicates already exist, close the extra sessions with `chorus_close_session`
+- This happens if someone manually calls `chorus_create_session` while the plugin also creates sessions
+- **Fix**: Never call `chorus_create_session` — the plugin handles all session creation automatically
+- If duplicates already exist, an Admin can close extras via the Settings page
 
 ### Sub-agent didn't receive session instructions
 - The SubagentStart hook auto-injects session UUID and workflow into the sub-agent's context
@@ -294,7 +293,7 @@ This keeps session history clean and makes it easier to trace work across multip
 | Plan work | Team Lead | — | `chorus_checkin`, `chorus_list_tasks` |
 | Create team | Team Lead | `TeamCreate` | — |
 | Spawn workers | Team Lead | `Task` (pass task UUIDs only) | — |
-| *(auto)* Create sessions + inject workflow | Plugin (SubagentStart) | — | `chorus_create_session` / `chorus_reopen_session` |
+| *(auto)* Create sessions + inject workflow | Plugin (SubagentStart) | — | *(automatic)* |
 | *(auto)* Receive session + workflow | Sub-Agent | (injected into context) | — |
 | Checkin to task | Sub-Agent | — | `chorus_session_checkin_task` |
 | Start work | Sub-Agent | — | `chorus_update_task(in_progress, sessionUuid)` |
@@ -303,5 +302,5 @@ This keeps session history clean and makes it easier to trace work across multip
 | Notify lead | Sub-Agent | `SendMessage` | — |
 | *(auto)* Heartbeat | Plugin | — | `chorus_session_heartbeat` |
 | Monitor | Team Lead | `TaskList` | `chorus_list_tasks` |
-| *(auto)* Close sessions | Plugin | — | `chorus_close_session` |
+| *(auto)* Close sessions | Plugin | — | *(automatic)* |
 | Shutdown | Team Lead | `SendMessage(shutdown_request)` + `TeamDelete` | — |

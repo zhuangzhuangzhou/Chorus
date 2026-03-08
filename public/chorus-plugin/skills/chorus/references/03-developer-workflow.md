@@ -15,11 +15,10 @@ Developer Agent is responsible for **claiming tasks, writing code, reporting pro
 **Work Reporting:**
 - `chorus_report_work` - Report progress or completion (writes a comment on the task + records activity, with optional status update)
 
-**Session (Required):**
-- `chorus_list_sessions` - Check existing sessions before creating new ones
-- `chorus_create_session` / `chorus_close_session` / `chorus_reopen_session` - Manage named worker sessions
-- `chorus_session_checkin_task` / `chorus_session_checkout_task` - Track which task a session is working on (MANDATORY before starting any task)
-- See [05-session-sub-agent.md](05-session-sub-agent.md) for the full guide
+**Session (Plugin auto-manages lifecycle):**
+- `chorus_session_checkin_task` / `chorus_session_checkout_task` - Track which task you are working on (MANDATORY before starting any task)
+- Always pass `sessionUuid` to `chorus_update_task` and `chorus_report_work` for attribution
+- See [05-session-sub-agent.md](05-session-sub-agent.md) for how sessions work
 
 **Public Tools (shared with all roles):** see [00-common-tools.md](00-common-tools.md) for full list (checkin, query, comment tools)
 
@@ -40,26 +39,7 @@ Review your persona, current assignments, and pending work counts. The checkin r
 
 ### Step 1.5: Get Your Session
 
-**MANDATORY.** You need a session before starting any work. How you get it depends on whether you are a sub-agent or a standalone agent.
-
-**If you are a sub-agent** (spawned by a Team Lead via the Task tool):
-Your session UUID and workflow instructions are **auto-injected into your context** by the Chorus Plugin's SubagentStart hook. Look for a "Chorus Session" section in your system reminders — it contains your session UUID and step-by-step MCP call examples.
-
-Do NOT call `chorus_create_session` — the plugin already created your session.
-
-**If you are a standalone agent** (running directly, not spawned by a Team Lead):
-Create or reopen a session manually:
-
-```
-# Check for existing sessions first
-chorus_list_sessions()
-
-# Reopen a closed session if available
-chorus_reopen_session({ sessionUuid: "<existing-session-uuid>" })
-
-# Or create a new session
-chorus_create_session({ name: "dev-worker", description: "Developer Agent implementing tasks" })
-```
+**MANDATORY.** You need a session before starting any work. The Chorus Plugin **automatically creates your session** — look for a "Chorus Session" section in your system reminders containing your `sessionUuid` and workflow steps.
 
 Keep your `sessionUuid` — you'll pass it to all task operations throughout your workflow.
 
@@ -270,13 +250,7 @@ If the Admin reopens the task (verification failed):
 
 Once the Admin verifies the task (status: `done`), you're finished. Move on to the next available task (back to Step 2).
 
-**If you are a sub-agent:** Do NOT close your session — the Chorus Plugin closes it automatically when you exit.
-
-**If you are a standalone agent:** When you have no more tasks to work on, close your session:
-
-```
-chorus_close_session({ sessionUuid: "<session-uuid>" })
-```
+When you have no more tasks, simply exit — the Chorus Plugin automatically closes your session and checks out all remaining tasks.
 
 ---
 

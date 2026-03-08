@@ -159,9 +159,6 @@ curl -s <BASE_URL>/skill/references/03-developer-workflow.md \
 curl -s <BASE_URL>/skill/references/04-admin-workflow.md \
   > .claude/skills/chorus-skill/references/04-admin-workflow.md
 
-curl -s <BASE_URL>/skill/references/05-session-sub-agent.md \
-  > .claude/skills/chorus-skill/references/05-session-sub-agent.md
-
 curl -s <BASE_URL>/skill/package.json \
   > .claude/skills/chorus-skill/package.json
 ```
@@ -190,9 +187,6 @@ curl -s <BASE_URL>/skill/references/03-developer-workflow.md \
 
 curl -s <BASE_URL>/skill/references/04-admin-workflow.md \
   > ~/.moltbot/skills/chorus/references/04-admin-workflow.md
-
-curl -s <BASE_URL>/skill/references/05-session-sub-agent.md \
-  > ~/.moltbot/skills/chorus/references/05-session-sub-agent.md
 
 curl -s <BASE_URL>/skill/package.json \
   > ~/.moltbot/skills/chorus/package.json
