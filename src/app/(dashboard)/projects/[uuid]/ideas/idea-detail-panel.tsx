@@ -228,9 +228,8 @@ export function IdeaDetailPanel({
   const canAssign = idea.status !== "completed" && idea.status !== "closed";
   const elaborationResolved = idea.elaborationStatus === "resolved";
   const canCreateProposal =
-    idea.status === "elaborating" &&
-    elaborationResolved &&
-    !isUsedInProposal;
+    (idea.status === "elaborating" || idea.status === "proposal_created" || idea.status === "completed") &&
+    elaborationResolved;
   const canSkipElaboration =
     idea.status === "elaborating" &&
     (!idea.elaborationStatus || idea.elaborationStatus !== "resolved") &&
