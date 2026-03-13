@@ -10,13 +10,14 @@ export default defineConfig({
     ],
   },
   test: {
+    reporters: process.env.GITHUB_ACTIONS === 'true' ? ['default', 'github-actions'] : ['default'],
     globals: true,
     environment: 'node',
     include: ['src/**/__tests__/**/*.test.ts'],
     exclude: ['node_modules', '.next', 'packages'],
     coverage: {
       provider: 'v8',
-      reporter: ['text', 'html', 'lcov'],
+      reporter: ['text', 'html', 'lcov', 'json', 'json-summary'],
       include: ['src/services/**/*.ts', 'src/lib/**/*.ts'],
       exclude: [
         'src/**/__tests__/**',
