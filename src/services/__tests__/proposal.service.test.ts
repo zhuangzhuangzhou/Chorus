@@ -1770,3 +1770,109 @@ describe("getProjectProposals", () => {
     expect(result).toHaveLength(0);
   });
 });
+
+
+// ===== Idea Reuse across Proposals =====
+describe("Idea reuse - submitProposal with proposal_created Idea", () => {
+  it("should not error when Idea is already in proposal_created status", async () => {
+    const { submitProposal } = await import("@/services/proposal.service");
+
+    const now = new Date();
+    const proposal = {
+      uuid: "proposal-reuse",
+      companyUuid: COMPANY_UUID,
+      projectUuid: PROJECT_UUID,
+      status: "draft",
+      inputType: "idea",
+      inputUuids: ["idea-already-used"],
+      documentDrafts: [
+        { uuid: "doc-1", type: "prd", title: "PRD", content: "This is a comprehensive PRD document that describes the feature requirements in detail for the Idea reuse feature across multiple proposals." },
+        { uuid: "doc-2", type: "tech_design", title: "Tech Design", content: "This is a comprehensive tech design document that describes the implementation approach for the Idea reuse feature across multiple proposals." },
+      ],
+      taskDrafts: [{
+        uuid: "task-1", title: "Task", description: "desc", storyPoints: 1, priority: "medium",
+        acceptanceCriteria: null, acceptanceCriteriaItems: [{ description: "AC1" }], dependsOnDraftUuids: [],
+      }],
+      project: { uuid: PROJECT_UUID, name: "Test" },
+      description: "Test proposal for Idea reuse scenario",
+      createdByUuid: ACTOR_UUID,
+      createdByType: "agent",
+      reviewedByUuid: null,
+      reviewNote: null,
+      reviewedAt: null,
+      createdAt: now,
+      updatedAt: now,
+    };
+
+    // E5 check: ideas must have resolved elaboration
+    mockPrisma.idea.findMany.mockResolvedValue([
+      { uuid: "idea-already-used", title: "Test Idea", elaborationStatus: "resolved" },
+    ]);
+
+    mockPrisma.proposal.findFirst.mockResolvedValue(proposal);
+    mockPrisma.proposal.update.mockResolvedValue({ ...proposal, status: "pending" });
+    // Idea is already proposal_created - updateMany should match 0 rows (no error)
+    mockPrisma.idea.updateMany.mockResolvedValue({ count: 0 });
+
+    const result = await submitProposal("proposal-reuse", COMPANY_UUID);
+
+    expect(result.status).toBe("pending");
+    // updateMany was called with status: "elaborating" filter, which won't match proposal_created
+    expect(mockPrisma.idea.updateMany).toHaveBeenCalledWith({
+      where: { uuid: { in: ["idea-already-used"] }, companyUuid: COMPANY_UUID, status: "elaborating" },
+      data: { status: "proposal_created" },
+    });
+  });
+});
+
+describe("Idea reuse - approveProposal with completed Idea", () => {
+  it("should not error when Idea is already in completed status", async () => {
+    const { approveProposal } = await import("@/services/proposal.service");
+
+    const now = new Date();
+    const proposal = {
+      uuid: "proposal-reuse-2",
+      companyUuid: COMPANY_UUID,
+      projectUuid: PROJECT_UUID,
+      status: "pending",
+      inputType: "idea",
+      inputUuids: ["idea-completed"],
+      documentDrafts: [{ uuid: "doc-1", type: "prd", title: "PRD", content: "content" }],
+      taskDrafts: [],
+      project: { uuid: PROJECT_UUID, name: "Test" },
+      createdByUuid: ACTOR_UUID,
+      createdByType: "agent",
+      reviewedByUuid: null,
+      reviewNote: null,
+      reviewedAt: null,
+      createdAt: now,
+      updatedAt: now,
+    };
+
+    mockPrisma.proposal.findFirst.mockResolvedValue(proposal);
+
+    mockPrisma.$transaction.mockImplementation(async (callback) => {
+      const txMock = {
+        proposal: { update: vi.fn().mockResolvedValue({
+          ...proposal, status: "approved",
+          reviewedByUuid: "reviewer-uuid", reviewNote: "Approved", reviewedAt: now,
+          project: { uuid: PROJECT_UUID, name: "Test" },
+        }) },
+        taskDependency: { create: vi.fn() },
+        acceptanceCriterion: { createMany: vi.fn() },
+      };
+      return callback(txMock);
+    });
+    mockCreateTasks.mockResolvedValue({ draftToTaskUuidMap: new Map() });
+    // Idea is already completed - updateMany should match 0 rows (no error)
+    mockPrisma.idea.updateMany.mockResolvedValue({ count: 0 });
+
+    await approveProposal("proposal-reuse-2", COMPANY_UUID, "reviewer-uuid", "Approved");
+
+    // updateMany was called with status: "proposal_created" filter, which won't match completed
+    expect(mockPrisma.idea.updateMany).toHaveBeenCalledWith({
+      where: { uuid: { in: ["idea-completed"] }, companyUuid: COMPANY_UUID, status: "proposal_created" },
+      data: { status: "completed" },
+    });
+  });
+});

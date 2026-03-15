@@ -184,7 +184,8 @@ export function registerPmTools(server: McpServer, auth: AgentAuthContext) {
         return { content: [{ type: "text", text: "Project not found" }], isError: true };
       }
 
-      // If input type is idea, validate assignee and uniqueness
+      // If input type is idea, validate assignee
+      let reusedWarning = "";
       if (inputType === "idea") {
         const assigneeCheck = await proposalService.checkIdeasAssignee(
           auth.companyUuid,
@@ -199,17 +200,14 @@ export function registerPmTools(server: McpServer, auth: AgentAuthContext) {
           };
         }
 
+        // Check if ideas are already used by other proposals (informational only, not blocking)
         const availabilityCheck = await proposalService.checkIdeasAvailability(
           auth.companyUuid,
           inputUuids
         );
-        if (!availabilityCheck.available) {
-          const usedIdea = availabilityCheck.usedIdeas[0];
-          return {
-            content: [{ type: "text", text: `Idea is already used by Proposal "${usedIdea.proposalTitle}"` }],
-            isError: true,
-          };
-        }
+        reusedWarning = !availabilityCheck.available
+          ? `\nNote: Idea is also referenced by existing Proposal(s): ${availabilityCheck.usedIdeas.map(u => `"${u.proposalTitle}"`).join(", ")}`
+          : "";
       }
 
       const proposal = await proposalService.createProposal({
@@ -224,7 +222,7 @@ export function registerPmTools(server: McpServer, auth: AgentAuthContext) {
       });
 
       return {
-        content: [{ type: "text", text: JSON.stringify({ uuid: proposal.uuid, title: proposal.title, status: proposal.status }, null, 2) }],
+        content: [{ type: "text", text: JSON.stringify({ uuid: proposal.uuid, title: proposal.title, status: proposal.status }, null, 2) + reusedWarning }],
       };
     }
   );

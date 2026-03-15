@@ -6,7 +6,6 @@ import { getTranslations } from "next-intl/server";
 import { getServerAuthContext } from "@/lib/auth-server";
 import { projectExists } from "@/services/project.service";
 import { listIdeas } from "@/services/idea.service";
-import { checkIdeasAvailability } from "@/services/proposal.service";
 import { CreateProposalForm } from "./create-proposal-form";
 
 interface PageProps {
@@ -41,14 +40,8 @@ export default async function NewProposalPage({ params, searchParams }: PageProp
     actorType: auth.type,
   });
 
-  // Filter out ideas that have not been used yet
-  const ideaUuids = ideas.map(idea => idea.uuid);
-  const availabilityCheck = ideaUuids.length > 0
-    ? await checkIdeasAvailability(auth.companyUuid, ideaUuids)
-    : { usedIdeas: [] };
-
-  const usedIdeaUuids = new Set(availabilityCheck.usedIdeas.map(u => u.uuid));
-  const availableIdeas = ideas.filter(idea => !usedIdeaUuids.has(idea.uuid));
+  // All ideas with resolved elaboration are available (ideas can be reused across proposals)
+  const availableIdeas = ideas;
 
   return (
     <div className="p-8">
