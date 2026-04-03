@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { Loader2, Check } from "lucide-react";
@@ -45,58 +45,59 @@ export function MoveIdeaDialog({ open, onOpenChange, ideaUuid, projectUuid, onMo
   const [selectedProject, setSelectedProject] = useState<{ uuid: string; name: string } | null>(null);
   const [isMoving, setIsMoving] = useState(false);
   const [moveError, setMoveError] = useState<string | null>(null);
-  const [hasLoaded, setHasLoaded] = useState(false);
+
+  const loadProjects = useCallback(async () => {
+    setSelectedProject(null);
+    setMoveError(null);
+    setIsLoadingProjects(true);
+    try {
+      const result = await getProjectsAndGroupsAction();
+      if (result.success) {
+        const { projects: allProjects, groups: allGroups } = result.data;
+        const projects = allProjects
+          .filter((p: { uuid: string }) => p.uuid !== projectUuid)
+          .map((p: { uuid: string; name: string; groupUuid: string | null }) => ({
+            uuid: p.uuid, name: p.name, groupUuid: p.groupUuid,
+          }));
+
+        const groupMap = new Map<string, string>();
+        for (const g of allGroups) {
+          groupMap.set(g.uuid, g.name);
+        }
+
+        const grouped = new Map<string, MoveGroup>();
+        const ungrouped: { uuid: string; name: string }[] = [];
+
+        for (const p of projects) {
+          if (p.groupUuid && groupMap.has(p.groupUuid)) {
+            if (!grouped.has(p.groupUuid)) {
+              grouped.set(p.groupUuid, { uuid: p.groupUuid, name: groupMap.get(p.groupUuid)!, projects: [] });
+            }
+            grouped.get(p.groupUuid)!.projects.push({ uuid: p.uuid, name: p.name });
+          } else {
+            ungrouped.push({ uuid: p.uuid, name: p.name });
+          }
+        }
+
+        const groups = [...grouped.values()];
+        if (ungrouped.length > 0) {
+          groups.push({ uuid: "ungrouped", name: t("ideas.ungrouped"), projects: ungrouped });
+        }
+        setMoveGroups(groups);
+      }
+    } catch (e) {
+      console.error("Failed to load projects for move dialog:", e);
+      setMoveGroups([]);
+    }
+    setIsLoadingProjects(false);
+  }, [projectUuid, t]);
 
   // Load projects when dialog opens
-  const handleOpenChange = async (isOpen: boolean) => {
-    onOpenChange(isOpen);
-    if (isOpen && !hasLoaded) {
-      setSelectedProject(null);
-      setMoveError(null);
-      setIsLoadingProjects(true);
-      try {
-        const result = await getProjectsAndGroupsAction();
-        if (result.success) {
-          const { projects: allProjects, groups: allGroups } = result.data;
-          const projects = allProjects
-            .filter((p: { uuid: string }) => p.uuid !== projectUuid)
-            .map((p: { uuid: string; name: string; groupUuid: string | null }) => ({
-              uuid: p.uuid, name: p.name, groupUuid: p.groupUuid,
-            }));
-
-          const groupMap = new Map<string, string>();
-          for (const g of allGroups) {
-            groupMap.set(g.uuid, g.name);
-          }
-
-          const grouped = new Map<string, MoveGroup>();
-          const ungrouped: { uuid: string; name: string }[] = [];
-
-          for (const p of projects) {
-            if (p.groupUuid && groupMap.has(p.groupUuid)) {
-              if (!grouped.has(p.groupUuid)) {
-                grouped.set(p.groupUuid, { uuid: p.groupUuid, name: groupMap.get(p.groupUuid)!, projects: [] });
-              }
-              grouped.get(p.groupUuid)!.projects.push({ uuid: p.uuid, name: p.name });
-            } else {
-              ungrouped.push({ uuid: p.uuid, name: p.name });
-            }
-          }
-
-          const groups = [...grouped.values()];
-          if (ungrouped.length > 0) {
-            groups.push({ uuid: "ungrouped", name: t("ideas.ungrouped"), projects: ungrouped });
-          }
-          setMoveGroups(groups);
-          setHasLoaded(true);
-        }
-      } catch (e) {
-        console.error("Failed to load projects for move dialog:", e);
-        setMoveGroups([]);
-      }
-      setIsLoadingProjects(false);
+  useEffect(() => {
+    if (open) {
+      loadProjects();
     }
-  };
+  }, [open, loadProjects]);
 
   const handleMove = async () => {
     if (!selectedProject || isMoving) return;
@@ -119,7 +120,7 @@ export function MoveIdeaDialog({ open, onOpenChange, ideaUuid, projectUuid, onMo
   };
 
   return (
-    <Dialog open={open} onOpenChange={handleOpenChange}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>{t("ideas.moveIdeaTitle")}</DialogTitle>
