@@ -270,7 +270,7 @@ export function IdeaDetailPanel({
     }
     getTaskAction(selectedTaskUuid).then((result) => {
       if (result.success) setSelectedTask(result.data);
-    }).catch(console.error);
+    }).catch((e) => console.error("Failed to load task details:", e));
   }, [selectedTaskUuid]);
 
   const handleSubmitComment = async () => {
