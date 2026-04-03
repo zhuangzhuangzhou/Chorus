@@ -157,7 +157,9 @@
     "closed": "Closed",
     "elaborating": "Elaborating",
     "proposalCreated": "Proposal Created",
-    "proposal_created": "Proposal Created"
+    "proposal_created": "Proposal Created",
+    "needHumanInput": "Need Human Input",
+    "humanConductRequired": "Human Conduct Required"
   },
   "admin": {
     "title": "Super Admin",
@@ -980,6 +982,80 @@
       "copyKey": "This step will let you copy your API key. Coming soon.",
       "installGuide": "This step will guide you through installation. Coming soon.",
       "testConnection": "This step will test your agent connection. Coming soon."
+    }
+  },
+  "ideaTracker": {
+    "overview": "Overview",
+    "overviewSubtitle": "Track ideas, proposals, and tasks at a glance",
+    "tabs": {
+      "ideas": "Ideas",
+      "stats": "Stats"
+    },
+    "badge": {
+      "open": "Open",
+      "researching": "Researching",
+      "answerQuestions": "Answer questions",
+      "planning": "Planning",
+      "reviewProposal": "Review proposal",
+      "building": "Building",
+      "verifyWork": "Verify work",
+      "done": "Done",
+      "closed": "Closed"
+    },
+    "status": {
+      "todo": "To Do",
+      "inProgress": "In Progress",
+      "humanConductRequired": "Human Conduct Required",
+      "done": "Done"
+    },
+    "actions": {
+      "newIdea": "New Idea",
+      "untitledIdea": "Untitled Idea",
+      "search": "Search ideas...",
+      "retry": "Retry",
+      "assign": "Assign",
+      "reassign": "Reassign"
+    },
+    "empty": {
+      "noIdeas": "No ideas yet",
+      "getStarted": "Ideas flow through elaboration, proposals, and tasks — start by creating one",
+      "noResults": "No ideas match your search",
+      "groupEmpty": "No ideas in this status"
+    },
+    "newIdea": {
+      "title": "New Idea",
+      "ideaTitle": "Title",
+      "titlePlaceholder": "What's the idea?",
+      "description": "Description",
+      "descriptionPlaceholder": "Add context, goals, or any details that help clarify the idea..."
+    },
+    "error": {
+      "loadFailed": "Failed to load ideas",
+      "createFailed": "Failed to create idea"
+    },
+    "loading": "Loading...",
+    "justNow": "Just now",
+    "minutesAgo": "{minutes}m ago",
+    "hoursAgo": "{hours}h ago",
+    "daysAgo": "{days}d ago",
+    "stats": {
+      "totalIdeas": "Total Ideas",
+      "totalTasks": "Total Tasks",
+      "totalProposals": "Total Proposals",
+      "totalDocuments": "Total Documents",
+      "openCount": "{count} open",
+      "activeCount": "{count} active",
+      "pendingCount": "{count} pending",
+      "taskPipeline": "Task Pipeline",
+      "totalCount": "{count} total",
+      "todoCount": "To Do: {count}",
+      "inProgressCount": "In Progress: {count}",
+      "toVerifyCount": "To Verify: {count}",
+      "doneCount": "Done: {count}",
+      "noTasks": "No tasks yet",
+      "recentActivity": "Recent Activity",
+      "viewAll": "View all",
+      "noActivity": "No recent activity"
     }
   },
   "search": {

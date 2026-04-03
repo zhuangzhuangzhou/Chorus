@@ -1,0 +1,105 @@
+"use client";
+
+import { useState } from "react";
+import { useTranslations } from "next-intl";
+import { Plus } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { IdeaTrackerList } from "./idea-tracker-list";
+import { IdeaTrackerStats } from "./idea-tracker-stats";
+import { NewIdeaDialog } from "./new-idea-dialog";
+import type { TrackerGroupsResult } from "@/services/idea.service";
+
+interface IdeaTrackerProps {
+  projectUuid: string;
+  initialTrackerData: TrackerGroupsResult;
+  initialStatsData: {
+    stats: {
+      ideas: { total: number; open: number };
+      tasks: { total: number; inProgress: number; todo: number; toVerify: number; done: number };
+      proposals: { total: number; pending: number };
+      documents: { total: number };
+    };
+    recentActivities: Array<{
+      uuid: string;
+      targetType: string;
+      action: string;
+      actorName: string;
+      createdAt: string;
+    }>;
+  };
+}
+
+export function IdeaTracker({ projectUuid, initialTrackerData, initialStatsData }: IdeaTrackerProps) {
+  const t = useTranslations("ideaTracker");
+  const [activeTab, setActiveTab] = useState<"ideas" | "stats">("ideas");
+  const [isEmpty, setIsEmpty] = useState(false);
+  const [showNewIdeaDialog, setShowNewIdeaDialog] = useState(false);
+
+  return (
+    <div className="flex h-full flex-col">
+      {/* Header: Tabs + New Idea button */}
+      {!isEmpty && (
+        <div className="mb-4 flex items-center justify-between">
+          {/* Tab switcher */}
+          <div className="flex gap-0.5 rounded-lg border border-[#E5E0D8] bg-[#F7F6F3] p-0.5">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setActiveTab("ideas")}
+              className={`rounded-md px-3 py-1 h-auto text-[12px] font-medium transition-colors ${
+                activeTab === "ideas"
+                  ? "bg-white text-[#2C2C2C] shadow-sm"
+                  : "text-[#9A9A9A] hover:text-[#6B6B6B]"
+              }`}
+            >
+              {t("tabs.ideas")}
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setActiveTab("stats")}
+              className={`rounded-md px-3 py-1 h-auto text-[12px] font-medium transition-colors ${
+                activeTab === "stats"
+                  ? "bg-white text-[#2C2C2C] shadow-sm"
+                  : "text-[#9A9A9A] hover:text-[#6B6B6B]"
+              }`}
+            >
+              {t("tabs.stats")}
+            </Button>
+          </div>
+
+          {/* New Idea button — only on ideas tab */}
+          {activeTab === "ideas" && (
+            <Button
+              onClick={() => setShowNewIdeaDialog(true)}
+              size="sm"
+              className="gap-1.5 rounded-md bg-[#C67A52] px-3.5 py-2 text-white hover:bg-[#B56A42]"
+            >
+              <Plus className="h-4 w-4" />
+              {t("actions.newIdea")}
+            </Button>
+          )}
+        </div>
+      )}
+
+      {/* Tab content */}
+      {activeTab === "ideas" ? (
+        <IdeaTrackerList
+          projectUuid={projectUuid}
+          initialData={initialTrackerData}
+          onNewIdea={() => setShowNewIdeaDialog(true)}
+          onEmptyChange={setIsEmpty}
+        />
+      ) : (
+        <IdeaTrackerStats projectUuid={projectUuid} initialData={initialStatsData} />
+      )}
+
+      {/* New Idea Dialog */}
+      <NewIdeaDialog
+        open={showNewIdeaDialog}
+        onOpenChange={setShowNewIdeaDialog}
+        projectUuid={projectUuid}
+      />
+    </div>
+  );
+}

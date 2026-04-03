@@ -157,7 +157,9 @@
     "closed": "已关闭",
     "elaborating": "需求澄清中",
     "proposalCreated": "方案已创建",
-    "proposal_created": "方案已创建"
+    "proposal_created": "方案已创建",
+    "needHumanInput": "需要人工介入",
+    "humanConductRequired": "需要人工处理"
   },
   "admin": {
     "title": "超级管理员",
@@ -981,6 +983,80 @@
       "copyKey": "此步骤将用于复制 API 密钥。即将推出。",
       "installGuide": "此步骤将引导您完成安装。即将推出。",
       "testConnection": "此步骤将测试智能体连接。即将推出。"
+    }
+  },
+  "ideaTracker": {
+    "overview": "总览",
+    "overviewSubtitle": "追踪想法、提案和任务进展",
+    "tabs": {
+      "ideas": "想法",
+      "stats": "统计"
+    },
+    "badge": {
+      "open": "待处理",
+      "researching": "调研中",
+      "answerQuestions": "待回答",
+      "planning": "规划中",
+      "reviewProposal": "待审核",
+      "building": "构建中",
+      "verifyWork": "待验证",
+      "done": "已完成",
+      "closed": "已关闭"
+    },
+    "status": {
+      "todo": "待办",
+      "inProgress": "进行中",
+      "humanConductRequired": "需要人工处理",
+      "done": "已完成"
+    },
+    "actions": {
+      "newIdea": "新想法",
+      "untitledIdea": "无标题想法",
+      "search": "搜索想法...",
+      "retry": "重试",
+      "assign": "分配",
+      "reassign": "重新分配"
+    },
+    "empty": {
+      "noIdeas": "暂无想法",
+      "getStarted": "想法通过需求澄清、提案和任务推进——先创建一个吧",
+      "noResults": "没有匹配的想法",
+      "groupEmpty": "此状态下暂无想法"
+    },
+    "newIdea": {
+      "title": "新想法",
+      "ideaTitle": "标题",
+      "titlePlaceholder": "你的想法是什么？",
+      "description": "描述",
+      "descriptionPlaceholder": "添加背景、目标或任何有助于说明想法的详细信息..."
+    },
+    "error": {
+      "loadFailed": "加载想法失败",
+      "createFailed": "创建想法失败"
+    },
+    "loading": "加载中...",
+    "justNow": "刚刚",
+    "minutesAgo": "{minutes}分钟前",
+    "hoursAgo": "{hours}小时前",
+    "daysAgo": "{days}天前",
+    "stats": {
+      "totalIdeas": "想法总数",
+      "totalTasks": "任务总数",
+      "totalProposals": "提案总数",
+      "totalDocuments": "文档总数",
+      "openCount": "{count} 待处理",
+      "activeCount": "{count} 进行中",
+      "pendingCount": "{count} 待处理",
+      "taskPipeline": "任务流水线",
+      "totalCount": "共 {count} 个",
+      "todoCount": "待办: {count}",
+      "inProgressCount": "进行中: {count}",
+      "toVerifyCount": "待验证: {count}",
+      "doneCount": "已完成: {count}",
+      "noTasks": "暂无任务",
+      "recentActivity": "最近动态",
+      "viewAll": "查看全部",
+      "noActivity": "暂无最近动态"
     }
   },
   "search": {
