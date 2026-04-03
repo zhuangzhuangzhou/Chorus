@@ -20,7 +20,7 @@ interface TrackerApiResponse {
 
 interface IdeaTrackerListProps {
   projectUuid: string;
-  onIdeaClick: (uuid: string) => void;
+  onIdeaClick?: (uuid: string) => void;
   onNewIdea?: () => void;
   onEmptyChange?: (isEmpty: boolean) => void;
 }

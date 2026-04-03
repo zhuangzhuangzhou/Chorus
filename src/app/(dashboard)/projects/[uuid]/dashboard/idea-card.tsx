@@ -20,7 +20,7 @@ export interface IdeaCardItem {
 
 interface IdeaRowProps {
   idea: IdeaCardItem;
-  onClick: (uuid: string) => void;
+  onClick?: (uuid: string) => void;
 }
 
 // Badge i18n key for each badgeHint value
@@ -63,8 +63,8 @@ export function IdeaCard({ idea, onClick }: IdeaRowProps) {
 
   return (
     <div
-      className="flex cursor-pointer items-center justify-between px-3.5 py-3 transition-colors hover:bg-[#FAF8F4]"
-      onClick={() => onClick(idea.uuid)}
+      className={`flex items-center justify-between px-3.5 py-3 transition-colors ${onClick ? "cursor-pointer hover:bg-[#FAF8F4]" : ""}`}
+      onClick={onClick ? () => onClick(idea.uuid) : undefined}
     >
       {/* Left: ID + Title + Badge */}
       <div className="flex min-w-0 items-center gap-2.5">

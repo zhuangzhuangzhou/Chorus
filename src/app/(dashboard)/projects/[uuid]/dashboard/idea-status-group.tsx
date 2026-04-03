@@ -14,7 +14,7 @@ interface IdeaStatusGroupProps {
   status: string;
   ideas: IdeaCardItem[];
   defaultOpen?: boolean;
-  onIdeaClick: (uuid: string) => void;
+  onIdeaClick?: (uuid: string) => void;
 }
 
 // Dot colors matching the Pencil design
