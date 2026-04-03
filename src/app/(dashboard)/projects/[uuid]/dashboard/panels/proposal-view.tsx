@@ -55,16 +55,13 @@ interface ProposalViewProps {
   onDocClick?: (doc: { title: string; type: string; content: string }) => void;
 }
 
-function getDocTypeLabel(type: string): string {
-  const map: Record<string, string> = {
-    prd: "PRD",
-    tech_design: "Tech Design",
-    adr: "ADR",
-    spec: "Spec",
-    guide: "Guide",
-  };
-  return map[type] || type.replace(/_/g, " ");
-}
+const DOC_TYPE_I18N_KEYS: Record<string, string> = {
+  prd: "typePrd",
+  tech_design: "typeTechDesign",
+  adr: "typeAdr",
+  spec: "typeSpec",
+  guide: "typeGuide",
+};
 
 /** Normalize escaped newlines from JSON into real newlines for markdown rendering */
 function normalizeNewlines(text: string): string {
@@ -74,6 +71,7 @@ function normalizeNewlines(text: string): string {
 export function ProposalView({ idea, projectUuid, onTaskClick, onDocClick }: ProposalViewProps) {
   const t = useTranslations("ideaTracker");
   const tProposals = useTranslations("proposals");
+  const tDocs = useTranslations("documents");
 
   const [proposals, setProposals] = useState<ProposalData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -130,6 +128,7 @@ export function ProposalView({ idea, projectUuid, onTaskClick, onDocClick }: Pro
           projectUuid={projectUuid}
           t={t}
           tProposals={tProposals}
+          tDocs={tDocs}
           onTaskClick={onTaskClick}
           onDocClick={onDocClick}
         />
@@ -149,6 +148,7 @@ function ProposalContent({
   projectUuid,
   t,
   tProposals,
+  tDocs,
   onTaskClick,
   onDocClick,
 }: {
@@ -158,6 +158,8 @@ function ProposalContent({
   t: any;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   tProposals: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  tDocs: any;
   onTaskClick?: (taskUuid: string) => void;
   onDocClick?: (doc: { title: string; type: string; content: string }) => void;
 }) {
@@ -267,7 +269,7 @@ function ProposalContent({
                   variant="outline"
                   className="shrink-0 text-[10px] font-medium border-[#E5E0D8] text-[#6B6B6B] bg-[#F5F2EC] px-2 py-0.5 font-mono"
                 >
-                  {getDocTypeLabel(doc.type)}
+                  {tDocs(DOC_TYPE_I18N_KEYS[doc.type] || "typeOther")}
                 </Badge>
                 <span className="flex-1 min-w-0 text-left text-[13px] text-[#2C2C2A] truncate">
                   {doc.title}
@@ -325,7 +327,7 @@ function ProposalContent({
                     : "text-[#9A9A9A] hover:text-[#6B6B6B]"
                 }`}
               >
-                DAG
+                {tProposals("dagView")}
               </Button>
             </div>
           )}

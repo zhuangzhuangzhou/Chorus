@@ -591,6 +591,9 @@
     "typePrd": "PRD",
     "typeSpec": "Spec",
     "typeDesign": "Design",
+    "typeTechDesign": "Tech Design",
+    "typeAdr": "ADR",
+    "typeGuide": "Guide",
     "typeNote": "Note",
     "typeOther": "Other"
   },

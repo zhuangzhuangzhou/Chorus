@@ -592,6 +592,9 @@
     "typePrd": "PRD",
     "typeSpec": "技术规格",
     "typeDesign": "设计文档",
+    "typeTechDesign": "技术设计",
+    "typeAdr": "ADR",
+    "typeGuide": "指南",
     "typeNote": "笔记",
     "typeOther": "其他"
   },

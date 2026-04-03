@@ -9,16 +9,13 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Streamdown } from "streamdown";
 import { code as codePlugin } from "@streamdown/code";
 
-function getDocTypeLabel(type: string): string {
-  const map: Record<string, string> = {
-    prd: "PRD",
-    tech_design: "Tech Design",
-    adr: "ADR",
-    spec: "Spec",
-    guide: "Guide",
-  };
-  return map[type] || type.replace(/_/g, " ");
-}
+const DOC_TYPE_I18N_KEYS: Record<string, string> = {
+  prd: "typePrd",
+  tech_design: "typeTechDesign",
+  adr: "typeAdr",
+  spec: "typeSpec",
+  guide: "typeGuide",
+};
 
 function normalizeNewlines(text: string): string {
   return text.replace(/\\n/g, "\n");
@@ -33,7 +30,7 @@ interface DocumentPanelProps {
 }
 
 export function DocumentPanel({ title, type, content, onClose, onBack }: DocumentPanelProps) {
-  const t = useTranslations("proposals");
+  const tDocs = useTranslations("documents");
 
   const [hasAnimated, setHasAnimated] = useState(false);
   useEffect(() => {
@@ -76,7 +73,7 @@ export function DocumentPanel({ title, type, content, onClose, onBack }: Documen
                 variant="outline"
                 className="text-[10px] font-medium border-[#E5E0D8] text-[#6B6B6B] bg-[#F5F2EC] px-2 py-0.5 font-mono"
               >
-                {getDocTypeLabel(type)}
+                {tDocs(DOC_TYPE_I18N_KEYS[type] || "typeOther")}
               </Badge>
             </div>
           </div>

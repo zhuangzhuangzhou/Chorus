@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { Bot, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -23,6 +23,7 @@ interface BasicViewProps {
 export function BasicView({ idea, projectUuid, currentUserUuid, onRefresh }: BasicViewProps) {
   const t = useTranslations("ideaTracker");
   const tCommon = useTranslations("common");
+  const locale = useLocale();
   const [showAssignModal, setShowAssignModal] = useState(false);
 
   return (
@@ -103,7 +104,7 @@ export function BasicView({ idea, projectUuid, currentUserUuid, onRefresh }: Bas
             </span>
           )}
           <span className="text-xs text-[#9A9A9A]">
-            {new Date(idea.createdAt).toLocaleDateString()}
+            {new Date(idea.createdAt).toLocaleDateString(locale)}
           </span>
         </div>
       </div>

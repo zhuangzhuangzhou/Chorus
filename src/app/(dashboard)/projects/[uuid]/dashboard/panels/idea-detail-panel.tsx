@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { useRouter } from "next/navigation";
 import { X, Loader2, Bot, User, Send, Trash2, ArrowRightLeft, Pencil, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -131,7 +131,7 @@ const derivedStatusI18nKeys: Record<string, string> = {
 };
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function formatRelativeTime(dateString: string, t: any): string {
+function formatRelativeTime(dateString: string, t: any, locale: string): string {
   const date = new Date(dateString);
   const now = new Date();
   const diffMs = now.getTime() - date.getTime();
@@ -143,7 +143,7 @@ function formatRelativeTime(dateString: string, t: any): string {
   if (diffMins < 60) return t("time.minutesAgo", { minutes: diffMins });
   if (diffHours < 24) return t("time.hoursAgo", { hours: diffHours });
   if (diffDays < 7) return t("time.daysAgo", { days: diffDays });
-  return date.toLocaleDateString();
+  return date.toLocaleDateString(locale);
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -197,6 +197,7 @@ export function IdeaDetailPanel({
   const t = useTranslations();
   const tTracker = useTranslations("ideaTracker");
   const tStatus = useTranslations("status");
+  const locale = useLocale();
 
   const [idea, setIdea] = useState<IdeaResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -234,7 +235,6 @@ export function IdeaDetailPanel({
   // Task detail panel state
   const [selectedTaskUuid, setSelectedTaskUuid] = useState<string | null>(null);
   const [selectedTask, setSelectedTask] = useState<TaskForPanel | null>(null);
-  const [isLoadingTask, setIsLoadingTask] = useState(false);
 
   // Document panel state
   const [selectedDoc, setSelectedDoc] = useState<{ title: string; type: string; content: string } | null>(null);
@@ -316,7 +316,6 @@ export function IdeaDetailPanel({
       setSelectedTask(null);
       return;
     }
-    setIsLoadingTask(true);
     fetch(`/api/projects/${projectUuid}/tasks?pageSize=200`)
       .then((res) => res.json())
       .then((json) => {
@@ -327,8 +326,7 @@ export function IdeaDetailPanel({
           if (found) setSelectedTask(found);
         }
       })
-      .catch(() => {})
-      .finally(() => setIsLoadingTask(false));
+      .catch(() => {});
   }, [selectedTaskUuid, projectUuid]);
 
   const handleSubmitComment = async () => {
@@ -527,7 +525,7 @@ export function IdeaDetailPanel({
                       {tStatus(derivedStatusI18nKeys[status] || "todo")}
                     </Badge>
                     <span className="text-xs text-[#9A9A9A]">
-                      {new Date(idea.createdAt).toLocaleDateString()}
+                      {new Date(idea.createdAt).toLocaleDateString(locale)}
                     </span>
                   </div>
                 </>
@@ -627,7 +625,6 @@ export function IdeaDetailPanel({
               <>
                 <PanelContent
                   idea={idea}
-                  status={status}
                   projectUuid={projectUuid}
                   currentUserUuid={currentUserUuid}
                   onRefresh={fetchIdea}
@@ -661,7 +658,7 @@ export function IdeaDetailPanel({
                             <p className="text-[13px] text-[#2C2C2C]">
                               {formatActivityMessage(activity, t)}
                             </p>
-                            <p className="text-[11px] text-[#9A9A9A]">{formatRelativeTime(activity.createdAt, t)}</p>
+                            <p className="text-[11px] text-[#9A9A9A]">{formatRelativeTime(activity.createdAt, t, locale)}</p>
                           </div>
                         </div>
                       ))
@@ -696,7 +693,7 @@ export function IdeaDetailPanel({
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2">
                               <span className={`text-xs font-semibold ${c.author.type === "agent" ? "text-[#C67A52]" : "text-[#2C2C2C]"}`}>{c.author.name}</span>
-                              <span className="text-[11px] text-[#9A9A9A]">{formatRelativeTime(c.createdAt, t)}</span>
+                              <span className="text-[11px] text-[#9A9A9A]">{formatRelativeTime(c.createdAt, t, locale)}</span>
                             </div>
                             <div className="mt-1 text-xs leading-relaxed text-[#2C2C2C]">
                               <ContentWithMentions>{c.content}</ContentWithMentions>
@@ -974,7 +971,6 @@ function PanelContent({
   onDocClick,
 }: {
   idea: IdeaResponse;
-  status: string;
   projectUuid: string;
   currentUserUuid: string;
   onRefresh: () => void;
