@@ -978,7 +978,7 @@ describe("submitProposal", () => {
     expect(mockEventBus.emitChange).toHaveBeenCalled();
   });
 
-  it("should auto-transition input ideas to proposal_created", async () => {
+  it("should NOT auto-transition input ideas on submit (status derived from proposal/tasks)", async () => {
     const proposal = dbProposal({
       status: "draft",
       inputType: "idea",
@@ -993,18 +993,11 @@ describe("submitProposal", () => {
       { uuid: "idea-2", title: "Idea 2", elaborationStatus: "resolved" },
     ]);
     mockPrisma.proposal.update.mockResolvedValue(dbProposal({ ...proposal, status: "pending" }));
-    mockPrisma.idea.updateMany.mockResolvedValue({ count: 2 });
 
     await submitProposal(proposal.uuid, COMPANY_UUID);
 
-    expect(mockPrisma.idea.updateMany).toHaveBeenCalledWith({
-      where: {
-        uuid: { in: ["idea-1", "idea-2"] },
-        companyUuid: COMPANY_UUID,
-        status: "elaborating",
-      },
-      data: { status: "proposal_created" },
-    });
+    // Should NOT call idea.updateMany — idea status is no longer changed on proposal submit
+    expect(mockPrisma.idea.updateMany).not.toHaveBeenCalled();
   });
 });
 
@@ -1154,7 +1147,7 @@ describe("approveProposal", () => {
     ).rejects.toThrow("empty or invalid description");
   });
 
-  it("should auto-complete input ideas when approved", async () => {
+  it("should NOT auto-complete input ideas when approved (derived status handles lifecycle)", async () => {
     const proposal = dbProposal({
       status: "pending",
       documentDrafts: null,
@@ -1173,18 +1166,11 @@ describe("approveProposal", () => {
       };
       return cb(tx);
     });
-    mockPrisma.idea.updateMany.mockResolvedValue({ count: 1 });
 
     await approveProposal(proposal.uuid, COMPANY_UUID, "reviewer-uuid");
 
-    expect(mockPrisma.idea.updateMany).toHaveBeenCalledWith({
-      where: {
-        uuid: { in: ["idea-1"] },
-        companyUuid: COMPANY_UUID,
-        status: "proposal_created",
-      },
-      data: { status: "completed" },
-    });
+    // Ideas should NOT be auto-completed — derived status is computed from task progress
+    expect(mockPrisma.idea.updateMany).not.toHaveBeenCalled();
   });
 });
 
@@ -1811,22 +1797,17 @@ describe("Idea reuse - submitProposal with proposal_created Idea", () => {
 
     mockPrisma.proposal.findFirst.mockResolvedValue(proposal);
     mockPrisma.proposal.update.mockResolvedValue({ ...proposal, status: "pending" });
-    // Idea is already proposal_created - updateMany should match 0 rows (no error)
-    mockPrisma.idea.updateMany.mockResolvedValue({ count: 0 });
 
     const result = await submitProposal("proposal-reuse", COMPANY_UUID);
 
     expect(result.status).toBe("pending");
-    // updateMany was called with status: "elaborating" filter, which won't match proposal_created
-    expect(mockPrisma.idea.updateMany).toHaveBeenCalledWith({
-      where: { uuid: { in: ["idea-already-used"] }, companyUuid: COMPANY_UUID, status: "elaborating" },
-      data: { status: "proposal_created" },
-    });
+    // Idea status is no longer changed on proposal submit — derived status handles lifecycle
+    expect(mockPrisma.idea.updateMany).not.toHaveBeenCalled();
   });
 });
 
 describe("Idea reuse - approveProposal with completed Idea", () => {
-  it("should not error when Idea is already in completed status", async () => {
+  it("should not auto-complete ideas on approval (derived status handles lifecycle)", async () => {
     const { approveProposal } = await import("@/services/proposal.service");
 
     const now = new Date();
@@ -1864,15 +1845,10 @@ describe("Idea reuse - approveProposal with completed Idea", () => {
       return callback(txMock);
     });
     mockCreateTasks.mockResolvedValue({ draftToTaskUuidMap: new Map() });
-    // Idea is already completed - updateMany should match 0 rows (no error)
-    mockPrisma.idea.updateMany.mockResolvedValue({ count: 0 });
 
     await approveProposal("proposal-reuse-2", COMPANY_UUID, "reviewer-uuid", "Approved");
 
-    // updateMany was called with status: "proposal_created" filter, which won't match completed
-    expect(mockPrisma.idea.updateMany).toHaveBeenCalledWith({
-      where: { uuid: { in: ["idea-completed"] }, companyUuid: COMPANY_UUID, status: "proposal_created" },
-      data: { status: "completed" },
-    });
+    // Ideas should NOT be auto-completed — derived status computed from task progress
+    expect(mockPrisma.idea.updateMany).not.toHaveBeenCalled();
   });
 });

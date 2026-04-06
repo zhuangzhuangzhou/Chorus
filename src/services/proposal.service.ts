@@ -416,6 +416,42 @@ export async function checkIdeasAssignee(
 
 // ===== Service Methods =====
 
+// Get proposals that reference a specific idea UUID
+export async function getProposalsByIdeaUuid(
+  companyUuid: string,
+  projectUuid: string,
+  ideaUuid: string,
+): Promise<ProposalResponse[]> {
+  const rawProposals = await prisma.proposal.findMany({
+    where: { projectUuid, companyUuid },
+    orderBy: { createdAt: "desc" },
+    select: {
+      uuid: true,
+      title: true,
+      description: true,
+      inputType: true,
+      inputUuids: true,
+      documentDrafts: true,
+      taskDrafts: true,
+      status: true,
+      createdByUuid: true,
+      createdByType: true,
+      reviewedByUuid: true,
+      reviewNote: true,
+      reviewedAt: true,
+      createdAt: true,
+      updatedAt: true,
+    },
+  });
+
+  // Filter by ideaUuid in the JSON inputUuids array (Prisma JSON filtering is DB-dependent)
+  const matching = rawProposals.filter(
+    (p) => Array.isArray(p.inputUuids) && (p.inputUuids as string[]).includes(ideaUuid),
+  );
+
+  return Promise.all(matching.map((p) => formatProposalResponse(p)));
+}
+
 // List proposals query
 export async function listProposals({
   companyUuid,
@@ -702,16 +738,12 @@ export async function approveProposal(
 
   eventBus.emitChange({ companyUuid: proposal.companyUuid, projectUuid: proposal.projectUuid, entityType: "proposal", entityUuid: proposalUuid, action: "updated" });
 
-  // Auto-complete input Ideas when proposal is approved
-  if (proposal.inputType === "idea") {
-    const inputUuids = (proposal.inputUuids as string[]) || [];
-    if (inputUuids.length > 0) {
-      await prisma.idea.updateMany({
-        where: { uuid: { in: inputUuids }, companyUuid, status: "proposal_created" },
-        data: { status: "completed" },
-      });
-    }
-  }
+  // Note: We do NOT auto-complete input Ideas here.
+  // The Idea's derived status is computed from its linked Tasks' progress:
+  //   proposal_created + approved proposal → in_review (tasks not started)
+  //   proposal_created + tasks to_verify   → verifying
+  //   All tasks done                       → idea auto-completed by task completion flow
+  // See computeDerivedStatus() in idea.service.ts.
 
   const response: ApprovalResult = await formatProposalResponse(updatedProposal);
   if (materializedTasks.length > 0) response.materializedTasks = materializedTasks;
@@ -824,17 +856,6 @@ export async function submitProposal(
     },
   });
 
-  // Auto-transition input Ideas to proposal_created
-  if (proposal.inputType === "idea") {
-    const inputUuids = (proposal.inputUuids as string[]) || [];
-    if (inputUuids.length > 0) {
-      await prisma.idea.updateMany({
-        where: { uuid: { in: inputUuids }, companyUuid, status: "elaborating" },
-        data: { status: "proposal_created" },
-      });
-    }
-  }
-
   eventBus.emitChange({ companyUuid: updated.companyUuid, projectUuid: updated.projectUuid, entityType: "proposal", entityUuid: updated.uuid, action: "updated" });
 
   return formatProposalResponse(updated);
@@ -868,6 +889,7 @@ export async function addDocumentDraft(
     },
   });
 
+  eventBus.emitChange({ companyUuid, projectUuid: proposal.projectUuid, entityType: "proposal", entityUuid: proposalUuid, action: "updated" });
   return formatProposalResponse(updated);
 }
 
@@ -899,6 +921,7 @@ export async function addTaskDraft(
     },
   });
 
+  eventBus.emitChange({ companyUuid, projectUuid: proposal.projectUuid, entityType: "proposal", entityUuid: proposalUuid, action: "updated" });
   return formatProposalResponse(updated);
 }
 
@@ -936,6 +959,7 @@ export async function updateDocumentDraft(
     },
   });
 
+  eventBus.emitChange({ companyUuid, projectUuid: proposal.projectUuid, entityType: "proposal", entityUuid: proposalUuid, action: "updated" });
   return formatProposalResponse(updated);
 }
 
@@ -973,6 +997,7 @@ export async function updateTaskDraft(
     },
   });
 
+  eventBus.emitChange({ companyUuid, projectUuid: proposal.projectUuid, entityType: "proposal", entityUuid: proposalUuid, action: "updated" });
   return formatProposalResponse(updated);
 }
 
@@ -1005,6 +1030,7 @@ export async function removeDocumentDraft(
     },
   });
 
+  eventBus.emitChange({ companyUuid, projectUuid: proposal.projectUuid, entityType: "proposal", entityUuid: proposalUuid, action: "updated" });
   return formatProposalResponse(updated);
 }
 
@@ -1042,6 +1068,7 @@ export async function removeTaskDraft(
     },
   });
 
+  eventBus.emitChange({ companyUuid, projectUuid: proposal.projectUuid, entityType: "proposal", entityUuid: proposalUuid, action: "updated" });
   return formatProposalResponse(updated);
 }
 

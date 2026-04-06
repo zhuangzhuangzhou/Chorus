@@ -71,6 +71,7 @@
     "elaborationSkipped": "{actor} skipped elaboration",
     "elaborationResolved": "{actor} resolved elaboration",
     "elaborationFollowup": "{actor} requested follow-up elaboration",
+    "genericAction": "{actor} performed {action}",
     "entityIdea": "Idea",
     "entityProposal": "Proposal",
     "entityTask": "Task",
@@ -91,7 +92,14 @@
   "comments": {
     "title": "Comments",
     "noComments": "No comments yet",
-    "addComment": "Add a comment... (type @ to mention)"
+    "addComment": "Add a comment... (type @ to mention)",
+    "roleAgent": "Agent",
+    "roleHuman": "Human",
+    "onBehalfOf": "on behalf of {name}",
+    "showMore": "Show more",
+    "showLess": "Show less",
+    "loadError": "Failed to load comments",
+    "retry": "Retry"
   },
   "mentions": {
     "noResults": "No results",
@@ -156,8 +164,11 @@
     "completed": "Completed",
     "closed": "Closed",
     "elaborating": "Elaborating",
+    "elaborated": "Elaborated",
     "proposalCreated": "Proposal Created",
-    "proposal_created": "Proposal Created"
+    "proposal_created": "Proposal Created",
+    "needHumanInput": "Need Human Input",
+    "humanConductRequired": "Human Conduct Required"
   },
   "admin": {
     "title": "Super Admin",
@@ -285,13 +296,13 @@
     "openProposals": "Open proposals",
     "ideasCaptured": "Ideas captured",
     "taskProgress": "Task progress",
+    "createNewProject": "Create New Project",
+    "createNewProjectDesc": "Start a new project and invite your team",
+    "updated": "Updated",
     "listView": "List",
     "gridView": "Grid",
     "empty": "Empty",
     "complete": "Complete",
-    "createNewProject": "Create New Project",
-    "createNewProjectDesc": "Start a new project and invite your team",
-    "updated": "Updated",
     "createNew": {
       "title": "Create New Project",
       "subtitle": "Set up your project details, then assign ideas to PM Agent later",
@@ -450,7 +461,9 @@
     "reviewInstructions": "Review the content and approve or reject this proposal.",
     "basedOn": "Based on",
     "documentDrafts": "Document Drafts",
+    "documents": "Documents",
     "taskDrafts": "Task Drafts",
+    "tasks": "Tasks",
     "emptyContainer": "This proposal container is empty. Add documents or tasks to it.",
     "inputType": "Input Type",
     "creatorType": "Creator Type",
@@ -458,10 +471,12 @@
     "documents": "Documents",
     "tasks": "Tasks",
     "inputs": "Inputs",
+    "discussion": "Discussion",
     "reviewInfo": "Review Info",
     "reviewedBy": "Reviewed By",
     "reviewedAt": "Reviewed At",
     "reviewNote": "Review Note",
+    "requestChanges": "Request Changes",
     "approveProposal": "Approve Proposal",
     "approveProposalDesc": "Optionally add a note for the proposal creator (e.g., instructions for the agent).",
     "approveNotePlaceholder": "Add a note (optional)...",
@@ -514,6 +529,13 @@
     "docTypeAdr": "ADR",
     "docTypeSpec": "Spec",
     "docTypeGuide": "Guide",
+    "docSubtitlePrd": "Product Requirements Document",
+    "docSubtitleTechDesign": "Technical Design Document",
+    "docSubtitleAdr": "Architecture Decision Record",
+    "docSubtitleSpec": "Specification",
+    "docSubtitleGuide": "Guide",
+    "acCount": "{count} AC",
+    "depCount": "{count, plural, one {# dep} other {# deps}}",
     "storyPointsPlaceholder": "e.g. 4",
     "cardsView": "Cards",
     "dependencyExists": "This dependency already exists",
@@ -586,6 +608,9 @@
     "typePrd": "PRD",
     "typeSpec": "Spec",
     "typeDesign": "Design",
+    "typeTechDesign": "Tech Design",
+    "typeAdr": "ADR",
+    "typeGuide": "Guide",
     "typeNote": "Note",
     "typeOther": "Other"
   },
@@ -735,6 +760,7 @@
     "projectBadge": "Project",
     "notificationPreferences": "Notification Preferences",
     "loadMore": "Load more",
+    "viewDetail": "View",
     "types": {
       "proposal_approved": "Proposal approved",
       "proposal_rejected": "Proposal rejected",
@@ -797,6 +823,9 @@
     "skipReasonPlaceholder": "e.g., Bug fix with clear reproduction steps",
     "skipReasonRequired": "Please provide a reason",
     "elaborationRequiredHint": "Complete or skip elaboration to create a proposal",
+    "questionCount": "{count} questions",
+    "navCounter": "{current} of {total}",
+    "somethingElse": "Something else",
     "category": {
       "functional": "Functional",
       "nonFunctional": "Non-functional",
@@ -980,6 +1009,97 @@
       "copyKey": "This step will let you copy your API key. Coming soon.",
       "installGuide": "This step will guide you through installation. Coming soon.",
       "testConnection": "This step will test your agent connection. Coming soon."
+    }
+  },
+  "ideaTracker": {
+    "overview": "Overview",
+    "overviewSubtitle": "Track ideas, proposals, and tasks at a glance",
+    "tabs": {
+      "ideas": "Ideas",
+      "stats": "Stats"
+    },
+    "badge": {
+      "open": "Open",
+      "researching": "Researching",
+      "answerQuestions": "Answer questions",
+      "planning": "Planning",
+      "reviewProposal": "Review proposal",
+      "building": "Building",
+      "verifyWork": "Verify work",
+      "done": "Done",
+      "closed": "Closed"
+    },
+    "status": {
+      "todo": "To Do",
+      "inProgress": "In Progress",
+      "humanConductRequired": "Human Conduct Required",
+      "done": "Done"
+    },
+    "actions": {
+      "newIdea": "New Idea",
+      "untitledIdea": "Untitled Idea",
+      "search": "Search ideas...",
+      "retry": "Retry",
+      "assign": "Assign",
+      "reassign": "Reassign"
+    },
+    "empty": {
+      "noIdeas": "No ideas yet",
+      "getStarted": "Ideas flow through elaboration, proposals, and tasks — start by creating one",
+      "noResults": "No ideas match your search",
+      "groupEmpty": "No ideas in this status"
+    },
+    "newIdea": {
+      "title": "New Idea",
+      "ideaTitle": "Title",
+      "titlePlaceholder": "What's the idea?",
+      "description": "Description",
+      "descriptionPlaceholder": "Add context, goals, or any details that help clarify the idea..."
+    },
+    "error": {
+      "loadFailed": "Failed to load ideas",
+      "createFailed": "Failed to create idea"
+    },
+    "loading": "Loading...",
+    "justNow": "Just now",
+    "minutesAgo": "{minutes}m ago",
+    "hoursAgo": "{hours}h ago",
+    "daysAgo": "{days}d ago",
+    "stats": {
+      "totalIdeas": "Total Ideas",
+      "totalTasks": "Total Tasks",
+      "totalProposals": "Total Proposals",
+      "totalDocuments": "Total Documents",
+      "openCount": "{count} open",
+      "activeCount": "{count} active",
+      "pendingCount": "{count} pending",
+      "taskPipeline": "Task Pipeline",
+      "totalCount": "{count} total",
+      "todoCount": "To Do: {count}",
+      "inProgressCount": "In Progress: {count}",
+      "toVerifyCount": "To Verify: {count}",
+      "doneCount": "Done: {count}",
+      "noTasks": "No tasks yet",
+      "recentActivity": "Recent Activity",
+      "viewAll": "View all",
+      "noActivity": "No recent activity"
+    },
+    "panel": {
+      "notFound": "Idea not found",
+      "loadFailed": "Failed to load idea",
+      "verifyingPlaceholder": "Verification in progress...",
+      "donePlaceholder": "This idea has been completed.",
+      "elaborationStatus": "Elaboration Status",
+      "elaborationRounds": "Elaboration Q&A",
+      "elaborationWaiting": "Waiting for agent",
+      "elaborationWaitingDesc": "The PM agent will start elaboration soon.",
+      "elaboration": {
+        "pendingAnswers": "Pending Answers",
+        "validating": "Validating",
+        "resolved": "Resolved"
+      },
+      "noProposals": "No proposals linked to this idea yet",
+      "viewProposal": "View Full Proposal"
     }
   },
   "search": {

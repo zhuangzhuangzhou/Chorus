@@ -10,6 +10,10 @@ import { ApiError } from "@/lib/api-handler";
 import * as mentionService from "@/services/mention.service";
 import * as activityService from "@/services/activity.service";
 
+// ===== Derived Status =====
+
+export type DerivedIdeaStatus = 'todo' | 'in_progress' | 'human_conduct_required' | 'done';
+
 // ===== Type Definitions =====
 
 export interface IdeaListParams {
@@ -62,14 +66,13 @@ export interface IdeaResponse {
   updatedAt: string;
 }
 
-// Idea status transition rules — simplified AI-DLC lifecycle
-// open → elaborating → proposal_created → completed → closed
+// Idea status transition rules — simplified 3-state model
+// open → elaborating → elaborated
+// Post-elaboration status is derived from Proposal + Task states (see computeDerivedStatus)
 export const IDEA_STATUS_TRANSITIONS: Record<string, string[]> = {
-  open: ["elaborating", "closed"],
-  elaborating: ["proposal_created", "closed"],
-  proposal_created: ["completed", "elaborating", "closed"],
-  completed: ["closed"],
-  closed: [],
+  open: ["elaborating"],
+  elaborating: ["elaborated"],
+  elaborated: [],
 };
 
 // Map legacy statuses to current ones (for backward compatibility with historical data)
@@ -78,8 +81,11 @@ export function normalizeIdeaStatus(status: string): string {
     case "assigned":
     case "in_progress":
       return "elaborating";
+    case "proposal_created":
+    case "completed":
+    case "closed":
     case "pending_review":
-      return "proposal_created";
+      return "elaborated";
     default:
       return status;
   }
@@ -310,8 +316,9 @@ export async function claimIdea({
   if (existing.assigneeUuid) {
     throw new AlreadyClaimedError("Idea");
   }
-  if (existing.status === "completed" || existing.status === "closed") {
-    throw new Error("Cannot claim a completed or closed Idea");
+  const normalizedStatus = normalizeIdeaStatus(existing.status);
+  if (normalizedStatus === "elaborated") {
+    throw new Error("Cannot claim an elaborated Idea");
   }
 
   const idea = await prisma.idea.update({
@@ -345,8 +352,9 @@ export async function assignIdea({
     where: { uuid: ideaUuid, companyUuid },
   });
   if (!existing) throw new Error("Idea not found");
-  if (existing.status === "completed" || existing.status === "closed") {
-    throw new Error("Cannot assign a completed or closed Idea");
+  const normalizedAssignStatus = normalizeIdeaStatus(existing.status);
+  if (normalizedAssignStatus === "elaborated") {
+    throw new Error("Cannot assign an elaborated Idea");
   }
 
   // If currently open, move to elaborating; otherwise keep current status
@@ -375,8 +383,9 @@ export async function assignIdea({
 export async function releaseIdea(uuid: string): Promise<IdeaResponse> {
   const existing = await prisma.idea.findUnique({ where: { uuid } });
   if (!existing) throw new Error("Idea not found");
-  if (existing.status === "completed" || existing.status === "closed") {
-    throw new Error("Cannot release a completed or closed Idea");
+  const normalizedReleaseStatus = normalizeIdeaStatus(existing.status);
+  if (normalizedReleaseStatus === "elaborated") {
+    throw new Error("Cannot release an elaborated Idea");
   }
 
   const idea = await prisma.idea.update({
@@ -533,4 +542,289 @@ export async function moveIdea(
     include: { project: { select: { uuid: true, name: true } } },
   });
   return formatIdeaResponse(updated!);
+}
+
+// ===== Derived Status =====
+
+/**
+ * Compute the derived status for a single idea based on its native status
+ * and related Proposal/Task chain.
+ */
+export interface DerivedStatusContext {
+  ideaStatus: string;
+  elaborationStatus?: string | null;
+  hasPendingProposal: boolean;
+  hasApprovedProposal: boolean;
+  taskStatuses: string[];
+}
+
+export type BadgeHint =
+  | "open"              // New idea, not started
+  | "researching"       // AI elaborating
+  | "answer_questions"  // Elaboration: human needs to answer questions
+  | "planning"          // AI drafting proposal
+  | "review_proposal"   // Proposal: awaiting human approval
+  | "building"          // Tasks in development
+  | "verify_work"       // Tasks: work done, human needs to verify
+  | "done"              // All tasks complete
+  | null;
+
+export interface DerivedStatusResult {
+  derivedStatus: DerivedIdeaStatus;
+  badgeHint: BadgeHint;
+}
+
+export function computeDerivedStatus(ctx: DerivedStatusContext): DerivedStatusResult {
+  const normalized = normalizeIdeaStatus(ctx.ideaStatus);
+
+  switch (normalized) {
+    case "open":
+      return { derivedStatus: "todo", badgeHint: "open" };
+    case "elaborating":
+      // Only pending_answers means human needs to act; otherwise agent is working
+      if (ctx.elaborationStatus === "pending_answers")
+        return { derivedStatus: "human_conduct_required", badgeHint: "answer_questions" };
+      return { derivedStatus: "in_progress", badgeHint: "researching" };
+    case "elaborated": {
+      if (ctx.hasPendingProposal)
+        return { derivedStatus: "human_conduct_required", badgeHint: "review_proposal" };
+      if (ctx.hasApprovedProposal) {
+        if (ctx.taskStatuses.some((s) => s === "to_verify"))
+          return { derivedStatus: "human_conduct_required", badgeHint: "verify_work" };
+        const allDone = ctx.taskStatuses.length > 0
+          && ctx.taskStatuses.every((s) => s === "done" || s === "closed");
+        if (allDone) return { derivedStatus: "done", badgeHint: "done" };
+        return { derivedStatus: "in_progress", badgeHint: "building" };
+      }
+      return { derivedStatus: "in_progress", badgeHint: "planning" };
+    }
+    default:
+      return { derivedStatus: "todo", badgeHint: "open" };
+  }
+}
+
+/**
+ * Get a single idea with its derived status computed from proposal + task states.
+ * Returns the full IdeaResponse plus derivedStatus and badgeHint.
+ */
+export async function getIdeaWithDerivedStatus(
+  companyUuid: string,
+  ideaUuid: string,
+): Promise<(IdeaResponse & DerivedStatusResult) | null> {
+  const idea = await getIdea(companyUuid, ideaUuid);
+  if (!idea) return null;
+
+  const proposals = await prisma.proposal.findMany({
+    where: {
+      companyUuid,
+      projectUuid: idea.project?.uuid,
+      status: { in: ["approved", "pending"] },
+      inputUuids: { array_contains: [ideaUuid] },
+    },
+    select: { uuid: true, status: true, createdAt: true },
+    orderBy: { createdAt: "desc" },
+  });
+
+  const approvedProposal = proposals.find((p) => p.status === "approved") ?? null;
+  let taskStatuses: string[] = [];
+  if (approvedProposal) {
+    const tasks = await prisma.task.findMany({
+      where: { companyUuid, proposalUuid: approvedProposal.uuid },
+      select: { status: true },
+    });
+    taskStatuses = tasks.map((t) => t.status);
+  }
+
+  const result = computeDerivedStatus({
+    ideaStatus: idea.status,
+    elaborationStatus: idea.elaborationStatus,
+    hasPendingProposal: proposals.some((p) => p.status === "pending"),
+    hasApprovedProposal: !!approvedProposal,
+    taskStatuses,
+  });
+
+  return { ...idea, ...result };
+}
+
+export interface IdeaWithDerivedStatus {
+  uuid: string;
+  title: string;
+  status: string;
+  derivedStatus: DerivedIdeaStatus;
+  badgeHint: BadgeHint;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+/**
+ * Get all ideas in a project with their derived statuses.
+ * Uses 3 batch queries (Ideas, Proposals, Tasks) — no N+1.
+ */
+export async function getIdeasWithDerivedStatus(
+  companyUuid: string,
+  projectUuid: string,
+): Promise<IdeaWithDerivedStatus[]> {
+  // Query 1: All ideas in the project
+  const ideas = await prisma.idea.findMany({
+    where: { companyUuid, projectUuid },
+    select: {
+      uuid: true,
+      title: true,
+      status: true,
+      elaborationStatus: true,
+      createdAt: true,
+      updatedAt: true,
+    },
+    orderBy: { createdAt: "desc" },
+  });
+
+  // Query 2: All proposals (approved + pending) for the project
+  const proposals = await prisma.proposal.findMany({
+    where: {
+      companyUuid,
+      projectUuid,
+      status: { in: ["approved", "pending"] },
+    },
+    select: {
+      uuid: true,
+      status: true,
+      inputUuids: true,
+      createdAt: true,
+    },
+    orderBy: { createdAt: "desc" },
+  });
+
+  // Build ideaUuid → latest approved Proposal mapping
+  // Also track which ideas have a pending proposal
+  const ideaToLatestApproved = new Map<string, { uuid: string; createdAt: Date }>();
+  const ideasWithPendingProposal = new Set<string>();
+
+  for (const proposal of proposals) {
+    const inputUuids = proposal.inputUuids as string[];
+    if (!Array.isArray(inputUuids)) continue;
+    for (const ideaUuid of inputUuids) {
+      if (proposal.status === "pending") {
+        ideasWithPendingProposal.add(ideaUuid);
+      } else if (proposal.status === "approved") {
+        const existing = ideaToLatestApproved.get(ideaUuid);
+        if (!existing || proposal.createdAt > existing.createdAt) {
+          ideaToLatestApproved.set(ideaUuid, { uuid: proposal.uuid, createdAt: proposal.createdAt });
+        }
+      }
+    }
+  }
+
+  // Collect unique approved proposal UUIDs
+  const relevantProposalUuids = [...new Set([...ideaToLatestApproved.values()].map((p) => p.uuid))];
+
+  // Query 3: Tasks linked to those approved proposals
+  const proposalToTaskStatuses = new Map<string, string[]>();
+  if (relevantProposalUuids.length > 0) {
+    const tasks = await prisma.task.findMany({
+      where: {
+        companyUuid,
+        proposalUuid: { in: relevantProposalUuids },
+      },
+      select: {
+        proposalUuid: true,
+        status: true,
+      },
+    });
+
+    for (const task of tasks) {
+      if (!task.proposalUuid) continue;
+      const statuses = proposalToTaskStatuses.get(task.proposalUuid) || [];
+      statuses.push(task.status);
+      proposalToTaskStatuses.set(task.proposalUuid, statuses);
+    }
+  }
+
+  // Compute derived status for each idea
+  return ideas.map((idea) => {
+    const latestApproved = ideaToLatestApproved.get(idea.uuid);
+    const taskStatuses = latestApproved
+      ? proposalToTaskStatuses.get(latestApproved.uuid) || []
+      : [];
+
+    const { derivedStatus, badgeHint } = computeDerivedStatus({
+      ideaStatus: idea.status,
+      elaborationStatus: idea.elaborationStatus,
+      hasPendingProposal: ideasWithPendingProposal.has(idea.uuid),
+      hasApprovedProposal: !!latestApproved,
+      taskStatuses,
+    });
+
+    return {
+      uuid: idea.uuid,
+      title: idea.title,
+      status: idea.status,
+      derivedStatus,
+      badgeHint,
+      createdAt: idea.createdAt,
+      updatedAt: idea.updatedAt,
+    };
+  });
+}
+
+// ===== Tracker Grouping =====
+
+/** Serialized idea for the tracker API/SSR response */
+export interface TrackerIdeaItem {
+  uuid: string;
+  title: string;
+  status: string;
+  derivedStatus: DerivedIdeaStatus;
+  badgeHint: BadgeHint;
+  createdAt: string;
+}
+
+export interface TrackerGroupsResult {
+  groups: Record<string, TrackerIdeaItem[]>;
+  counts: Record<string, number>;
+}
+
+/** The 4 tracker columns (closed is excluded from the board view) */
+const TRACKER_STATUSES: DerivedIdeaStatus[] = [
+  "todo",
+  "in_progress",
+  "human_conduct_required",
+  "done",
+];
+
+/**
+ * Get ideas grouped by derived status for the tracker board.
+ * Business logic lives here — routes/server components just call this.
+ */
+export async function getTrackerGroups(
+  companyUuid: string,
+  projectUuid: string,
+): Promise<TrackerGroupsResult> {
+  const ideas = await getIdeasWithDerivedStatus(companyUuid, projectUuid);
+
+  const groups: Record<string, TrackerIdeaItem[]> = {};
+  const counts: Record<string, number> = {};
+
+  for (const status of TRACKER_STATUSES) {
+    groups[status] = [];
+    counts[status] = 0;
+  }
+
+  for (const idea of ideas) {
+    const ds = idea.derivedStatus;
+    const formatted: TrackerIdeaItem = {
+      uuid: idea.uuid,
+      title: idea.title,
+      status: idea.status,
+      derivedStatus: ds,
+      badgeHint: idea.badgeHint,
+      createdAt: idea.createdAt.toISOString(),
+    };
+
+    if (groups[ds]) {
+      groups[ds].push(formatted);
+      counts[ds]++;
+    }
+  }
+
+  return { groups, counts };
 }

@@ -1,0 +1,107 @@
+"use client";
+
+import { useState } from "react";
+import { useTranslations, useLocale } from "next-intl";
+import { UserPlus } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
+import { Streamdown } from "streamdown";
+import { code } from "@streamdown/code";
+import { motion } from "framer-motion";
+import { fadeIn } from "@/lib/animation";
+import type { IdeaResponse } from "@/services/idea.service";
+import { AssignIdeaModal } from "@/app/(dashboard)/projects/[uuid]/ideas/assign-idea-modal";
+import { AssigneeSection } from "./assignee-section";
+
+interface BasicViewProps {
+  idea: IdeaResponse;
+  projectUuid: string;
+  currentUserUuid: string;
+  onRefresh: () => void;
+}
+
+export function BasicView({ idea, projectUuid, currentUserUuid, onRefresh }: BasicViewProps) {
+  const t = useTranslations("ideaTracker");
+  const tCommon = useTranslations("common");
+  const locale = useLocale();
+  const [showAssignModal, setShowAssignModal] = useState(false);
+
+  return (
+    <motion.div variants={fadeIn} initial="initial" animate="animate">
+      {/* Assignee Section */}
+      <AssigneeSection assignee={idea.assignee} />
+
+      <Separator className="my-5 bg-[#F5F2EC]" />
+
+      {/* Content Section */}
+      <div>
+        <Label className="text-[11px] font-medium uppercase tracking-wide text-[#9A9A9A]">
+          {tCommon("content")}
+        </Label>
+        <div className="mt-2">
+          {idea.content ? (
+            <div className="prose prose-sm max-w-none text-[13px] leading-relaxed text-[#2C2C2C]">
+              <Streamdown plugins={{ code }}>{idea.content}</Streamdown>
+            </div>
+          ) : (
+            <p className="text-sm italic text-[#9A9A9A]">
+              {tCommon("noContent")}
+            </p>
+          )}
+        </div>
+      </div>
+
+      <Separator className="my-5 bg-[#F5F2EC]" />
+
+      {/* Created By Section */}
+      <div>
+        <Label className="text-[11px] font-medium uppercase tracking-wide text-[#9A9A9A]">
+          {tCommon("created")}
+        </Label>
+        <div className="mt-2 flex items-center gap-2">
+          {idea.createdBy && (
+            <span className="text-sm text-[#2C2C2C]">
+              {idea.createdBy.name}
+            </span>
+          )}
+          <span className="text-xs text-[#9A9A9A]">
+            {new Date(idea.createdAt).toLocaleDateString(locale)}
+          </span>
+        </div>
+      </div>
+
+      {/* Assign / Reassign Action */}
+      <Separator className="my-5 bg-[#F5F2EC]" />
+      <div>
+        <Button
+          className="bg-[#C67A52] hover:bg-[#B56A42] text-white w-full"
+          onClick={() => setShowAssignModal(true)}
+        >
+          <UserPlus className="mr-2 h-4 w-4" />
+          {idea.assignee ? t("actions.reassign") : t("actions.assign")}
+        </Button>
+      </div>
+
+      {showAssignModal && (
+        <AssignIdeaModal
+          idea={{
+            uuid: idea.uuid,
+            title: idea.title,
+            content: idea.content,
+            status: idea.status,
+            assignee: idea.assignee
+              ? { type: idea.assignee.type, uuid: idea.assignee.uuid, name: idea.assignee.name }
+              : null,
+          }}
+          projectUuid={projectUuid}
+          currentUserUuid={currentUserUuid}
+          onClose={() => {
+            setShowAssignModal(false);
+            onRefresh();
+          }}
+        />
+      )}
+    </motion.div>
+  );
+}
