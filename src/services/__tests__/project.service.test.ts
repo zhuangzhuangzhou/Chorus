@@ -36,6 +36,7 @@ import {
   deleteProject,
   projectExists,
   getProjectByUuid,
+  getProjectUuidsByGroup,
   getCompanyOverviewStats,
   getProjectStats,
   listProjectsWithStats,
@@ -109,6 +110,21 @@ describe("getProject", () => {
     const result = await getProject(companyUuid, "nonexistent");
     expect(result).toBeNull();
   });
+
+  it("should include groupUuid in the result", async () => {
+    const groupUuid = "group-0000-0000-0000-000000000001";
+    const project = makeProject({ groupUuid, _count: { ideas: 1, documents: 0, tasks: 0, proposals: 0, activities: 0 } });
+    mockPrisma.project.findFirst.mockResolvedValue(project);
+
+    const result = await getProject(companyUuid, projectUuid);
+
+    expect(result!.groupUuid).toBe(groupUuid);
+    expect(mockPrisma.project.findFirst).toHaveBeenCalledWith(
+      expect.objectContaining({
+        select: expect.objectContaining({ groupUuid: true }),
+      })
+    );
+  });
 });
 
 // ===== createProject =====
@@ -157,12 +173,17 @@ describe("createProject", () => {
 // ===== updateProject =====
 describe("updateProject", () => {
   it("should update project fields", async () => {
+    mockPrisma.project.findFirst.mockResolvedValue({ uuid: projectUuid });
     const updated = makeProject({ name: "Updated Name" });
     mockPrisma.project.update.mockResolvedValue(updated);
 
-    const result = await updateProject(projectUuid, { name: "Updated Name" });
+    const result = await updateProject(companyUuid, projectUuid, { name: "Updated Name" });
 
-    expect(result.name).toBe("Updated Name");
+    expect(result!.name).toBe("Updated Name");
+    expect(mockPrisma.project.findFirst).toHaveBeenCalledWith({
+      where: { uuid: projectUuid, companyUuid },
+      select: { uuid: true },
+    });
     expect(mockPrisma.project.update).toHaveBeenCalledWith(
       expect.objectContaining({
         where: { uuid: projectUuid },
@@ -170,18 +191,40 @@ describe("updateProject", () => {
       })
     );
   });
+
+  it("should return null when project not found", async () => {
+    mockPrisma.project.findFirst.mockResolvedValue(null);
+
+    const result = await updateProject(companyUuid, "nonexistent", { name: "X" });
+    expect(result).toBeNull();
+    expect(mockPrisma.project.update).not.toHaveBeenCalled();
+  });
 });
 
 // ===== deleteProject =====
 describe("deleteProject", () => {
-  it("should delete project by uuid", async () => {
+  it("should delete project scoped by companyUuid", async () => {
+    mockPrisma.project.findFirst.mockResolvedValue({ uuid: projectUuid });
     mockPrisma.project.delete.mockResolvedValue(makeProject());
 
-    await deleteProject(projectUuid);
+    const result = await deleteProject(companyUuid, projectUuid);
 
+    expect(result).toBe(true);
+    expect(mockPrisma.project.findFirst).toHaveBeenCalledWith({
+      where: { uuid: projectUuid, companyUuid },
+      select: { uuid: true },
+    });
     expect(mockPrisma.project.delete).toHaveBeenCalledWith({
       where: { uuid: projectUuid },
     });
+  });
+
+  it("should return false when project not found", async () => {
+    mockPrisma.project.findFirst.mockResolvedValue(null);
+
+    const result = await deleteProject(companyUuid, "nonexistent");
+    expect(result).toBe(false);
+    expect(mockPrisma.project.delete).not.toHaveBeenCalled();
   });
 });
 
@@ -227,6 +270,32 @@ describe("getProjectByUuid", () => {
 
     const result = await getProjectByUuid(companyUuid, "nonexistent");
     expect(result).toBeNull();
+  });
+});
+
+// ===== getProjectUuidsByGroup =====
+describe("getProjectUuidsByGroup", () => {
+  it("should return UUIDs of projects in the group", async () => {
+    const groupUuid = "group-0000-0000-0000-000000000001";
+    mockPrisma.project.findMany.mockResolvedValue([
+      { uuid: "proj-1" },
+      { uuid: "proj-2" },
+    ]);
+
+    const result = await getProjectUuidsByGroup(companyUuid, groupUuid);
+
+    expect(result).toEqual(["proj-1", "proj-2"]);
+    expect(mockPrisma.project.findMany).toHaveBeenCalledWith({
+      where: { companyUuid, groupUuid },
+      select: { uuid: true },
+    });
+  });
+
+  it("should return empty array when no projects in group", async () => {
+    mockPrisma.project.findMany.mockResolvedValue([]);
+
+    const result = await getProjectUuidsByGroup(companyUuid, "empty-group");
+    expect(result).toEqual([]);
   });
 });
 
@@ -276,6 +345,20 @@ describe("getProjectStats", () => {
     expect(result.tasks).toEqual({ total: 16, inProgress: 4, todo: 3, toVerify: 2, done: 7 });
     expect(result.proposals).toEqual({ total: 7, pending: 2 });
     expect(result.documents).toEqual({ total: 8 });
+  });
+
+  it("should default to zero when statuses are missing", async () => {
+    mockPrisma.idea.groupBy.mockResolvedValue([]);
+    mockPrisma.task.groupBy.mockResolvedValue([]);
+    mockPrisma.proposal.groupBy.mockResolvedValue([]);
+    mockPrisma.document.count.mockResolvedValue(0);
+
+    const result = await getProjectStats(companyUuid, projectUuid);
+
+    expect(result.ideas).toEqual({ total: 0, open: 0 });
+    expect(result.tasks).toEqual({ total: 0, inProgress: 0, todo: 0, toVerify: 0, done: 0 });
+    expect(result.proposals).toEqual({ total: 0, pending: 0 });
+    expect(result.documents).toEqual({ total: 0 });
   });
 });
 
