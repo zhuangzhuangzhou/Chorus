@@ -1,0 +1,251 @@
+---
+interface Props {
+  src: string;
+  id: string;
+}
+
+const { src, id } = Astro.props;
+---
+
+<div class="vp-wrap" data-vp={id}>
+  <video class="vp-video" data-vp-video={id} src={src} autoplay loop muted playsinline />
+  <div class="vp-controls">
+    <div class="vp-progress" data-vp-bar={id}>
+      <div class="vp-progress-filled" data-vp-filled={id}></div>
+      <div class="vp-progress-thumb" data-vp-thumb={id}></div>
+    </div>
+    <button class="vp-expand" data-vp-expand={id} aria-label="Expand">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6"/><path d="M9 21H3v-6"/><path d="M21 3l-7 7"/><path d="M3 21l7-7"/></svg>
+    </button>
+  </div>
+</div>
+
+<!-- Lightbox -->
+<div class="vp-lightbox" data-vp-lb={id}>
+  <button class="vp-lb-close" data-vp-lb-close={id} aria-label="Close">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+  </button>
+  <div class="vp-lb-player">
+    <video class="vp-lb-video" data-vp-lb-video={id} src={src} loop muted playsinline />
+    <div class="vp-lb-controls">
+      <div class="vp-progress vp-lb-bar" data-vp-lb-bar={id}>
+        <div class="vp-progress-filled" data-vp-lb-filled={id}></div>
+        <div class="vp-progress-thumb" data-vp-lb-thumb={id}></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .vp-wrap { position: relative; }
+  .vp-video {
+    width: 100%;
+    border-radius: 12px;
+    cursor: zoom-in;
+    display: block;
+  }
+  .vp-controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 8px;
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+  .vp-wrap:hover .vp-controls { opacity: 1; }
+  :global(.vp-progress) {
+    flex: 1;
+    height: 6px;
+    background: rgba(255,255,255,0.12);
+    border-radius: 3px;
+    cursor: pointer;
+    position: relative;
+  }
+  :global(.vp-progress-filled) {
+    height: 100%;
+    background: var(--primary);
+    border-radius: 3px;
+    width: 0%;
+    pointer-events: none;
+  }
+  :global(.vp-progress-thumb) {
+    position: absolute;
+    top: 50%; left: 0%;
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    transition: transform 0.1s;
+  }
+  :global(.vp-progress:hover .vp-progress-thumb) {
+    transform: translate(-50%, -50%) scale(1.3);
+  }
+  .vp-expand {
+    width: 32px; height: 32px;
+    border-radius: 8px;
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.15);
+    color: rgba(255,255,255,0.6);
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    transition: all 0.2s;
+  }
+  .vp-expand:hover { background: rgba(255,255,255,0.2); color: #fff; }
+
+  /* Light bg variant (showcase cards) */
+  :global(.showcase-item) .vp-progress { background: rgba(0,0,0,0.08); }
+  :global(.showcase-item) .vp-expand {
+    background: rgba(0,0,0,0.05);
+    border-color: var(--border);
+    color: var(--text-tertiary);
+  }
+  :global(.showcase-item) .vp-expand:hover {
+    background: rgba(0,0,0,0.1);
+    color: var(--text-primary);
+  }
+
+  /* Lightbox — use :global because lightbox is moved to body via JS */
+  :global(.vp-lightbox) {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    background: rgba(0,0,0,0.85);
+    backdrop-filter: blur(8px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s, visibility 0.3s;
+  }
+  :global(.vp-lightbox.open) { opacity: 1; visibility: visible; }
+  :global(.vp-lb-close) {
+    position: absolute;
+    top: 20px; right: 20px;
+    width: 44px; height: 44px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.2);
+    color: #fff;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: background 0.2s;
+    z-index: 1;
+  }
+  :global(.vp-lb-close:hover) { background: rgba(255,255,255,0.2); }
+  :global(.vp-lb-player) {
+    max-width: 90vw;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  :global(.vp-lb-video) {
+    width: 100%;
+    max-height: 80vh;
+    border-radius: 16px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+    cursor: pointer;
+  }
+  :global(.vp-lb-controls) { padding: 0 4px; }
+  :global(.vp-lb-bar) { background: rgba(255,255,255,0.2); }
+</style>
+
+<script>
+  // Generic video player init — works for multiple instances
+  // Move all lightboxes to body so they aren't clipped by overflow:hidden parents
+  document.querySelectorAll('.vp-lightbox').forEach(lb => document.body.appendChild(lb));
+
+  document.querySelectorAll('[data-vp]').forEach(wrap => {
+    const id = (wrap as HTMLElement).dataset.vp!;
+    const video = document.querySelector(`[data-vp-video="${id}"]`) as HTMLVideoElement;
+    const bar = document.querySelector(`[data-vp-bar="${id}"]`) as HTMLElement;
+    const filled = document.querySelector(`[data-vp-filled="${id}"]`) as HTMLElement;
+    const thumb = document.querySelector(`[data-vp-thumb="${id}"]`) as HTMLElement;
+    const expandBtn = document.querySelector(`[data-vp-expand="${id}"]`) as HTMLElement;
+    const lb = document.querySelector(`[data-vp-lb="${id}"]`) as HTMLElement;
+    const lbVideo = document.querySelector(`[data-vp-lb-video="${id}"]`) as HTMLVideoElement;
+    const lbClose = document.querySelector(`[data-vp-lb-close="${id}"]`) as HTMLElement;
+    const lbBar = document.querySelector(`[data-vp-lb-bar="${id}"]`) as HTMLElement;
+    const lbFilled = document.querySelector(`[data-vp-lb-filled="${id}"]`) as HTMLElement;
+    const lbThumb = document.querySelector(`[data-vp-lb-thumb="${id}"]`) as HTMLElement;
+
+    if (!video || !bar || !filled || !thumb) return;
+
+    // --- Inline progress ---
+    let dragging = false;
+    video.addEventListener('timeupdate', () => {
+      if (dragging) return;
+      const pct = video.duration ? (video.currentTime / video.duration) * 100 : 0;
+      filled.style.width = pct + '%';
+      thumb.style.left = pct + '%';
+    });
+
+    function seek(e: MouseEvent | TouchEvent) {
+      const rect = bar.getBoundingClientRect();
+      const cx = 'touches' in e ? e.touches[0].clientX : e.clientX;
+      const pct = Math.max(0, Math.min(1, (cx - rect.left) / rect.width));
+      if (video.duration) video.currentTime = pct * video.duration;
+      filled.style.width = (pct * 100) + '%';
+      thumb.style.left = (pct * 100) + '%';
+    }
+    bar.addEventListener('mousedown', (e) => { dragging = true; seek(e); });
+    bar.addEventListener('touchstart', (e) => { dragging = true; seek(e); }, { passive: true });
+    document.addEventListener('mousemove', (e) => { if (dragging) seek(e); });
+    document.addEventListener('touchmove', (e) => { if (dragging) seek(e); }, { passive: true });
+    document.addEventListener('mouseup', () => { dragging = false; });
+    document.addEventListener('touchend', () => { dragging = false; });
+
+    video.addEventListener('click', () => { openLb(); });
+
+    // --- Lightbox ---
+    if (!lb || !lbVideo || !lbClose) return;
+
+    function openLb() {
+      lb.classList.add('open');
+      lbVideo.currentTime = video.currentTime;
+      lbVideo.play();
+      document.body.style.overflow = 'hidden';
+    }
+    function closeLb() {
+      lb.classList.remove('open');
+      lbVideo.pause();
+      document.body.style.overflow = '';
+    }
+
+    expandBtn?.addEventListener('click', (e) => { e.stopPropagation(); openLb(); });
+    lbClose.addEventListener('click', closeLb);
+    lb.addEventListener('click', (e) => { if (e.target === lb) closeLb(); });
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeLb(); });
+
+    lbVideo.addEventListener('click', () => {
+      if (lbVideo.paused) lbVideo.play(); else lbVideo.pause();
+    });
+
+    // --- Lightbox progress ---
+    if (!lbBar || !lbFilled || !lbThumb) return;
+    let lbDragging = false;
+    lbVideo.addEventListener('timeupdate', () => {
+      if (lbDragging) return;
+      const pct = lbVideo.duration ? (lbVideo.currentTime / lbVideo.duration) * 100 : 0;
+      lbFilled.style.width = pct + '%';
+      lbThumb.style.left = pct + '%';
+    });
+    function lbSeek(e: MouseEvent | TouchEvent) {
+      const rect = lbBar.getBoundingClientRect();
+      const cx = 'touches' in e ? e.touches[0].clientX : e.clientX;
+      const pct = Math.max(0, Math.min(1, (cx - rect.left) / rect.width));
+      if (lbVideo.duration) lbVideo.currentTime = pct * lbVideo.duration;
+      lbFilled.style.width = (pct * 100) + '%';
+      lbThumb.style.left = (pct * 100) + '%';
+    }
+    lbBar.addEventListener('mousedown', (e) => { lbDragging = true; lbSeek(e); });
+    lbBar.addEventListener('touchstart', (e) => { lbDragging = true; lbSeek(e); }, { passive: true });
+    document.addEventListener('mousemove', (e) => { if (lbDragging) lbSeek(e); });
+    document.addEventListener('touchmove', (e) => { if (lbDragging) lbSeek(e); }, { passive: true });
+    document.addEventListener('mouseup', () => { lbDragging = false; });
+    document.addEventListener('touchend', () => { lbDragging = false; });
+  });
+</script>

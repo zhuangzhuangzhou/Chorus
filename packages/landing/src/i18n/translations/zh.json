@@ -113,8 +113,8 @@
         "description": "任务卡片随着 Agent 工作自动在「待办」「进行中」「待验收」之间流转。"
       },
       {
-        "title": "任务 DAG",
-        "description": "有向无环图展示任务依赖，一眼看清执行顺序和可并行路径。"
+        "title": "看板 & 任务 DAG",
+        "description": "看板追踪任务状态，DAG 展示依赖关系和并行路径，一目了然。"
       },
       {
         "title": "需求细化",
@@ -125,8 +125,8 @@
         "description": "审阅 AI 生成的提案 —— 文档草稿和任务 DAG 一起看，然后决定批不批。"
       },
       {
-        "title": "任务跟踪",
-        "description": "活动流、评论、依赖关系集中在一个面板 —— 任务从创建到完成的完整记录。"
+        "title": "验收标准",
+        "description": "双路验证 —— Dev Agent 自检 + Admin 独立审核，每条 AC 都有结构化的通过/失败证据。"
       }
     ]
   },
@@ -187,7 +187,7 @@
       { "num": "85", "label": "MCP 工具" },
       { "num": "21", "label": "数据模型" },
       { "num": "3", "label": "Agent 角色" },
-      { "num": "2", "label": "界面语言 (en / zh)" }
+      { "num": "2", "label": "多语言支持" }
     ]
   },
   "quickstart": {

@@ -1,6 +1,7 @@
 ---
 import { t, tRaw } from '../i18n/utils';
 import type { Lang } from '../i18n/utils';
+import VideoPlayer from './VideoPlayer.astro';
 
 interface Props {
   lang: Lang;
@@ -11,12 +12,12 @@ const { lang } = Astro.props;
 const showcaseItems = tRaw(lang, 'showcase.items') as Array<{ title: string; description: string }>;
 
 const itemMeta = [
-  { src: "/images/pixcel-workspace.gif", alt: "Pixel Workspace", wide: true },
-  { src: "/images/kanban-auto-update.gif", alt: "Kanban Auto Update", wide: true },
-  { src: "/images/dag.png", alt: "Task DAG", wide: false },
-  { src: "/images/elaboration.png", alt: "Requirements Elaboration", wide: false },
-  { src: "/images/proposal.png", alt: "Proposal Review", wide: false },
-  { src: "/images/task-tracking.png", alt: "Task Tracking", wide: false },
+  { src: "/images/pixcel-workspace.mp4", type: "video", alt: "Pixel Workspace", wide: false },
+  { src: "/images/kanban-presence.mp4", type: "video", alt: "Kanban Auto Update", wide: false },
+  { src: "/images/kanban-dag.png", type: "image", alt: "Kanban & DAG", wide: false },
+  { src: "/images/idea-elaborate.png", type: "image", alt: "Requirements Elaboration", wide: false },
+  { src: "/images/proposal.png", type: "image", alt: "Proposal Review", wide: false },
+  { src: "/images/task-ac.png", type: "image", alt: "Acceptance Criteria", wide: false },
 ];
 
 const items = showcaseItems.map((item, i) => ({
@@ -33,9 +34,15 @@ const items = showcaseItems.map((item, i) => ({
     <p>{t(lang, 'showcase.subtitle')}</p>
   </div>
   <div class="showcase-grid">
-    {items.map((item) => (
+    {items.map((item, i) => (
       <div class:list={["showcase-item", { wide: item.wide }]}>
-        <img src={item.src} alt={item.alt} loading="lazy" />
+        {item.type === "video" ? (
+          <div class="showcase-video-wrap">
+            <VideoPlayer src={item.src} id={`showcase-${i}`} />
+          </div>
+        ) : (
+          <img src={item.src} alt={item.alt} loading="lazy" class="showcase-img" data-lb-img={`img-${i}`} />
+        )}
         <div class="showcase-caption">
           <h3>{item.title}</h3>
           <p>{item.description}</p>
@@ -44,6 +51,76 @@ const items = showcaseItems.map((item, i) => ({
     ))}
   </div>
 </section>
+
+<!-- Image lightbox -->
+<div class="img-lightbox" id="img-lightbox">
+  <button class="img-lb-close" id="img-lb-close" aria-label="Close">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+  </button>
+  <img class="img-lb-content" id="img-lb-content" src="" alt="" />
+</div>
+
+<script>
+  const imgLb = document.getElementById('img-lightbox');
+  const imgLbContent = document.getElementById('img-lb-content') as HTMLImageElement;
+  const imgLbClose = document.getElementById('img-lb-close');
+
+  document.querySelectorAll('.showcase-img').forEach(img => {
+    img.addEventListener('click', () => {
+      const src = (img as HTMLImageElement).src;
+      const alt = (img as HTMLImageElement).alt;
+      if (imgLbContent) { imgLbContent.src = src; imgLbContent.alt = alt; }
+      imgLb?.classList.add('open');
+      document.body.style.overflow = 'hidden';
+    });
+  });
+
+  function closeImgLb() {
+    imgLb?.classList.remove('open');
+    document.body.style.overflow = '';
+  }
+  imgLbClose?.addEventListener('click', closeImgLb);
+  imgLb?.addEventListener('click', (e) => { if (e.target === imgLb) closeImgLb(); });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeImgLb(); });
+</script>
+
+<style is:global>
+  .img-lightbox {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    background: rgba(0,0,0,0.85);
+    backdrop-filter: blur(8px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s, visibility 0.3s;
+  }
+  .img-lightbox.open { opacity: 1; visibility: visible; }
+  .img-lb-close {
+    position: absolute;
+    top: 20px; right: 20px;
+    width: 44px; height: 44px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.2);
+    color: #fff;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: background 0.2s;
+    z-index: 1;
+  }
+  .img-lb-close:hover { background: rgba(255,255,255,0.2); }
+  .img-lb-content {
+    max-width: 90vw;
+    max-height: 85vh;
+    border-radius: 12px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+    object-fit: contain;
+  }
+</style>
 
 <style>
   .showcase-grid {
@@ -69,9 +146,13 @@ const items = showcaseItems.map((item, i) => ({
   .showcase-item img {
     width: 100%;
     display: block;
+    cursor: zoom-in;
+  }
+  .showcase-video-wrap {
+    padding: 12px 12px 0;
   }
   .showcase-caption {
-    padding: 20px 24px;
+    padding: 16px 24px 20px;
   }
   .showcase-caption h3 {
     font-size: 16px; font-weight: 700;

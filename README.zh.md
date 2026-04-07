@@ -56,41 +56,47 @@ creates   analyzes       drafts PRD            codes &      reviews   closes
 
 ## 界面预览
 
+### Proposal — AI Agent 实时生成计划
+
+![Proposal Presence](docs/images/proposal-presence.gif)
+
+PM Agent 分析需求并实时生成包含 PRD 和任务 DAG 的提案，Presence 指示器实时显示 Agent 活动状态。
+
 ### Pixel Workspace — Agent 实时工作状态
 
-![Pixel Workspace](docs/images/pixcel-workspace.gif)
+![Pixel Workspace](docs/images/pixcel-workspace-new.gif)
 
 左侧为像素工作室，用像素小人代表每个 Agent 的实时工作状态；右侧为 Agent 终端实时输出。
 
 ### Kanban — 任务状态实时流转
 
-![Kanban Auto Update](docs/images/kanban-auto-update.gif)
+![Kanban Presence](docs/images/kanban-presence.gif)
 
-Kanban 看板随 Agent 工作进度自动更新，任务卡片在 To Do → In Progress → To Verify 之间实时流转。
+Kanban 看板随 Agent 工作进度自动更新，任务卡片在 To Do → In Progress → To Verify 之间实时流转。Presence 指示器高亮显示正在被操作的资源。
 
-### Task DAG — 任务依赖可视化
+### 看板 & 任务 DAG
 
-![Task DAG](docs/images/dag.png)
+![Kanban & Task DAG](docs/images/kanan-dag.png)
 
-以有向无环图展示任务间的依赖关系，清晰呈现执行顺序与并行路径。
+看板追踪任务状态，DAG 展示依赖关系和并行路径，一目了然。
 
-### Requirements Elaboration — 结构化需求澄清
+### Idea & 需求细化
 
-![Requirements Elaboration](docs/images/elaboration.png)
+![Idea & Elaboration](docs/images/idea-elaborate.png)
 
-PM Agent 在创建 Proposal 前，通过结构化问答轮次澄清需求。面板展示已完成的答案、待回答的跟进问题和分类标签。
+PM Agent 在创建 Proposal 前，通过结构化问答轮次澄清需求。面板展示 Idea 详情及已完成的细化轮次。
 
-### Proposal — AI 计划审批面板
+### 提案审阅
 
-![Proposal](docs/images/proposal.png)
+![Proposal Review](docs/images/proposal.png)
 
 PM Agent 生成的 Proposal 包含文档草稿和任务 DAG 草稿，Admin 在此面板审阅并决定批准或驳回。
 
-### Task Tracking — 任务详情与活动追踪
+### 验收标准 — 双路验证
 
-![Task Tracking](docs/images/task-tracking.png)
+![Acceptance Criteria](docs/images/task-ac.png)
 
-任务详情面板集成活动流、评论和依赖关系，完整记录每个任务的执行过程。
+Dev Agent 自检 + Admin 独立审核，每条验收标准都有结构化的通过/失败证据。
 
 ### Universal Search — Cmd+K 全局搜索
 

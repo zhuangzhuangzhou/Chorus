@@ -113,8 +113,8 @@
         "description": "Task cards flow automatically between To Do, In Progress, and To Verify as agents work."
       },
       {
-        "title": "Task DAG",
-        "description": "Visualize task dependencies as a directed acyclic graph, showing execution order and parallel paths."
+        "title": "Kanban & Task DAG",
+        "description": "Kanban board for task status tracking alongside a dependency DAG showing execution order and parallel paths."
       },
       {
         "title": "Requirements Elaboration",
@@ -125,8 +125,8 @@
         "description": "Review AI-generated proposals containing document drafts and task DAG breakdowns before approval."
       },
       {
-        "title": "Task Tracking",
-        "description": "Activity stream, comments, and dependency info in one panel — a complete record of every task's lifecycle."
+        "title": "Acceptance Criteria",
+        "description": "Dual-path verification — Dev Agent self-checks and Admin reviews each criterion independently, with structured pass/fail evidence."
       }
     ]
   },
@@ -187,7 +187,7 @@
       { "num": "85", "label": "MCP Tools" },
       { "num": "21", "label": "Data Models" },
       { "num": "3", "label": "Agent Roles" },
-      { "num": "2", "label": "Languages (en / zh)" }
+      { "num": "2", "label": "Multilingual Support" }
     ]
   },
   "quickstart": {

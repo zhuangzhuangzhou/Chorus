@@ -1,6 +1,7 @@
 ---
 import { t } from '../i18n/utils';
 import type { Lang } from '../i18n/utils';
+import VideoPlayer from './VideoPlayer.astro';
 
 interface Props {
   lang: Lang;
@@ -16,7 +17,7 @@ const { lang } = Astro.props;
     <p>{t(lang, 'reversed.p2')}</p>
   </div>
   <div class="reversed-visual">
-    <img src="/images/proposal.png" alt="Proposal Review Panel" />
+    <VideoPlayer src="/images/proposal-presence.mp4" id="proposal-video" />
   </div>
 </div>
 
@@ -44,11 +45,6 @@ const { lang } = Astro.props;
     color: rgba(255,255,255,0.65);
     line-height: 1.7;
     margin-bottom: 16px;
-  }
-  .reversed-visual img {
-    width: 100%;
-    border-radius: 12px;
-    border: 1px solid rgba(255,255,255,0.1);
   }
 
   @media (max-width: 900px) {
