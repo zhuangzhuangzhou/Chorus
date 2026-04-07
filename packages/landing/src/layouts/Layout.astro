@@ -43,6 +43,72 @@ const { title, description = "Chorus is the agent harness for AI-human collabora
 </head>
 <body>
   <slot />
+  <script>
+    // --- Scroll-triggered fade-in ---
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          e.target.classList.add('in-view');
+          observer.unobserve(e.target);
+        }
+      });
+    }, { threshold: 0.15 });
+
+    document.querySelectorAll('.section, .reversed, .integration, .stats-bar, .pipeline-section, .quickstart, .cta').forEach(el => {
+      el.classList.add('fade-section');
+      observer.observe(el);
+    });
+
+    // Staggered children (feature cards, agent cards, workflow steps)
+    const staggerObserver = new IntersectionObserver((entries) => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          staggerObserver.unobserve(e.target);
+          const children = e.target.querySelectorAll('.feature-card, .agent-card, .workflow-step, .showcase-item, .stat-card');
+          children.forEach((child, i) => {
+            (child as HTMLElement).style.transitionDelay = `${i * 80}ms`;
+            child.classList.add('stagger-in');
+          });
+        }
+      });
+    }, { threshold: 0.1 });
+
+    document.querySelectorAll('.features-grid, .agents-grid, .workflow-steps, .showcase-grid, .stats-bar').forEach(el => {
+      el.querySelectorAll('.feature-card, .agent-card, .workflow-step, .showcase-item, .stat-card').forEach(child => {
+        child.classList.add('stagger-item');
+      });
+      staggerObserver.observe(el);
+    });
+
+    // --- Stats count-up ---
+    const countObserver = new IntersectionObserver((entries) => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          countObserver.unobserve(e.target);
+          e.target.querySelectorAll('.stat-num').forEach((el) => {
+            const text = el.textContent || '';
+            const match = text.match(/^(\d+)(.*)$/);
+            if (!match) return;
+            const target = parseInt(match[1]);
+            const suffix = match[2];
+            const duration = 1200;
+            const start = performance.now();
+            el.textContent = '0' + suffix;
+            function tick(now: number) {
+              const progress = Math.min((now - start) / duration, 1);
+              const eased = 1 - Math.pow(1 - progress, 3);
+              const current = Math.round(target * eased);
+              el.textContent = current + suffix;
+              if (progress < 1) requestAnimationFrame(tick);
+            }
+            requestAnimationFrame(tick);
+          });
+        }
+      });
+    }, { threshold: 0.3 });
+
+    document.querySelectorAll('.stats-bar').forEach(el => countObserver.observe(el));
+  </script>
 </body>
 </html>
 
@@ -123,6 +189,30 @@ const { title, description = "Chorus is the agent harness for AI-human collabora
     font-size: 17px;
     color: var(--text-secondary);
     max-width: 560px; margin: 0 auto;
+  }
+
+  /* Scroll-triggered fade-in */
+  .fade-section {
+    opacity: 0;
+    transform: translateY(32px);
+    transition: opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1),
+                transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .fade-section.in-view {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* Staggered children */
+  .stagger-item {
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1),
+                transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .stagger-item.stagger-in {
+    opacity: 1;
+    transform: translateY(0);
   }
 
   @media (max-width: 600px) {

@@ -110,11 +110,13 @@ const executeTexts = tRaw(lang, 'pipeline.execute') as Record<string, string>;
       reviewerDot.classList.remove('visible');
       hideBubble();
       cards.forEach(c => c.classList.remove('active'));
+      pipeline.classList.remove('has-active');
     }
 
     // --- Step animations (return total duration) ---
     function playStep(idx) {
       resetAll();
+      pipeline.classList.add('has-active');
       cards.forEach((c, i) => c.classList.toggle('active', i === idx));
       posAt(agentDot, getX(idx));
       agentDot.classList.add('visible');
@@ -264,7 +266,7 @@ const executeTexts = tRaw(lang, 'pipeline.execute') as Record<string, string>;
     display: flex;
     flex-direction: column;
     gap: 4px;
-    transition: transform 0.35s ease, box-shadow 0.35s ease;
+    transition: transform 0.35s ease, box-shadow 0.35s ease, opacity 0.35s ease;
     position: relative;
     cursor: default;
   }
@@ -272,9 +274,13 @@ const executeTexts = tRaw(lang, 'pipeline.execute') as Record<string, string>;
     transform: translateY(-3px);
     box-shadow: 0 8px 24px rgba(0,0,0,0.08);
   }
+  .pipeline.has-active .pipeline-card:not(.active) {
+    opacity: 0.4;
+  }
   .pipeline-card.active {
     transform: translateY(-5px);
     box-shadow: 0 12px 32px rgba(0,0,0,0.12);
+    opacity: 1;
   }
   .step-num {
     font-size: 11px;
@@ -303,6 +309,10 @@ const executeTexts = tRaw(lang, 'pipeline.execute') as Record<string, string>;
     align-items: center;
     padding: 0 4px;
     color: var(--border);
+    transition: opacity 0.35s ease;
+  }
+  .pipeline.has-active .pipeline-connector {
+    opacity: 0.3;
   }
 
   /* Actor dots */
