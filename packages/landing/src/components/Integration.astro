@@ -219,9 +219,18 @@
   .int-code .comment { color: rgba(255,255,255,0.3); }
 
   @media (max-width: 900px) {
-    .integration { padding: 48px 28px; margin: 60px 16px 0; }
+    .integration { padding: 36px 20px; margin: 60px 16px 0; border-radius: 16px; }
     .integration-grid { grid-template-columns: 1fr; }
+    .int-card { padding: 24px; }
     .int-card-featured { grid-column: auto; }
     .int-features { grid-template-columns: 1fr; }
+    .int-card-title-row { flex-wrap: wrap; }
+    .int-code { font-size: 11px; padding: 12px 14px; word-break: break-all; }
+  }
+  @media (max-width: 480px) {
+    .integration { padding: 28px 16px; margin: 40px 12px 0; }
+    .int-card { padding: 20px; }
+    .int-hooks { gap: 6px; }
+    .int-hook { font-size: 11px; padding: 4px 8px; }
   }
 </style>
