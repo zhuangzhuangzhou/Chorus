@@ -26,6 +26,23 @@ const dockerUrl = "https://hub.docker.com/repository/docker/chorusaidlc/chorus-a
           <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style="opacity:0.7"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
         </span>
       </a>
+      <!-- Mobile hamburger -->
+      <button class="menu-toggle" id="menu-toggle" aria-label="Menu">
+        <svg class="icon-open" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
+        <svg class="icon-close" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+  </div>
+  <!-- Mobile dropdown -->
+  <div class="mobile-menu" id="mobile-menu">
+    <a href="/#features">Features</a>
+    <a href="/#showcase">Showcase</a>
+    <a href="/#agents">Agents</a>
+    <a href="/blog/">Blog</a>
+    <div class="mobile-divider"></div>
+    <div class="mobile-actions">
+      <a href={dockerUrl} target="_blank" rel="noopener noreferrer">Docker Hub</a>
+      <a href={githubUrl} target="_blank" rel="noopener noreferrer">GitHub</a>
     </div>
   </div>
 </nav>
@@ -46,6 +63,22 @@ const dockerUrl = "https://hub.docker.com/repository/docker/chorusaidlc/chorus-a
     } catch { /* silent */ }
   }
   fetchStars();
+
+  const toggle = document.getElementById('menu-toggle');
+  const menu = document.getElementById('mobile-menu');
+  if (toggle && menu) {
+    toggle.addEventListener('click', () => {
+      const open = menu.classList.toggle('open');
+      toggle.classList.toggle('active', open);
+    });
+    // Close on link click
+    menu.querySelectorAll('a').forEach(a => {
+      a.addEventListener('click', () => {
+        menu.classList.remove('open');
+        toggle.classList.remove('active');
+      });
+    });
+  }
 </script>
 
 <style>
@@ -72,7 +105,6 @@ const dockerUrl = "https://hub.docker.com/repository/docker/chorusaidlc/chorus-a
   .logo img { width: 32px; height: 32px; }
   .logo span { color: var(--text-primary); }
 
-  /* Center links */
   .nav-links {
     display: flex; gap: 28px; align-items: center;
   }
@@ -85,7 +117,6 @@ const dockerUrl = "https://hub.docker.com/repository/docker/chorusaidlc/chorus-a
   }
   .nav-links a:hover { color: var(--text-primary); }
 
-  /* Right actions */
   .nav-actions {
     display: flex; align-items: center; gap: 12px;
     flex-shrink: 0;
@@ -128,11 +159,78 @@ const dockerUrl = "https://hub.docker.com/repository/docker/chorusaidlc/chorus-a
     font-weight: 500;
   }
 
+  /* Hamburger button */
+  .menu-toggle {
+    display: none;
+    width: 40px; height: 40px;
+    border: none;
+    background: none;
+    cursor: pointer;
+    color: var(--text-primary);
+    padding: 0;
+    align-items: center;
+    justify-content: center;
+  }
+  .menu-toggle .icon-close { display: none; }
+  .menu-toggle.active .icon-open { display: none; }
+  .menu-toggle.active .icon-close { display: block; }
+
+  /* Mobile dropdown */
+  .mobile-menu {
+    display: none;
+    flex-direction: column;
+    padding: 8px 32px 20px;
+    background: rgba(250, 248, 244, 0.98);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+  }
+  .mobile-menu a {
+    display: block;
+    padding: 12px 0;
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--text-primary);
+    text-decoration: none;
+    border-bottom: 1px solid rgba(0,0,0,0.05);
+  }
+  .mobile-menu a:last-child { border-bottom: none; }
+  .mobile-divider {
+    height: 1px;
+    background: var(--border);
+    margin: 4px 0;
+  }
+  .mobile-actions {
+    display: flex; gap: 12px; padding-top: 8px;
+  }
+  .mobile-actions a {
+    flex: 1;
+    text-align: center;
+    padding: 10px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    border-bottom: none;
+  }
+  .mobile-actions a:first-child {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    color: var(--text-primary);
+  }
+  .mobile-actions a:last-child {
+    background: var(--text-primary);
+    color: #fff;
+  }
+
   @media (max-width: 768px) {
     .nav-links { gap: 20px; }
   }
   @media (max-width: 600px) {
+    .nav-inner { padding: 0 20px; }
     .nav-links { display: none; }
     .nav-icon-link { display: none; }
+    .gh-label, .gh-stars { display: none; }
+    .nav-github { padding: 7px 10px; }
+    .menu-toggle { display: flex; }
+    .mobile-menu.open { display: flex; }
   }
 </style>
