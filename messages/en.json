@@ -287,6 +287,24 @@
     "noProjects": "No projects yet",
     "noProjectsDesc": "Create your first project to start collaborating with AI agents.",
     "createFirst": "Create First Project",
+    "onboarding": {
+      "welcomeTitle": "Welcome to Chorus",
+      "welcomeDesc": "Chorus organizes work into Project Groups and Projects. Let's set up your workspace.",
+      "whatIsGroupTitle": "Project Group",
+      "whatIsGroupDesc": "A container for related projects. Think of it as a team, product line, or initiative — e.g., \"Mobile Apps\" or \"Q3 Launch\".",
+      "whatIsProjectTitle": "Project",
+      "whatIsProjectDesc": "Where work happens. Each project has its own ideas, proposals, documents, and tasks. AI agents collaborate within projects.",
+      "step1Title": "Step 1: Create a Project Group",
+      "step1Desc": "Start by organizing your workspace. Create a group to hold related projects.",
+      "step2Title": "Step 2: Create a Project",
+      "step2Desc": "Add a project inside your group. This is where you'll capture ideas and assign work to AI agents.",
+      "createGroupBtn": "Create Project Group",
+      "agentTipTitle": "Have an Admin Agent? Let AI do the setup",
+      "agentTipDesc": "Copy this prompt and send it to your admin agent to automatically create project groups and projects:",
+      "agentPrompt": "Please help me set up the workspace. Create a project group called \"{groupName}\" with description \"{groupDesc}\", then create a project called \"{projectName}\" inside it.",
+      "agentPromptDefault": "Please help me set up the workspace. Create a project group named \"My Team\" with a brief description, then create an initial project inside it.",
+      "copiedPrompt": "Prompt copied!"
+    },
     "ideas": "ideas",
     "tasks": "tasks",
     "docs": "docs",
@@ -1092,6 +1110,8 @@
       "donePlaceholder": "This idea has been completed.",
       "elaborationStatus": "Elaboration Status",
       "elaborationRounds": "Elaboration Q&A",
+      "elaborationNotStarted": "Not started yet",
+      "elaborationNotStartedDesc": "Assign this idea to an agent to start requirement elaboration.",
       "elaborationWaiting": "Waiting for agent",
       "elaborationWaitingDesc": "The PM agent will start elaboration soon.",
       "elaboration": {
@@ -1100,7 +1120,55 @@
         "resolved": "Resolved"
       },
       "noProposals": "No proposals linked to this idea yet",
-      "viewProposal": "View Full Proposal"
+      "viewProposal": "View Full Proposal",
+      "tabs": {
+        "overview": "Overview",
+        "elaboration": "Elaboration",
+        "proposal": "Proposal",
+        "tasks": "Tasks",
+        "activity": "Activity"
+      },
+      "timeline": {
+        "ideaCreated": "Idea Created",
+        "elaboration": "Elaboration",
+        "proposal": "Proposal",
+        "tasksProgress": "Tasks",
+        "noElaboration": "Not started",
+        "elaborationComplete": "Resolved ({count} questions)",
+        "elaborationInProgress": "In progress",
+        "elaborationSkipped": "Skipped",
+        "noProposal": "Not created yet",
+        "proposalApproved": "Approved",
+        "proposalsApproved": "{count}/{total} approved",
+        "proposalPending": "Pending review",
+        "proposalDraft": "Draft",
+        "proposalRejected": "Rejected",
+        "tasksComplete": "{done}/{total} completed",
+        "noTasks": "No tasks yet",
+        "createdBy": "Created by {name}",
+        "documents": "{count} documents",
+        "tasks": "{count} tasks",
+        "rounds": "{count, plural, one {# round} other {# rounds}}",
+        "moreItems": "+{count} more"
+      },
+      "taskList": {
+        "inProgress": "In Progress",
+        "toVerify": "To Verify",
+        "open": "Open",
+        "done": "Done",
+        "noTasks": "No tasks available",
+        "assigned": "Assigned",
+        "closed": "Closed",
+        "summary": "{done}/{total} tasks done",
+        "acSummary": "{passed}/{total} criteria passed",
+        "agentWorking": "{count, plural, one {# agent working} other {# agents working}}",
+        "workersActive": "{count, plural, one {# worker} other {# workers}}",
+        "viewKanban": "Kanban"
+      },
+      "activityTab": {
+        "activity": "Activity",
+        "comments": "Comments"
+      }
     }
   },
   "search": {

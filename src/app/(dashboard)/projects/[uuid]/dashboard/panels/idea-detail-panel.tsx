@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { useRouter } from "next/navigation";
 import { X, Loader2, User, Trash2, ArrowRightLeft, Pencil } from "lucide-react";
@@ -21,18 +21,18 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { usePanelUrl } from "@/hooks/use-panel-url";
+import { PresenceIndicator } from "@/components/ui/presence-indicator";
 import { useRealtimeEntityTypeEvent } from "@/contexts/realtime-context";
-import { BasicView } from "./basic-view";
 import { ElaborationView } from "./elaboration-view";
-import { ProposalView } from "./proposal-view";
+import { ProposalView, type ProposalData } from "./proposal-view";
+import { OverviewTimeline } from "./overview-timeline";
+import { TaskListView } from "./task-list-view";
+import { ActivityCommentsView } from "./activity-comments-view";
 import { TaskDetailPanel } from "@/app/(dashboard)/projects/[uuid]/tasks/task-detail-panel";
 import { DocumentPanel } from "./document-panel";
-import { ActivityTimeline } from "./activity-timeline";
-import { UnifiedComments } from "@/components/unified-comments";
 import { MoveIdeaDialog } from "./move-idea-dialog";
 import { deleteIdeaAction, updateIdeaAction } from "@/app/(dashboard)/projects/[uuid]/ideas/actions";
-import { getIdeaAction, getTaskAction } from "./actions";
+import { getIdeaAction, getTaskAction, getProposalsForIdeaAction, getTasksForProposalAction } from "./actions";
 import { AssignIdeaModal } from "@/app/(dashboard)/projects/[uuid]/ideas/assign-idea-modal";
 import type { IdeaResponse } from "@/services/idea.service";
 
@@ -84,7 +84,44 @@ import {
   DERIVED_STATUS_COLORS as derivedStatusColors,
   DERIVED_STATUS_I18N_KEYS as derivedStatusI18nKeys,
   BADGE_HINT_I18N_KEYS,
+  type FlatTask,
 } from "../utils";
+
+// ===== Tab Types =====
+type TabId = "overview" | "elaboration" | "proposal" | "tasks" | "activity";
+
+function getVisibleTabs(
+  idea: IdeaWithDerivedStatus,
+  proposals: ProposalData[],
+  tasks: FlatTask[],
+): TabId[] {
+  const tabs: TabId[] = ["overview"];
+  tabs.push("elaboration");
+  if (proposals.length > 0) tabs.push("proposal");
+  if (tasks.length > 0) tabs.push("tasks");
+  tabs.push("activity");
+  return tabs;
+}
+
+function getDefaultTab(badgeHint: string | null): TabId {
+  switch (badgeHint) {
+    case "open":
+      return "elaboration";
+    case "researching":
+    case "answer_questions":
+      return "elaboration";
+    case "planning":
+    case "review_proposal":
+      return "proposal";
+    case "building":
+    case "verify_work":
+      return "tasks";
+    case "done":
+      return "overview";
+    default:
+      return "overview";
+  }
+}
 
 interface IdeaDetailPanelProps {
   ideaUuid: string;
@@ -110,6 +147,18 @@ export function IdeaDetailPanel({
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Top-level data: proposals and tasks
+  const [proposals, setProposals] = useState<ProposalData[]>([]);
+  const [tasks, setTasks] = useState<FlatTask[]>([]);
+
+  // Tab state
+  const [activeTab, setActiveTab] = useState<TabId>("overview");
+  const [visitedTabs, setVisitedTabs] = useState<Set<TabId>>(new Set(["overview"]));
+  const [userHasSwitchedTab, setUserHasSwitchedTab] = useState(false);
+
+  // Comment count for activity badge
+  const [commentCount, setCommentCount] = useState(0);
+
   // Footer/modal state
   const [showAssignModal, setShowAssignModal] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -124,10 +173,31 @@ export function IdeaDetailPanel({
   // Move dialog state
   const [showMoveDialog, setShowMoveDialog] = useState(false);
 
-  // Child panel state
+  // Child panel state — only one secondary panel at a time
   const [selectedTaskUuid, setSelectedTaskUuid] = useState<string | null>(null);
   const [selectedTask, setSelectedTask] = useState<TaskForPanel | null>(null);
   const [selectedDoc, setSelectedDoc] = useState<{ title: string; type: string; content: string } | null>(null);
+
+  const openTask = useCallback((taskUuid: string) => {
+    setSelectedDoc(null); // Close doc panel when opening task
+    setSelectedTaskUuid(taskUuid);
+  }, []);
+
+  const openDoc = useCallback((doc: { title: string; type: string; content: string }) => {
+    setSelectedTaskUuid(null); // Close task panel when opening doc
+    setSelectedTask(null);
+    setSelectedDoc(doc);
+  }, []);
+
+  // Wide screen detection for side-by-side panels
+  const [isWideScreen, setIsWideScreen] = useState(false);
+  useEffect(() => {
+    const mql = window.matchMedia("(min-width: 960px)");
+    setIsWideScreen(mql.matches);
+    const handler = (e: MediaQueryListEvent) => setIsWideScreen(e.matches);
+    mql.addEventListener("change", handler);
+    return () => mql.removeEventListener("change", handler);
+  }, []);
 
   // Slide-in animation
   const [hasAnimated, setHasAnimated] = useState(false);
@@ -136,7 +206,12 @@ export function IdeaDetailPanel({
     return () => clearTimeout(timer);
   }, []);
 
-  usePanelUrl(`/projects/${projectUuid}/dashboard`, ideaUuid);
+  // Sync tab to URL query param (replaceState only, no history entry)
+  const switchTab = useCallback((tab: string) => {
+    const params = new URLSearchParams(window.location.search);
+    params.set("tab", tab);
+    window.history.replaceState(null, "", `${window.location.pathname}?${params.toString()}`);
+  }, []);
 
   // Fetch single idea
   const fetchIdea = useCallback(async () => {
@@ -161,9 +236,153 @@ export function IdeaDetailPanel({
   }, [fetchIdea]);
 
   useRealtimeEntityTypeEvent("idea", fetchIdea);
+  // Derived status depends on proposal/task state — refetch idea when they change
+  useRealtimeEntityTypeEvent("proposal", fetchIdea);
+  useRealtimeEntityTypeEvent("task", fetchIdea);
 
-  // Fetch task when selected from proposal view
+  // ===== Lift data fetching: Proposals =====
+  const ideaUuidForFetch = idea?.uuid;
+  const ideaStatusForFetch = idea?.status;
+  const fetchProposals = useCallback(async () => {
+    if (!ideaUuidForFetch || ideaStatusForFetch === "open") {
+      setProposals([]);
+      return;
+    }
+    try {
+      const result = await getProposalsForIdeaAction(projectUuid, ideaUuidForFetch);
+      if (result.success) {
+        setProposals(result.data);
+      }
+    } catch (e) {
+      console.error("Failed to fetch proposals:", e);
+    }
+  }, [projectUuid, ideaUuidForFetch, ideaStatusForFetch]);
+
   useEffect(() => {
+    fetchProposals();
+  }, [fetchProposals]);
+
+  useRealtimeEntityTypeEvent("proposal", fetchProposals);
+
+  // ===== Lift data fetching: Tasks (from approved proposals) =====
+  const fetchTasks = useCallback(async () => {
+    const approvedProposals = proposals.filter((p) => p.status === "approved");
+    if (approvedProposals.length === 0) {
+      setTasks([]);
+      return;
+    }
+    try {
+      const results = await Promise.all(
+        approvedProposals.map((p) => getTasksForProposalAction(projectUuid, p.uuid))
+      );
+      const allTasks: FlatTask[] = results.flatMap((result) =>
+        result.success && result.data
+          ? result.data.map((t) => {
+              const task = t as {
+                uuid: string;
+                title: string;
+                status: string;
+                commentCount?: number;
+                assignee?: { type: string; uuid: string; name: string } | null;
+                acceptanceSummary?: FlatTask["acceptanceSummary"];
+              };
+              return {
+                uuid: task.uuid,
+                title: task.title,
+                status: task.status,
+                commentCount: task.commentCount ?? 0,
+                assignee: task.assignee ?? null,
+                acceptanceSummary: task.acceptanceSummary ?? null,
+              };
+            })
+          : []
+      );
+      setTasks(allTasks);
+    } catch (e) {
+      console.error("Failed to fetch tasks:", e);
+    }
+  }, [projectUuid, proposals]);
+
+  useEffect(() => {
+    fetchTasks();
+  }, [fetchTasks]);
+
+  useRealtimeEntityTypeEvent("task", fetchTasks);
+
+  // ===== Tab visibility & default =====
+  const visibleTabs = useMemo(
+    () => (idea ? getVisibleTabs(idea, proposals, tasks) : ["overview" as TabId, "activity" as TabId]),
+    [idea, proposals, tasks],
+  );
+
+  // Read initial tab from URL (if present and valid) — consumed once on first auto-select
+  const urlTabRef = useRef<string | null>(
+    typeof window !== "undefined"
+      ? new URLSearchParams(window.location.search).get("tab")
+      : null
+  );
+
+  // Auto-select default tab when idea loads/changes or when visible tabs update,
+  // unless user has manually switched
+  const desiredTab = idea ? getDefaultTab(idea.badgeHint) : "overview";
+  useEffect(() => {
+    if (!idea || userHasSwitchedTab) return;
+    const urlTab = urlTabRef.current;
+    let tab: TabId;
+    if (urlTab) {
+      if (visibleTabs.includes(urlTab as TabId)) {
+        // URL tab is now visible — use it, consume the ref, and lock selection
+        tab = urlTab as TabId;
+        urlTabRef.current = null;
+        setUserHasSwitchedTab(true); // Prevent subsequent auto-routing from overriding
+      } else {
+        // URL tab not yet visible — don't consume, wait for next visibleTabs update
+        return;
+      }
+    } else {
+      if (visibleTabs.includes(desiredTab)) {
+        tab = desiredTab;
+      } else if (desiredTab === "overview") {
+        tab = "overview";
+      } else {
+        // Desired tab not yet visible (data loading) — wait instead of flashing "overview"
+        return;
+      }
+    }
+    setActiveTab(tab);
+    setVisitedTabs((prev) => new Set([...prev, tab]));
+    switchTab(tab); // Sync URL with auto-selected tab
+    // Intentionally omitting userHasSwitchedTab and switchTab — checked/used inside but shouldn't trigger re-runs
+  }, [idea?.uuid, desiredTab, visibleTabs]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Reset user switch flag only when switching to a different idea
+  // (badgeHint changes mid-view should NOT yank the user to a different tab)
+  useEffect(() => {
+    setUserHasSwitchedTab(false);
+  }, [ideaUuid]);
+
+  // Ensure active tab is still visible (e.g., tasks cleared)
+  useEffect(() => {
+    if (!visibleTabs.includes(activeTab)) {
+      setActiveTab("overview");
+    }
+  }, [visibleTabs, activeTab]);
+
+  const handleTabChange = (tab: TabId) => {
+    setActiveTab(tab);
+    setUserHasSwitchedTab(true);
+    setVisitedTabs((prev) => new Set([...prev, tab]));
+    switchTab(tab);
+  };
+
+  // ===== Badge counts =====
+  const activeTaskCount = useMemo(
+    () => tasks.filter((t) => t.status === "in_progress" || t.status === "assigned" || t.status === "to_verify").length,
+    [tasks],
+  );
+
+  // Fetch task when selected from any tab view
+  const fetchSelectedTask = useCallback(() => {
     if (!selectedTaskUuid) {
       setSelectedTask(null);
       return;
@@ -172,6 +391,13 @@ export function IdeaDetailPanel({
       if (result.success) setSelectedTask(result.data);
     }).catch((e) => console.error("Failed to load task details:", e));
   }, [selectedTaskUuid]);
+
+  useEffect(() => {
+    fetchSelectedTask();
+  }, [fetchSelectedTask]);
+
+  // Re-fetch selected task on SSE task events (status changes, AC updates, etc.)
+  useRealtimeEntityTypeEvent("task", fetchSelectedTask);
 
   // Reset edit state when idea changes
   useEffect(() => {
@@ -325,6 +551,37 @@ export function IdeaDetailPanel({
           </div>
         </div>
 
+        {/* Tab Bar */}
+        {idea && !isLoading && !isEditing && (
+          <div className="border-b border-[#F5F2EC] px-6">
+            <div className="flex gap-0 -mb-px">
+              {visibleTabs.map((tab) => (
+                <button
+                  key={tab}
+                  onClick={() => handleTabChange(tab)}
+                  className={`relative flex items-center gap-1.5 px-3 py-2.5 text-[13px] font-medium transition-colors cursor-pointer ${
+                    activeTab === tab
+                      ? "text-[#C67A52] border-b-2 border-[#C67A52]"
+                      : "text-[#9A9A9A] hover:text-[#6B6B6B]"
+                  }`}
+                >
+                  {tTracker(`panel.tabs.${tab}`)}
+                  {tab === "tasks" && activeTaskCount > 0 && (
+                    <span className="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full bg-[#E3F2FD] text-[#1976D2] text-[10px] font-semibold leading-none">
+                      {activeTaskCount}
+                    </span>
+                  )}
+                  {tab === "activity" && commentCount > 0 && (
+                    <span className="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full bg-[#F5F2EC] text-[#6B6B6B] text-[10px] font-semibold leading-none">
+                      {commentCount}
+                    </span>
+                  )}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Body */}
         <ScrollArea className="flex-1 min-h-0 [&_[data-slot=scroll-area-viewport]>div]:!block">
           <div className="flex min-h-full flex-col px-6 py-5">
@@ -375,25 +632,67 @@ export function IdeaDetailPanel({
                   </div>
                 </div>
               ) : (
-              <>
-                <PanelContent
-                  idea={idea}
-                  projectUuid={projectUuid}
-                  currentUserUuid={currentUserUuid}
-                  onRefresh={fetchIdea}
-                  onTaskClick={setSelectedTaskUuid}
-                  onDocClick={setSelectedDoc}
-                />
+                /* Tab Content with visitedTabs caching */
+                <>
+                  {/* Overview Tab */}
+                  {visitedTabs.has("overview") && (
+                    <div style={{ display: activeTab === "overview" ? "block" : "none" }}>
+                      <OverviewTimeline
+                        idea={idea}
+                        proposals={proposals}
+                        tasks={tasks}
+                        onSelectTask={openTask}
+                      />
+                    </div>
+                  )}
 
-                <ActivityTimeline ideaUuid={ideaUuid} />
+                  {/* Elaboration Tab */}
+                  {visibleTabs.includes("elaboration") && visitedTabs.has("elaboration") && (
+                    <div style={{ display: activeTab === "elaboration" ? "block" : "none" }}>
+                      <ElaborationView
+                        idea={idea}
+                        onRefresh={fetchIdea}
+                      />
+                    </div>
+                  )}
 
-                <UnifiedComments
-                  targetType="idea"
-                  targetUuid={ideaUuid}
-                  currentUserUuid={currentUserUuid}
-                  compact
-                />
-              </>
+                  {/* Proposal Tab */}
+                  {visibleTabs.includes("proposal") && visitedTabs.has("proposal") && (
+                    <div style={{ display: activeTab === "proposal" ? "block" : "none" }}>
+                      <ProposalView
+                        idea={idea}
+                        projectUuid={projectUuid}
+                        onTaskClick={openTask}
+                        onDocClick={openDoc}
+                        initialProposals={proposals}
+                      />
+                    </div>
+                  )}
+
+                  {/* Tasks Tab */}
+                  {visibleTabs.includes("tasks") && visitedTabs.has("tasks") && (
+                    <div style={{ display: activeTab === "tasks" ? "block" : "none" }}>
+                      <TaskListView
+                        tasks={tasks}
+                        projectUuid={projectUuid}
+                        proposalUuids={proposals.filter((p) => p.status === "approved").map((p) => p.uuid)}
+                        onSelectTask={openTask}
+                      />
+                    </div>
+                  )}
+
+                  {/* Activity Tab */}
+                  {visitedTabs.has("activity") && (
+                    <div style={{ display: activeTab === "activity" ? "block" : "none" }}>
+                      <ActivityCommentsView
+                        ideaUuid={idea.uuid}
+                        currentUserUuid={currentUserUuid}
+                        commentCount={commentCount}
+                        onCommentCountChange={setCommentCount}
+                      />
+                    </div>
+                  )}
+                </>
               )
             ) : null}
           </div>
@@ -522,6 +821,7 @@ export function IdeaDetailPanel({
           task={selectedTask}
           projectUuid={projectUuid}
           currentUserUuid={currentUserUuid}
+          mode={isWideScreen ? "sidebyside" : "overlay"}
           onClose={() => {
             setSelectedTaskUuid(null);
             setSelectedTask(null);
@@ -539,67 +839,11 @@ export function IdeaDetailPanel({
           title={selectedDoc.title}
           type={selectedDoc.type}
           content={selectedDoc.content}
+          mode={isWideScreen ? "sidebyside" : "overlay"}
           onClose={() => setSelectedDoc(null)}
           onBack={() => setSelectedDoc(null)}
         />
       )}
     </>
   );
-}
-
-// Route to the correct view based on the idea's raw status
-function PanelContent({
-  idea,
-  projectUuid,
-  currentUserUuid,
-  onRefresh,
-  onTaskClick,
-  onDocClick,
-}: {
-  idea: IdeaResponse;
-  projectUuid: string;
-  currentUserUuid: string;
-  onRefresh: () => void;
-  onTaskClick?: (taskUuid: string) => void;
-  onDocClick?: (doc: { title: string; type: string; content: string }) => void;
-}) {
-  const t = useTranslations("ideaTracker");
-  const rawStatus = idea.status;
-
-  switch (rawStatus) {
-    case "open":
-      return (
-        <BasicView
-          idea={idea}
-          projectUuid={projectUuid}
-          currentUserUuid={currentUserUuid}
-          onRefresh={onRefresh}
-        />
-      );
-    case "elaborating":
-      return (
-        <ElaborationView
-          idea={idea}
-          onRefresh={onRefresh}
-        />
-      );
-    case "elaborated":
-      return (
-        <ProposalView
-          idea={idea}
-          projectUuid={projectUuid}
-          onTaskClick={onTaskClick}
-          onDocClick={onDocClick}
-        />
-      );
-    default:
-      return (
-        <BasicView
-          idea={idea}
-          projectUuid={projectUuid}
-          currentUserUuid={currentUserUuid}
-          onRefresh={onRefresh}
-        />
-      );
-  }
 }

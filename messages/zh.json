@@ -287,6 +287,24 @@
     "noProjects": "暂无项目",
     "noProjectsDesc": "创建您的第一个项目，开始与 AI 智能体协作。",
     "createFirst": "创建第一个项目",
+    "onboarding": {
+      "welcomeTitle": "欢迎使用 Chorus",
+      "welcomeDesc": "Chorus 通过项目组和项目来组织工作。让我们来设置您的工作空间。",
+      "whatIsGroupTitle": "项目组",
+      "whatIsGroupDesc": "用于归类相关项目的容器。可以理解为一个团队、产品线或计划 —— 例如「移动应用」或「Q3 发布」。",
+      "whatIsProjectTitle": "项目",
+      "whatIsProjectDesc": "实际工作发生的地方。每个项目有自己的想法、提案、文档和任务。AI 智能体在项目内协作。",
+      "step1Title": "第一步：创建项目组",
+      "step1Desc": "先组织您的工作空间。创建一个分组来归类相关项目。",
+      "step2Title": "第二步：创建项目",
+      "step2Desc": "在分组中添加一个项目。这是您收集想法和分配 AI 智能体工作的地方。",
+      "createGroupBtn": "创建项目组",
+      "agentTipTitle": "有管理员智能体？让 AI 帮你完成设置",
+      "agentTipDesc": "复制以下提示词发送给管理员智能体，自动创建项目组和项目：",
+      "agentPrompt": "请帮我设置工作空间。创建一个名为「{groupName}」的项目组，描述为「{groupDesc}」，然后在其中创建一个名为「{projectName}」的项目。",
+      "agentPromptDefault": "请帮我设置工作空间。创建一个名为「我的团队」的项目组并添加简要描述，然后在其中创建一个初始项目。",
+      "copiedPrompt": "提示词已复制！"
+    },
     "ideas": "个想法",
     "tasks": "个任务",
     "docs": "个文档",
@@ -1093,6 +1111,8 @@
       "donePlaceholder": "此想法已完成。",
       "elaborationStatus": "细化状态",
       "elaborationRounds": "细化问答",
+      "elaborationNotStarted": "尚未开始",
+      "elaborationNotStartedDesc": "分配给智能体以开始需求细化。",
       "elaborationWaiting": "等待智能体",
       "elaborationWaitingDesc": "PM 智能体将很快开始细化。",
       "elaboration": {
@@ -1101,7 +1121,55 @@
         "resolved": "已完成"
       },
       "noProposals": "暂无与此想法关联的提案",
-      "viewProposal": "查看完整提案"
+      "viewProposal": "查看完整提案",
+      "tabs": {
+        "overview": "概览",
+        "elaboration": "需求细化",
+        "proposal": "提案",
+        "tasks": "任务",
+        "activity": "动态"
+      },
+      "timeline": {
+        "ideaCreated": "创建 Idea",
+        "elaboration": "需求细化",
+        "proposal": "提案",
+        "tasksProgress": "任务进度",
+        "noElaboration": "未开始",
+        "elaborationComplete": "已完成（{count} 个问题）",
+        "elaborationInProgress": "进行中",
+        "elaborationSkipped": "已跳过",
+        "noProposal": "尚未创建",
+        "proposalApproved": "已批准",
+        "proposalsApproved": "{count}/{total} 已批准",
+        "proposalPending": "待审核",
+        "proposalDraft": "草稿",
+        "proposalRejected": "已拒绝",
+        "tasksComplete": "{done}/{total} 已完成",
+        "noTasks": "暂无任务",
+        "createdBy": "由 {name} 创建",
+        "documents": "{count} 个文档",
+        "tasks": "{count} 个任务",
+        "rounds": "{count} 轮问答",
+        "moreItems": "+{count} 更多"
+      },
+      "taskList": {
+        "inProgress": "进行中",
+        "toVerify": "待验证",
+        "open": "待处理",
+        "done": "已完成",
+        "noTasks": "暂无可用任务",
+        "assigned": "已分配",
+        "closed": "已关闭",
+        "summary": "{done}/{total} 任务完成",
+        "acSummary": "{passed}/{total} 验收通过",
+        "agentWorking": "{count} 个 Agent 正在工作",
+        "workersActive": "{count} 个工作者",
+        "viewKanban": "看板"
+      },
+      "activityTab": {
+        "activity": "动态",
+        "comments": "评论"
+      }
     }
   },
   "search": {

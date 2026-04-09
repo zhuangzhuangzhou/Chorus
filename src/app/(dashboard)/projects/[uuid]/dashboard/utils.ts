@@ -3,6 +3,51 @@ import type { BadgeHint } from "@/services/idea.service";
 
 export type TranslateFn = ReturnType<typeof useTranslations>;
 
+// ===== Panel Layout Constants =====
+
+/** Width of side panels (idea detail, document, task detail) — used for side-by-side positioning */
+export const PANEL_WIDTH_PX = 480;
+
+// ===== Shared Task Types =====
+
+/** Flattened task shape used across panel components */
+export interface FlatTask {
+  uuid: string;
+  title: string;
+  status: string;
+  commentCount: number;
+  assignee?: { type: string; uuid: string; name: string } | null;
+  acceptanceSummary?: {
+    total: number;
+    required: number;
+    passed: number;
+    failed: number;
+    pending: number;
+    requiredPassed: number;
+    requiredFailed: number;
+    requiredPending: number;
+  } | null;
+}
+
+/** Task status → dot color mapping (shared by overview-timeline and task-list-view) */
+export function getTaskStatusDotColor(status: string): string {
+  switch (status) {
+    case "done":
+      return "bg-[#00796B]";
+    case "in_progress":
+      return "bg-[#1976D2]";
+    case "to_verify":
+      return "bg-[#7B1FA2]";
+    case "open":
+    case "assigned":
+      return "bg-[#E65100]";
+    case "closed":
+      return "bg-[#9A9A9A]";
+    default:
+      return "bg-[#D9D9D9]";
+  }
+}
+
 // ===== Relative Time Formatting =====
 
 export function formatRelativeTime(dateString: string, t: TranslateFn, locale?: string): string {

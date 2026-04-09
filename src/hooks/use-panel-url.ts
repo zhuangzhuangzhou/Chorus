@@ -5,62 +5,87 @@ import { useState, useEffect, useCallback, useRef } from "react";
 /**
  * Manages browser URL for side-panel navigation using History API.
  *
- * - openPanel(id): pushState on first open, replaceState when switching items
- * - closePanel(): pushState back to base URL
- * - popstate: syncs React state from pathname
- * - Preserves query params (filters, etc.)
+ * Uses query params (?panel={id}&tab={tab}) instead of pathname segments
+ * because Next.js App Router intercepts pathname changes via pushState/replaceState
+ * and triggers soft navigation, which remounts components and resets state.
+ * Query param changes do NOT trigger soft navigation.
+ *
+ * - openPanel(id, tab?): replaceState with ?panel={id}&tab={tab}
+ * - closePanel(): replaceState removing panel & tab params
+ * - popstate: syncs React state from query params
+ * - Preserves other query params (filters, etc.)
  */
 export function usePanelUrl(basePath: string, initialSelectedId?: string | null) {
   const [selectedId, setSelectedId] = useState<string | null>(initialSelectedId ?? null);
-  const isPanelOpenRef = useRef(!!initialSelectedId);
+  const [selectedTab, setSelectedTab] = useState<string | null>(() => {
+    if (typeof window === "undefined") return null;
+    return new URLSearchParams(window.location.search).get("tab");
+  });
 
-  const openPanel = useCallback(
-    (id: string) => {
-      const search = window.location.search;
-      const newUrl = `${basePath}/${id}${search}`;
-
-      if (isPanelOpenRef.current) {
-        // Switching between items — replaceState to avoid history bloat
-        window.history.replaceState(null, "", newUrl);
+  /** Build URL with query params, preserving existing non-panel/tab params */
+  const buildUrl = useCallback(
+    (id: string | null, tab?: string | null) => {
+      const params = new URLSearchParams(window.location.search);
+      if (id) {
+        params.set("panel", id);
       } else {
-        // First open — pushState so back button closes panel
-        window.history.pushState(null, "", newUrl);
+        params.delete("panel");
       }
-
-      isPanelOpenRef.current = true;
-      setSelectedId(id);
+      if (tab) {
+        params.set("tab", tab);
+      } else {
+        params.delete("tab");
+      }
+      const search = params.toString();
+      return search ? `${basePath}?${search}` : basePath;
     },
     [basePath]
   );
 
+  const openPanel = useCallback(
+    (id: string, tab?: string) => {
+      const newUrl = buildUrl(id, tab);
+      window.history.replaceState(null, "", newUrl);
+      setSelectedId(id);
+      setSelectedTab(tab ?? null);
+    },
+    [buildUrl]
+  );
+
   const closePanel = useCallback(() => {
-    const search = window.location.search;
-    window.history.pushState(null, "", `${basePath}${search}`);
-    isPanelOpenRef.current = false;
+    const newUrl = buildUrl(null);
+    window.history.replaceState(null, "", newUrl);
     setSelectedId(null);
-  }, [basePath]);
+    setSelectedTab(null);
+  }, [buildUrl]);
+
+  const switchTab = useCallback(
+    (tab: string) => {
+      if (!selectedId) return;
+      const newUrl = buildUrl(selectedId, tab);
+      window.history.replaceState(null, "", newUrl);
+      setSelectedTab(tab);
+    },
+    [buildUrl, selectedId]
+  );
 
   // Listen for popstate (browser back/forward)
   useEffect(() => {
     function handlePopState() {
-      const pathname = window.location.pathname;
-      // Check if pathname matches basePath/{id}
-      if (pathname.startsWith(basePath + "/")) {
-        const id = pathname.slice(basePath.length + 1);
-        if (id && !id.includes("/")) {
-          isPanelOpenRef.current = true;
-          setSelectedId(id);
-          return;
-        }
+      const params = new URLSearchParams(window.location.search);
+      const id = params.get("panel");
+      if (id) {
+        setSelectedId(id);
+        setSelectedTab(params.get("tab"));
+      } else {
+        setSelectedId(null);
+        setSelectedTab(null);
       }
-      // No ID in URL — panel closed
-      isPanelOpenRef.current = false;
-      setSelectedId(null);
     }
 
     window.addEventListener("popstate", handlePopState);
     return () => window.removeEventListener("popstate", handlePopState);
-  }, [basePath]);
+  }, []);
 
-  return { selectedId, openPanel, closePanel };
+  return { selectedId, selectedTab, openPanel, closePanel, switchTab };
 }

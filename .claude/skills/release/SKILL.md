@@ -14,28 +14,31 @@ Step-by-step guide to cut a new release of Chorus.
 
 ## Prerequisites
 
-- All changes for the release are merged into `main`
 - `gh` CLI is authenticated (`gh auth status`)
 - Working tree is clean (`git status`)
+- You are on the `develop` branch
 
 ## Steps
 
-### 1. Identify the diff since last release
+### 1. Fetch remote and identify the diff since last release
 
 ```bash
+# Fetch remote tags and branches so local refs are up to date
+git fetch --tags origin
+
 # Find the previous release tag
 git tag -l 'v*' --sort=-version:refname | head -5
 
-# List commits since previous tag
-git log --oneline v<PREV>..HEAD
+# List commits since previous tag on develop
+git log --oneline v<PREV>..develop
 
 # Review each commit for CHANGELOG-worthy changes
 git show --stat <commit-hash>
 ```
 
-### 2. Update CHANGELOG.md
+### 2. Draft CHANGELOG and get user approval
 
-Add a new section at the top of `CHANGELOG.md`, below the `# Changelog` header and above the previous release section. Use this structure:
+Based on the commits identified in Step 1, draft the new CHANGELOG section and **present it to the user for review**. Use this structure:
 
 ```markdown
 ## [X.Y.Z] - YYYY-MM-DD
@@ -62,7 +65,13 @@ Add a new section at the top of `CHANGELOG.md`, below the `# Changelog` header a
 - Each entry should start with a **bold label** followed by a concise description
 - Separate from the previous release section with `---`
 
-### 3. Bump version in package.json
+**IMPORTANT:** After drafting, show the CHANGELOG content and the proposed version number to the user. **Do NOT proceed** until the user explicitly approves. The user may request edits to wording, version number, or grouping.
+
+### 3. Write CHANGELOG.md (on develop)
+
+After user approval, write the approved content into `CHANGELOG.md` — add the new section at the top, below the `# Changelog` header and above the previous release section.
+
+### 4. Bump version in package.json (on develop)
 
 ```bash
 # Edit package.json "version" field
@@ -74,17 +83,35 @@ Follow [semver](https://semver.org/):
 - **minor** (0.1.0 → 0.2.0): new features, non-breaking changes
 - **major** (0.1.0 → 1.0.0): breaking changes
 
-### 4. Commit
+### 5. Commit to develop and open PR to main
 
 ```bash
+# Commit the release prep on develop
 git add CHANGELOG.md package.json
 git commit -m "chore: bump version to vX.Y.Z and update CHANGELOG"
-git push
+git push origin develop
+
+# Open a PR from develop → main
+gh pr create --base main --head develop \
+  --title "chore: release vX.Y.Z" \
+  --body "Release vX.Y.Z — version bump and CHANGELOG update."
 ```
 
-### 5. Create GitHub release with tag
+Wait for CI to pass, then merge the PR:
 
 ```bash
+# Merge the PR (use the PR number returned above)
+gh pr merge <PR_NUMBER> --merge
+```
+
+### 6. Create GitHub release with tag (on main)
+
+After the PR is merged into `main`:
+
+```bash
+# Fetch the latest main so the tag targets the correct commit
+git fetch origin main
+
 gh release create vX.Y.Z \
   --target main \
   --title "vX.Y.Z" \
@@ -96,9 +123,13 @@ EOF
 
 **Important:** The `--notes` should contain **only** the new version's content, not the entire CHANGELOG file.
 
-### 6. Verify
+### 7. Sync develop with main and verify
 
 ```bash
+# Pull the merge commit back into develop
+git checkout develop
+git pull origin develop
+
 # Confirm tag exists
 git tag -l 'vX.Y.Z'
 
@@ -108,10 +139,14 @@ gh release view vX.Y.Z
 
 ## Checklist
 
-- [ ] `git log v<PREV>..HEAD` reviewed — no commits missed
-- [ ] CHANGELOG.md updated with correct date and content
+- [ ] `git fetch --tags origin` run — local tags are up to date
+- [ ] `git log v<PREV>..develop` reviewed — no commits missed
+- [ ] CHANGELOG draft presented to user and **approved**
+- [ ] CHANGELOG.md written with approved content
 - [ ] package.json version bumped
-- [ ] Committed and pushed to main
-- [ ] `gh release create` with tag on main
+- [ ] Changes committed and pushed to `develop`
+- [ ] PR from `develop` → `main` created, CI passed, and merged
+- [ ] `gh release create` with tag targeting `main`
 - [ ] Release notes contain only the new version's section
+- [ ] `develop` synced with `main` after merge
 - [ ] `gh release view` confirms everything looks correct

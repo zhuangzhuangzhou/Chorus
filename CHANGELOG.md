@@ -1,5 +1,48 @@
 # Changelog
 
+## [0.6.0] - 2026-04-09
+
+### Added
+- **Astro Landing Site**: New marketing site with i18n (en/zh), blog support, scroll animations, mobile hamburger menu, video player, sitemap, and Cloudflare Pages deployment. (#124, #134)
+- **IdeaTracker Dashboard**: Replaced project overview with IdeaTracker — idea detail panel with lifecycle views, tab switching, timeline, deep links, execution view, side-by-side layout, and task DAG visualization. (#96, #97, #139, #140)
+- **Independent Review Agents**: AI-DLC quality assurance with proposal-reviewer and task-reviewer agents, user config toggles, three-tier verdict system, finding classification, and convergence round limits. (#81, #84, #142)
+- **Agent Presence Indicator**: Real-time resource highlighting via SSE showing which agents are actively working on tasks/ideas. (#101, #102)
+- **Granular SSE Updates**: Entity-scoped refetch instead of full-page refresh, with toast notification popups on SSE events. (#98, #99)
+- **Cross-Column Kanban Animation**: Framer Motion layoutId for smooth card transitions across Kanban columns. (#100)
+- **Proposal Detail Redesign**: Discussion drawer with realtime updates, replaced action buttons with dropdown menu. (#104, #105, #122)
+- **Unified Comment Component**: Agent delegation support and collapsible threads. (#117)
+- **Elaboration Panel Carousel**: Slide navigation UI for elaboration rounds. (#76)
+- **Projects Page Onboarding**: SSE realtime for projects page, group delete fix. (#143)
+- **OpenClaw Plugin v0.4.0**: Native skills for OpenClaw plugin. (#66)
+
+### Changed
+- **Idea Lifecycle Simplified**: Idea state machine now ends at elaboration — removed auto-complete on proposal approval. (#116)
+- **Server Actions Migration**: Replaced all client-side fetch with Next.js server actions for data mutations.
+- **MCP Session Idle Timeout Removed**: Always-on clients no longer get disconnected. (#70)
+
+### Fixed
+- **SSE Realtime Broken for Non-First-Page Projects**: Fixed SSE event routing when project is not on the first page. (#121)
+- **Proposal Filter Lost on SSE Refetch**: Preserve proposal filter when SSE refetches kanban tasks. (#103)
+- **Kanban Realtime Regression**: Prevent progress regression when opening sidebar. (#108)
+- **Presence Indicator Border**: Use outline overlay instead of border to avoid layout shift. (#130)
+- **Elaboration UI**: Treat `needs_followup` rounds as answered, open ideas default to elaboration tab. (#118, #141)
+- **Inline Code Styling**: Style inline code as orange bold instead of unstyled. (#111)
+- **Discussion Drawer**: Restore presence indicator and comment count in drawer. (#110)
+- **Detail Panel Badges**: Fix badge status display and done idea content. (#106)
+- **Landing Site Fixes**: Language switch via URL param, mobile overflow, Cloudflare Wrangler compatibility, site URL update. (#130, #134)
+
+### Plugin
+- Plugin v0.6.2 — enable task reviewer by default, update agent definitions. (#109)
+
+### Docs
+- Added AIG implementation plan and presence design documents. (#112)
+- Added benchmark research and ProjDevBench setup guide. (#75)
+- Added harness engineering blog post. (#68)
+- Added cross-module contract and task granularity guidance to proposal skills. (#78, #79)
+- Added idea derived status state machine documentation.
+
+---
+
 ## [0.5.1] - 2026-03-29
 
 ### Added

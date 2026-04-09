@@ -108,10 +108,9 @@ export default function DashboardLayout({
       .catch(() => setCurrentGroupName(null));
   }, [currentGroupUuid]);
 
-  // Global pages: /projects, /projects/new, /settings
+  // Global pages: /projects, /settings
   const isGlobalPage =
     pathname === "/projects" ||
-    pathname === "/projects/new" ||
     pathname === "/settings" ||
     pathname.startsWith("/project-groups");
   const isProjectContext = currentProjectUuid && !isGlobalPage;
@@ -500,6 +499,7 @@ export default function DashboardLayout({
       </aside>
 
       {/* Main Content - add top padding on mobile for the fixed header (now ~110px with search) */}
+      {/* SSE: project pages get project-scoped events, /projects and /project-groups get company-wide, /settings gets none */}
       {isProjectContext && currentProjectUuid ? (
         <RealtimeProvider projectUuid={currentProjectUuid}>
           <main className="flex-1 flex flex-col overflow-auto pt-14 md:pt-0"><PageTransition>{children}</PageTransition></main>
@@ -507,6 +507,10 @@ export default function DashboardLayout({
             projectUuid={currentProjectUuid}
             projectName={currentProject?.name || ""}
           />
+        </RealtimeProvider>
+      ) : pathname === "/projects" || pathname.startsWith("/project-groups") ? (
+        <RealtimeProvider>
+          <main className="flex-1 flex flex-col overflow-auto pt-14 md:pt-0"><PageTransition>{children}</PageTransition></main>
         </RealtimeProvider>
       ) : (
         <main className="flex-1 flex flex-col overflow-auto pt-14 md:pt-0"><PageTransition>{children}</PageTransition></main>
