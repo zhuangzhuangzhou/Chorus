@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.6.1] - 2026-04-13
+
+### New
+- **`/yolo` skill**: Full-auto AI-DLC pipeline skill (Idea → Proposal → Execute → Verify) with Agent Team parallel execution and sequential fallback. Plugin bumped to v0.7.0.
+
+### Changed
+- **Unified page width**: Dashboard pages now share a consistent 1200px max-width (kanban excluded for full-width layout).
+
+### Plugin
+- **`/proposal` skill**: Updated Step 6 to require reject-before-edit for pending proposals.
+
+---
+
 ## [0.6.0] - 2026-04-09
 
 ### Added
