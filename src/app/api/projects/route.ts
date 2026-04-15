@@ -39,7 +39,7 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
           },
         },
         tasks: {
-          where: { status: "done" },
+          where: { status: { in: ["done", "closed"] } },
           select: { uuid: true },
         },
       },

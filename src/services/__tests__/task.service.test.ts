@@ -482,7 +482,7 @@ describe("claimTask", () => {
     expect(result.status).toBe("assigned");
     expect(mockPrisma.task.update).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: { uuid: TASK_UUID, status: "open" },
+        where: { uuid: TASK_UUID, status: { in: ["open", "assigned"] } },
         data: expect.objectContaining({
           status: "assigned",
           assigneeType: "agent",
@@ -492,7 +492,34 @@ describe("claimTask", () => {
     );
   });
 
-  it("throws AlreadyClaimedError when task is not open (Prisma P2025)", async () => {
+  it("reassigns an already-assigned task to a different agent", async () => {
+    const reassigned = {
+      ...rawTask({ status: "assigned", assigneeType: "agent", assigneeUuid: "a2" }),
+      project: { uuid: PROJECT_UUID, name: "Test Project" },
+    };
+    mockPrisma.task.update.mockResolvedValue(reassigned);
+
+    const result = await claimTask({
+      taskUuid: TASK_UUID,
+      companyUuid: COMPANY_UUID,
+      assigneeType: "agent",
+      assigneeUuid: "a2",
+      assignedByUuid: "user-123",
+    });
+
+    expect(result.status).toBe("assigned");
+    expect(mockPrisma.task.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { uuid: TASK_UUID, status: { in: ["open", "assigned"] } },
+        data: expect.objectContaining({
+          assigneeType: "agent",
+          assigneeUuid: "a2",
+        }),
+      }),
+    );
+  });
+
+  it("throws AlreadyClaimedError when task is not open or assigned (Prisma P2025)", async () => {
     mockPrisma.task.update.mockRejectedValue({ code: "P2025" });
 
     await expect(

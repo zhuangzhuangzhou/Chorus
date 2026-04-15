@@ -95,7 +95,7 @@ export function TaskListView({ tasks, projectUuid, proposalUuids, onSelectTask }
   // Aggregate stats
   const stats = useMemo(() => {
     const total = tasks.length;
-    const done = tasks.filter((t) => t.status === "done").length;
+    const done = tasks.filter((t) => t.status === "done" || t.status === "closed").length;
     let acTotal = 0;
     let acPassed = 0;
     let acRequired = 0;

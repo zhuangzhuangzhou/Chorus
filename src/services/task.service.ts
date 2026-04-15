@@ -596,7 +596,7 @@ export async function claimTask({
 }: TaskClaimParams): Promise<TaskResponse> {
   try {
     const task = await prisma.task.update({
-      where: { uuid: taskUuid, status: "open" },
+      where: { uuid: taskUuid, status: { in: ["open", "assigned"] } },
       data: {
         status: "assigned",
         assigneeType,

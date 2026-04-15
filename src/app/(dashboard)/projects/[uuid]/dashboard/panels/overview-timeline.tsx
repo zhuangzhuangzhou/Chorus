@@ -185,7 +185,7 @@ export function OverviewTimeline({
 
   // Task stats
   const taskStats = useMemo(() => {
-    const done = tasks.filter((t) => t.status === "done").length;
+    const done = tasks.filter((t) => t.status === "done" || t.status === "closed").length;
     const inProgress = tasks.filter((t) => t.status === "in_progress").length;
     const toVerify = tasks.filter((t) => t.status === "to_verify").length;
     const open = tasks.filter((t) => t.status === "open" || t.status === "assigned").length;
