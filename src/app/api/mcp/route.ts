@@ -8,6 +8,9 @@ import { createMcpServer } from "@/mcp/server";
 import { extractApiKey, validateApiKey } from "@/lib/api-key";
 import { getProjectUuidsByGroup } from "@/services/project.service";
 import type { AgentAuthContext } from "@/types/auth";
+import logger from "@/lib/logger";
+
+const mcpLogger = logger.child({ module: "mcp" });
 
 // Store active session transports
 // Sessions are cleaned up via: client DELETE request, transport onclose callback,
@@ -105,7 +108,7 @@ export async function POST(request: NextRequest) {
     const response = await transport.handleRequest(request);
     return response;
   } catch (error) {
-    console.error("MCP endpoint error:", error);
+    mcpLogger.error({ err: error }, "MCP endpoint error");
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }
@@ -133,7 +136,7 @@ export async function DELETE(request: NextRequest) {
 
     return new Response(null, { status: 204 });
   } catch (error) {
-    console.error("MCP session close error:", error);
+    mcpLogger.error({ err: error }, "MCP session close error");
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }

@@ -169,6 +169,17 @@ If `DATABASE_URL` is not set, the entrypoint builds it from these individual var
 | `NEXTAUTH_URL` | Public-facing base URL of the app (default: `http://localhost:3000`). Set this when running behind a reverse proxy. |
 | `COOKIE_SECURE` | Set to `"false"` to disable secure cookies for HTTP-only deployments (default: `"false"` in docker-compose). Set to `"true"` when deploying with HTTPS in production. |
 
+### Logging
+
+| Variable | Default | Description |
+|---|---|---|
+| `LOG_LEVEL` | `info` (production) / `debug` (dev) | Minimum server log level. Accepts: `trace`, `debug`, `info`, `warn`, `error`, `fatal`, `silent`. Set to `info` to suppress Prisma query logs. |
+| `NEXT_PUBLIC_LOG_LEVEL` | `warn` (production) / `debug` (dev) | Minimum browser log level. Accepts: `debug`, `info`, `warn`, `error`. |
+
+Production Docker images always output JSON to stdout (ready for CloudWatch / ELK). Colorized pretty output is only available in local development (`pnpm dev`).
+
+> See [Logging Architecture](LOGGING.md) for full details on log levels, output formats, and module structure.
+
 ### Super Admin
 
 | Variable | Description |
