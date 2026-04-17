@@ -1,5 +1,25 @@
 # Changelog
 
+## [0.6.2] - 2026-04-17
+
+### ⚠️ Breaking Changes
+- **Default port changed from 3000 to 8637**: To avoid conflicts with commonly used port 3000 (e.g., React, Next.js dev servers), Chorus now uses a unique default port. All documentation, Docker configs, CDK, and plugin scripts updated. Existing deployments must update port mappings and environment variables.
+
+### Added
+- **Embedded PGlite mode**: Zero-dependency deployment option using embedded PostgreSQL (PGlite), eliminating the need for an external database server. (#162)
+- **Structured logging with Pino**: Replaced console.log with structured JSON logging via Pino for better observability. (#168)
+- **MCP tool call logging**: All MCP tool calls are now logged, including business-level rejections. (#169)
+
+### Changed
+- **Stateless MCP route**: MCP endpoint no longer maintains in-memory session state — each request creates a fresh transport+server, enabling horizontal scaling without sticky sessions. (#176)
+
+### Fixed
+- **Progress bar completion count**: Closed tasks are now included in project progress bar calculations. (#120, #171)
+- **OIDC login unique constraint**: Resolved `oidcSub` unique constraint violation during default login flow. (#164)
+- **Task reassignment**: Allow reassigning tasks that are already assigned to another user/agent. (#12)
+
+---
+
 ## [0.6.1] - 2026-04-13
 
 ### New
