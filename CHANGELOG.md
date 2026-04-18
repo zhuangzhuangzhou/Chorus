@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.6.3] - 2026-04-18
+
+### Added
+- **CLI entry and npm publishing**: Added `chorus.mjs` CLI entry point with embedded PGlite support, `--port`, `--data-dir`, `--pglite-port` flags, auto-migration, and graceful shutdown. Enables `npx @chorus-aidlc/chorus` one-command startup. (#185)
+
+### Fixed
+- **Proposal approval transaction timeout**: Batch all materialization into 5 SQL calls max (was ~29) using `createManyAndReturn`. Propagates transaction client into child functions. Fixes PGlite and docker-local timeout on proposals with many tasks/docs. (#187)
+- **Dashboard PGlite connection exhaustion**: Serialize dashboard data queries to avoid exceeding PGlite's max-connections limit, which caused "Server has closed the connection" errors.
+- **Plugin MCP tool compatibility**: Fixed plugin MCP tool to work with stateless MCP servers. (#183)
+
+### Changed
+- **README**: Simplified README — removed redundant sections, added What's New. (#181)
+
+---
+
 ## [0.6.2] - 2026-04-17
 
 ### ⚠️ Breaking Changes
