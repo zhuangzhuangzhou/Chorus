@@ -15,16 +15,14 @@ export async function getDashboardData(projectUuid: string) {
     redirect("/projects");
   }
 
-  const [trackerData, stats, { activities }] = await Promise.all([
-    getTrackerGroups(auth.companyUuid, projectUuid),
-    getProjectStats(auth.companyUuid, projectUuid),
-    listActivitiesWithActorNames({
-      companyUuid: auth.companyUuid,
-      projectUuid,
-      skip: 0,
-      take: 5,
-    }),
-  ]);
+  const trackerData = await getTrackerGroups(auth.companyUuid, projectUuid);
+  const stats = await getProjectStats(auth.companyUuid, projectUuid);
+  const { activities } = await listActivitiesWithActorNames({
+    companyUuid: auth.companyUuid,
+    projectUuid,
+    skip: 0,
+    take: 5,
+  });
 
   return {
     project,
