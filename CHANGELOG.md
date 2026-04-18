@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.6.4] - 2026-04-18
+
+### Fixed
+- **PGlite stale connection auto-retry**: Add Prisma `$extends` middleware to auto-retry queries (up to 3 attempts) when PGlite silently drops idle connections during heavy transactions. Matches both P1017 and "Connection terminated" errors. (#190)
+- **PGlite idle connection eviction**: Add `pool.on("error")` handler to silently evict broken connections instead of crashing the process.
+
+### Changed
+- **README**: Add PGlite concurrency note (en/zh) recommending external PostgreSQL or Docker Compose for multi-agent use.
+
+---
+
 ## [0.6.3] - 2026-04-18
 
 ### Added
