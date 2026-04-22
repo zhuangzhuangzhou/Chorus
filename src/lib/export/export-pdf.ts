@@ -1,7 +1,22 @@
 import type { ExportableDocument } from "@/types/export";
 
+const NOTO_SANS_SC_URL = "https://cdn.jsdelivr.net/fontsource/fonts/noto-sans-sc@latest/chinese-simplified-400-normal.ttf";
+const NOTO_SANS_SC_BOLD_URL = "https://cdn.jsdelivr.net/fontsource/fonts/noto-sans-sc@latest/chinese-simplified-700-normal.ttf";
+
+let fontCache: { normal: ArrayBuffer; bold: ArrayBuffer } | null = null;
+
+async function loadCjkFonts(): Promise<{ normal: ArrayBuffer; bold: ArrayBuffer }> {
+  if (fontCache) return fontCache;
+  const [normal, bold] = await Promise.all([
+    fetch(NOTO_SANS_SC_URL).then((r) => r.arrayBuffer()),
+    fetch(NOTO_SANS_SC_BOLD_URL).then((r) => r.arrayBuffer()),
+  ]);
+  fontCache = { normal, bold };
+  return fontCache;
+}
+
 export async function exportAsPdf(doc: ExportableDocument): Promise<Blob> {
-  const [{ unified }, { default: remarkParse }, { default: remarkGfm }, { default: remarkPdf }, { default: remarkMermaid }, { buildMetadataMarkdown }] =
+  const [{ unified }, { default: remarkParse }, { default: remarkGfm }, { default: remarkPdf }, { default: remarkMermaid }, { buildMetadataMarkdown }, cjkFonts] =
     await Promise.all([
       import("unified"),
       import("remark-parse"),
@@ -9,6 +24,7 @@ export async function exportAsPdf(doc: ExportableDocument): Promise<Blob> {
       import("remark-pdf"),
       import("./remark-mermaid"),
       import("./export-md"),
+      loadCjkFonts(),
     ]);
 
   const markdown = buildMetadataMarkdown(doc) + "\n\n" + (doc.content ?? "");
@@ -19,7 +35,14 @@ export async function exportAsPdf(doc: ExportableDocument): Promise<Blob> {
     .use(remarkGfm)
     .use(remarkMermaid)
     .use(remarkPdf, {
-      fonts: ["Helvetica", "Courier"],
+      fonts: [
+        {
+          name: "NotoSansSC",
+          normal: cjkFonts.normal,
+          bold: cjkFonts.bold,
+        },
+        "Courier",
+      ],
       size: "A4",
       margin: { top: 60, bottom: 60, left: 65, right: 65 },
       spacing: 6,
