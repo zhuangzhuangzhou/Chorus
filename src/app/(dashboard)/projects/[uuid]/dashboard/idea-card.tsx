@@ -1,6 +1,7 @@
 "use client";
 
-import { useTranslations, useLocale } from "next-intl";
+import { useTranslations } from "next-intl";
+import { formatShortDate } from "@/lib/format-date";
 
 export interface IdeaCardItem {
   uuid: string;
@@ -44,16 +45,10 @@ const badgeHintColor: Record<string, string> = {
 
 export function IdeaCard({ idea, onClick }: IdeaRowProps) {
   const t = useTranslations("ideaTracker");
-  const locale = useLocale();
   const badgeKey = idea.badgeHint ? badgeHintI18n[idea.badgeHint] : null;
   const badgeColor = idea.badgeHint
     ? badgeHintColor[idea.badgeHint] || "text-[#888780]"
     : "text-[#888780]";
-
-  const formatShortDate = (dateString: string): string => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString(locale, { month: "short", day: "numeric" });
-  };
 
   return (
     <div
