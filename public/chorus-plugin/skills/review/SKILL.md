@@ -4,7 +4,7 @@ description: Chorus Review workflow — approve/reject proposals, verify tasks, 
 license: AGPL-3.0
 metadata:
   author: chorus
-  version: "0.1.0"
+  version: "0.7.3"
   category: project-management
   mcp_server: chorus
 ---
@@ -34,7 +34,6 @@ Key responsibilities:
 |------|---------|
 | `chorus_admin_create_project` | Create a new project (optional `groupUuid` for group assignment) |
 | `chorus_admin_approve_proposal` | Approve proposal (materializes documents + tasks) |
-| `chorus_admin_reject_proposal` | Reject proposal with review note |
 | `chorus_admin_verify_task` | Verify completed task (to_verify -> done). Blocked if required AC not all passed. |
 | `chorus_mark_acceptance_criteria` | Mark acceptance criteria as passed/failed during verification (batch) |
 | `chorus_admin_reopen_task` | Reopen task for rework (to_verify -> in_progress) |
@@ -48,9 +47,27 @@ Key responsibilities:
 | `chorus_admin_delete_project_group` | Delete a project group (projects become ungrouped) |
 | `chorus_admin_move_project_to_group` | Move a project to a group or ungroup it |
 
+**PM + Admin (proposal reject/revoke):**
+
+| Tool | Purpose |
+|------|---------|
+| `chorus_pm_reject_proposal` | Reject a pending proposal (pending -> draft). PM: own proposals only. Admin: any proposal. |
+| `chorus_pm_revoke_proposal` | Revoke an approved proposal (approved -> draft). Cascade-closes tasks, deletes documents. PM: own only. Admin: any. |
+
 **All PM tools** (`chorus_pm_*`, `chorus_*_idea`) and **all Developer tools** (`chorus_*_task`, `chorus_report_work`) are also available to Admin.
 
 **Shared tools** (checkin, query, comment, search, notifications): see `/chorus`
+
+---
+
+## Review Strategy
+
+When reviewing proposals or tasks, prefer spawning an independent reviewer sub-agent over reviewing manually:
+
+1. **Try the reviewer first.** Spawn `chorus:proposal-reviewer` (for proposals) or `chorus:task-reviewer` (for tasks) as a read-only sub-agent. It posts a VERDICT comment with detailed findings.
+2. **Act on the VERDICT.** Read the reviewer's comment, then approve/reject (proposals) or verify/reopen (tasks) based on its findings. VERDICT: FAIL is advisory — you make the final call.
+3. **Track rounds.** Count existing VERDICT comments before spawning. After 3 rounds of FAIL on the same item, stop the loop and escalate to human review.
+4. **Fallback.** If the reviewer is unavailable (e.g., agent type not registered, sub-agent spawn fails), review the item yourself using the quality checklists in the workflows below.
 
 ---
 
@@ -120,11 +137,9 @@ This returns: title, description, input ideas, **document drafts** (PRD, tech de
 chorus_get_comments({ targetType: "proposal", targetUuid: "<proposal-uuid>" })
 ```
 
-#### A3.5: Independent Review (Automatic)
+#### A3.5: Independent Review
 
-After `chorus_pm_submit_proposal`, the Chorus plugin's PostToolUse hook suggests spawning `chorus:proposal-reviewer` — a read-only agent that adversarially reviews the proposal's document quality, task granularity, AC alignment, and dependency DAG. Check for its VERDICT comment before approving.
-
-> **VERDICT: FAIL is advisory** — the reviewer's opinion does not block approval. The admin reads the review comment and makes the final decision.
+Spawn `chorus:proposal-reviewer` per the [Review Strategy](#review-strategy) above. Read its VERDICT comment before proceeding.
 
 #### A4: Approve or Reject
 
@@ -146,7 +161,7 @@ When approved:
 **Reject:**
 
 ```
-chorus_admin_reject_proposal({
+chorus_pm_reject_proposal({
   proposalUuid: "<proposal-uuid>",
   reviewNote: "PRD missing error handling requirements. Task 3 needs clearer AC."
 })
@@ -157,6 +172,19 @@ chorus_add_comment({
   content: "Specific feedback:\n1. Add error scenarios to PRD\n2. Task 3 AC should include performance benchmarks"
 })
 ```
+
+### Workflow A2: Revoking Approved Proposals
+
+If an approved Proposal's direction turns out to be wrong, use `chorus_pm_revoke_proposal` to undo the approval. Unlike `reject` (which acts on pending proposals), `revoke` acts on already-approved proposals and rolls back all materialized resources.
+
+```
+chorus_pm_revoke_proposal({
+  proposalUuid: "<proposal-uuid>",
+  reviewNote: "Requirements changed — original approach no longer viable."
+})
+```
+
+Cascade effects: all materialized Tasks are closed, all materialized Documents are deleted, and related AcceptanceCriteria/TaskDependencies/SessionCheckins are cleaned up. The Proposal returns to `draft` status so the PM can revise and resubmit.
 
 ### Workflow B: Task Verification
 
@@ -173,6 +201,10 @@ Check: developer's work summary, acceptance criteria, self-check results.
 ```
 chorus_get_comments({ targetType: "task", targetUuid: "<task-uuid>" })
 ```
+
+#### B2.5: Independent Review
+
+Spawn `chorus:task-reviewer` per the [Review Strategy](#review-strategy) above. Read its VERDICT comment before proceeding.
 
 #### B3: Mark Acceptance Criteria
 

@@ -91,49 +91,6 @@ export function registerAdminTools(server: McpServer, auth: AgentAuthContext) {
     }
   );
 
-  // chorus_admin_reject_proposal - Reject a Proposal (returns to draft for re-editing)
-  server.registerTool(
-    "chorus_admin_reject_proposal",
-    {
-      description: "Reject a Proposal (Admin exclusive, acts on behalf of humans). After rejection, the Proposal returns to draft status and can be re-edited and resubmitted. The reviewNote is preserved as reference for revisions.",
-      inputSchema: z.object({
-        proposalUuid: z.string().describe("Proposal UUID"),
-        reviewNote: z.string().describe("Rejection reason (required, serves as revision reference)"),
-      }),
-    },
-    async ({ proposalUuid, reviewNote }) => {
-      const proposal = await proposalService.getProposalByUuid(auth.companyUuid, proposalUuid);
-      if (!proposal) {
-        return { content: [{ type: "text", text: "Proposal not found" }], isError: true };
-      }
-
-      if (proposal.status !== "pending") {
-        return { content: [{ type: "text", text: `Can only reject pending Proposals, current status: ${proposal.status}` }], isError: true };
-      }
-
-      const updated = await proposalService.rejectProposal(
-        proposalUuid,
-        auth.actorUuid,  // Admin Agent as reviewer
-        reviewNote
-      );
-
-      await activityService.createActivity({
-        companyUuid: auth.companyUuid,
-        projectUuid: proposal.projectUuid,
-        targetType: "proposal",
-        targetUuid: proposalUuid,
-        actorType: "agent",
-        actorUuid: auth.actorUuid,
-        action: "rejected_to_draft",
-        value: { reviewNote },
-      });
-
-      return {
-        content: [{ type: "text", text: JSON.stringify({ uuid: updated.uuid, status: updated.status }) }],
-      };
-    }
-  );
-
   // chorus_admin_close_proposal - Close a Proposal (terminal state)
   server.registerTool(
     "chorus_admin_close_proposal",

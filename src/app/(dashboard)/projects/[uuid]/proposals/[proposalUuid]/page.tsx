@@ -20,7 +20,8 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { MarkdownContent } from "@/components/markdown-content";
 import { getServerAuthContext } from "@/lib/auth-server";
-import { getProposal, type DocumentDraft, type TaskDraft } from "@/services/proposal.service";
+import { FormattedDateTime } from "@/components/formatted-date-time";
+import { getProposal, type DocumentDraft, type TaskDraft, getMaterializedEntities } from "@/services/proposal.service";
 import { getIdea } from "@/services/idea.service";
 import { projectExists } from "@/services/project.service";
 import { ProposalActions } from "./proposal-actions";
@@ -106,6 +107,11 @@ export default async function ProposalDetailPage({ params }: PageProps) {
       )).filter(Boolean) as Awaited<ReturnType<typeof getIdea>>[]
     : [];
 
+  // Fetch materialized entities for revoke dialog (approved only)
+  const materializedEntities = proposal.status === "approved"
+    ? await getMaterializedEntities(auth.companyUuid, proposalUuid)
+    : null;
+
   // Fetch comment count for the discussion drawer badge
   const commentCounts = await batchCommentCounts(auth.companyUuid, "proposal", [proposalUuid]);
   const commentCount = commentCounts[proposalUuid] || 0;
@@ -155,7 +161,7 @@ export default async function ProposalDetailPage({ params }: PageProps) {
             </div>
             <h1 className="text-2xl font-semibold tracking-tight text-foreground">{proposal.title}</h1>
             <div className="mt-2 flex items-center gap-2.5 text-xs text-muted-foreground">
-              <span>{t("common.created")} {new Date(proposal.createdAt).toLocaleDateString()}</span>
+              <span>{t("common.created")} <FormattedDateTime date={proposal.createdAt} /></span>
               {proposal.createdBy && (
                 <>
                   <span className="text-[#D0CCC4]">·</span>
@@ -178,6 +184,7 @@ export default async function ProposalDetailPage({ params }: PageProps) {
             proposalUuid={proposalUuid}
             projectUuid={projectUuid}
             status={proposal.status}
+            materializedEntities={materializedEntities}
           />
         </div>
       </div>
@@ -258,13 +265,13 @@ export default async function ProposalDetailPage({ params }: PageProps) {
               <div className="flex items-center justify-between">
                 <span className="text-xs text-muted-foreground">{t("common.created")}</span>
                 <span className="text-xs font-medium text-[#6B6B6B]">
-                  {new Date(proposal.createdAt).toLocaleDateString()}
+                  <FormattedDateTime date={proposal.createdAt} />
                 </span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-xs text-muted-foreground">{t("common.updated")}</span>
                 <span className="text-xs font-medium text-[#6B6B6B]">
-                  {new Date(proposal.updatedAt).toLocaleDateString()}
+                  <FormattedDateTime date={proposal.updatedAt} />
                 </span>
               </div>
             </CardContent>
@@ -305,7 +312,7 @@ export default async function ProposalDetailPage({ params }: PageProps) {
                   <div className="flex items-center justify-between">
                     <span className="text-xs text-muted-foreground">{t("proposals.reviewedAt")}</span>
                     <span className="text-xs font-medium text-[#6B6B6B]">
-                      {new Date(proposal.review.reviewedAt).toLocaleDateString()}
+                      <FormattedDateTime date={proposal.review.reviewedAt} />
                     </span>
                   </div>
                 )}
@@ -336,7 +343,7 @@ export default async function ProposalDetailPage({ params }: PageProps) {
                     {proposal.review.reviewedBy && (
                       <p className="mt-2 text-[11px] text-muted-foreground">
                         — {proposal.review.reviewedBy.name}
-                        {proposal.review.reviewedAt && `, ${new Date(proposal.review.reviewedAt).toLocaleDateString()}`}
+                        {proposal.review.reviewedAt && <>, <FormattedDateTime date={proposal.review.reviewedAt} /></>}
                       </p>
                     )}
                   </div>
@@ -357,7 +364,7 @@ export default async function ProposalDetailPage({ params }: PageProps) {
                     {proposal.review.reviewedBy && (
                       <p className="mt-2 text-[11px] text-muted-foreground">
                         — {proposal.review.reviewedBy.name}
-                        {proposal.review.reviewedAt && `, ${new Date(proposal.review.reviewedAt).toLocaleDateString()}`}
+                        {proposal.review.reviewedAt && <>, <FormattedDateTime date={proposal.review.reviewedAt} /></>}
                       </p>
                     )}
                   </div>

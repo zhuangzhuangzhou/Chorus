@@ -152,16 +152,11 @@ export async function create(
     },
   });
 
-  // Get updated unread count for the recipient
-  const unreadCount = await prisma.notification.count({
-    where: {
-      companyUuid: params.companyUuid,
-      recipientType: params.recipientType,
-      recipientUuid: params.recipientUuid,
-      readAt: null,
-      archivedAt: null,
-    },
-  });
+  const unreadCount = await getUnreadCount(
+    params.companyUuid,
+    params.recipientType,
+    params.recipientUuid
+  );
 
   // Emit SSE event for real-time notification delivery (includes details for toast)
   eventBus.emit(`notification:${params.recipientType}:${params.recipientUuid}`, {
@@ -217,15 +212,7 @@ export async function createBatch(
   for (const key of recipientKeys) {
     const [recipientType, recipientUuid, companyUuid] = key.split(":");
 
-    const unreadCount = await prisma.notification.count({
-      where: {
-        companyUuid,
-        recipientType,
-        recipientUuid,
-        readAt: null,
-        archivedAt: null,
-      },
-    });
+    const unreadCount = await getUnreadCount(companyUuid, recipientType, recipientUuid);
 
     const match = created.find(
       (n) => n.recipientType === recipientType && n.recipientUuid === recipientUuid
@@ -279,15 +266,7 @@ export async function list(
       orderBy: { createdAt: "desc" },
     }),
     prisma.notification.count({ where }),
-    prisma.notification.count({
-      where: {
-        companyUuid,
-        recipientType,
-        recipientUuid,
-        readAt: null,
-        archivedAt: null,
-      },
-    }),
+    getUnreadCount(companyUuid, recipientType, recipientUuid),
   ]);
 
   return {
@@ -420,44 +399,22 @@ export async function archive(
 }
 
 /**
- * Emit an agent_checkin notification to the agent's owner on first checkin only.
- * Returns true if notification was created, false if already existed.
+ * Emit an agent_checkin SSE event to the agent's owner. No DB row created —
+ * only used for real-time detection (e.g., onboarding connection test).
  */
-export async function emitAgentCheckinIfFirst(params: {
-  companyUuid: string;
+export function emitAgentCheckin(params: {
   agentUuid: string;
   agentName: string;
   ownerUuid: string;
-}): Promise<boolean> {
-  const existing = await prisma.notification.findFirst({
-    where: {
-      companyUuid: params.companyUuid,
-      action: "agent_checkin",
-      actorType: "agent",
-      actorUuid: params.agentUuid,
-    },
-    select: { uuid: true },
-  });
-
-  if (existing) return false;
-
-  await create({
-    companyUuid: params.companyUuid,
-    projectUuid: "system",
-    recipientType: "user",
-    recipientUuid: params.ownerUuid,
+}): void {
+  eventBus.emit(`notification:user:${params.ownerUuid}`, {
+    type: "new_notification",
+    action: "agent_checkin",
     entityType: "agent",
     entityUuid: params.agentUuid,
     entityTitle: params.agentName,
-    projectName: "",
-    action: "agent_checkin",
-    message: `Agent "${params.agentName}" connected successfully`,
-    actorType: "agent",
-    actorUuid: params.agentUuid,
     actorName: params.agentName,
   });
-
-  return true;
 }
 
 /**

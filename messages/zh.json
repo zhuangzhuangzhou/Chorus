@@ -84,6 +84,7 @@
     "actionRejected": "拒绝了",
     "actionClaimed": "认领了",
     "actionCompleted": "完成了",
+    "actionRevoked": "已撤回",
     "title": "动态",
     "subtitle": "项目最近活动",
     "noActivity": "暂无动态",
@@ -542,6 +543,11 @@
     "closeProposalDesc": "关闭提案后将无法再编辑。请填写关闭原因。",
     "closeReasonPlaceholder": "请输入关闭原因...",
     "closedNotice": "此提案已被永久关闭。",
+    "revokeProposal": "撤回批准",
+    "revokeProposalDesc": "此操作将关闭所有由此提案生成的任务，并删除所有生成的文档。提案将回退为草稿状态。",
+    "revokeReasonPlaceholder": "请输入撤回原因...",
+    "revokeTasksToClose": "将关闭 {count} 个任务",
+    "revokeDocsToDelete": "将删除 {count} 个文档",
     "failedToSaveDocDraft": "保存文档草稿失败",
     "failedToSaveTaskDraft": "保存任务草稿失败",
     "docTypePrd": "PRD",
@@ -633,6 +639,17 @@
     "typeGuide": "指南",
     "typeNote": "笔记",
     "typeOther": "其他"
+  },
+  "export": {
+    "exportDocument": "导出",
+    "exportAs": "导出为 {format}",
+    "formatMd": "Markdown (.md)",
+    "formatPdf": "PDF (.pdf)",
+    "formatDocx": "Word (.docx)",
+    "exporting": "导出中...",
+    "exportSuccess": "文档导出成功",
+    "exportError": "文档导出失败",
+    "fetchingContent": "加载文档中..."
   },
   "settings": {
     "title": "设置",
@@ -946,6 +963,7 @@
   "onboarding": {
     "skip": "暂时跳过",
     "next": "下一步",
+    "back": "返回",
     "steps": {
       "welcome": "欢迎",
       "createAgent": "创建智能体",
@@ -1020,9 +1038,8 @@
       "waiting": "等待智能体连接...",
       "waitingFor": "正在监听 {name} 的签到",
       "connected": "智能体连接成功！",
-      "timeout": "仍在等待连接。请检查安装步骤后重试。",
-      "retry": "重试",
-      "skipHint": "您可以稍后在设置中测试连接。"
+      "checkinHint": "复制以下提示词并发送给你的智能体，以验证连接：",
+      "checkinPrompt": "请连接到 Chorus 并执行 chorus_checkin() 验证连接。"
     },
     "placeholder": {
       "createAgent": "此步骤将用于创建 AI 智能体。即将推出。",

@@ -88,7 +88,6 @@ export function CopyKeyStep({ onNext, apiKey }: CopyKeyStepProps) {
             </p>
           </div>
 
-          {/* Next button */}
           <Button onClick={onNext} className="w-full">
             {t("next")}
           </Button>
