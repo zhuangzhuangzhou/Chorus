@@ -1,5 +1,30 @@
 # Changelog
 
+## [0.6.6] - 2026-04-23
+
+### Added
+- **npm one-click install**: `@chorus-aidlc/chorus` now works reliably via `npx` / `npm install` on all platforms (macOS ARM64, Linux, Windows) — replaced `bcrypt` (native C++ bindings) with pure-JS `bcryptjs`, eliminating the last cross-platform blocker. (#192)
+- **Document export (MD/PDF/Word)**: Export documents in three formats — Markdown with YAML frontmatter, PDF via remark-pdf with bundled CJK/symbol/emoji fonts, and Word via remark-docx with syntax-highlighted code blocks. Mermaid diagrams rendered as PNG. Available on document detail, document list, and proposal editor pages. (#199)
+- **Proposal revoke**: Admin operation to undo proposal approval — resets status to draft, cascade-closes materialized tasks, deletes materialized documents. Frontend dialog with impact preview. (#197)
+- **Unified PM reject/revoke tools**: Moved `chorus_admin_reject_proposal` and `chorus_admin_revoke_proposal` into PM tools (`chorus_pm_reject_proposal`, `chorus_pm_revoke_proposal`). PM agents can only reject/revoke own proposals; admin agents bypass ownership guard. (#202)
+- **Checkin API refactor**: New `checkin.service.ts` replaces bloated assignments response with project-grouped idea tracker (derived status, proposal/task counts) and 5-item notification summary. Agent-centric 3+1 query batch eliminates per-project N+1. (#203)
+- **Onboarding flow improvements**: Back navigation for Copy Key / Install Guide / Test Connection steps, removed 5-minute timeout (SSE listens indefinitely), copyable checkin prompt in waiting state. Agent checkin now emits SSE-only (no DB notification row). (#205)
+- **Post-completion reviewer reminder**: Inject review+verify reminder into SubagentStart workflow so subagents include it in their final response. Reviewer agents (proposal-reviewer, task-reviewer) are skipped. (#206)
+
+### Changed
+- **Unified 24h datetime display**: Replace all `toLocaleDateString()` with shared `formatDateTime` utility (YYYY-MM-DD HH:mm) across all pages and exports. Server Components use client-side `FormattedDateTime` for local timezone. (#200)
+
+### Fixed
+- **Duplicate notifications in multi-container**: EventBus Redis relay now tags re-emitted events with `_remote: true` so notification-listener skips DB writes on non-originating instances. (#204)
+- **Proposal revoke skips closed tasks**: Filter already-closed tasks during revoke to avoid stale resource accumulation. (#198)
+
+### Plugin
+- **Review skill**: Added shared Review Strategy section and task-reviewer verification step (B2.5). (#201)
+- **on-subagent-start.sh**: Post-completion block injected into workflow; on-subagent-stop.sh trimmed to side-effects only. (#206)
+- **on-session-start.sh**: Slimmed ~60 lines of redundant static docs, replaced with compact Quick Reference. (#203)
+
+---
+
 ## [0.6.4] - 2026-04-18
 
 ### Fixed
