@@ -1154,6 +1154,34 @@ Available to PM Agent and Admin Agent. Not available to Developer Agent.
 
 **Output**: Created Idea JSON (`{ uuid, title }`)
 
+### chorus_pm_reject_proposal
+
+**Description**: Reject a Proposal (pending -> draft). PM agents can only reject their own proposals; admin agents can reject any proposal. The reviewNote is preserved as reference.
+
+**Input**:
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| proposalUuid | string | Yes | Proposal UUID |
+| reviewNote | string | Yes | Rejection reason (serves as revision reference) |
+
+**Guards**: Proposal must exist, status must be `pending`. PM: `createdByUuid` must match. Admin: no ownership restriction.
+
+**Output**: Updated Proposal JSON (`{ uuid, status }`)
+
+### chorus_pm_revoke_proposal
+
+**Description**: Revoke an approved Proposal (approved -> draft). PM agents can only revoke their own proposals; admin agents can revoke any proposal. Cascade-closes all materialized Tasks and deletes all materialized Documents.
+
+**Input**:
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| proposalUuid | string | Yes | Proposal UUID |
+| reviewNote | string | No | Reason for revoking |
+
+**Guards**: Proposal must exist, status must be `approved`. PM: `createdByUuid` must match. Admin: no ownership restriction.
+
+**Output**: JSON with `{ uuid, status: "draft", closedTasks: [...], deletedDocuments: [...] }`
+
 ---
 
 ## Developer Agent Tools
@@ -1262,47 +1290,6 @@ Therefore, after approval there is **no need** to manually call `chorus_pm_creat
 | reviewNote | string | No | Review note |
 
 **Output**: Updated Proposal JSON
-
-### chorus_admin_reject_proposal
-
-**Description**: Reject a Proposal
-
-**Input**:
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| proposalUuid | string | Yes | Proposal UUID |
-| reviewNote | string | Yes | Rejection reason (required) |
-
-**Output**: Updated Proposal JSON
-
-### chorus_admin_revoke_proposal
-
-**Description**: Revoke an approved Proposal (approved → draft). Cascade-closes all materialized Tasks and deletes all materialized Documents. Use when an approved Proposal's direction is wrong and you need to undo the approval.
-
-**Difference from reject**: `reject` works on pending → draft (before approval), `revoke` works on approved → draft (undo approval).
-
-**Cascade behavior**:
-- All materialized Tasks → closed
-- All materialized Documents → deleted
-- External task dependencies (other tasks depending on revoked tasks) are removed
-- SessionCheckins are cleaned up
-- AcceptanceCriteria and internal dependencies remain attached to closed tasks for history
-
-**Input**:
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| proposalUuid | string | Yes | Proposal UUID |
-| reviewNote | string | No | Reason for revoking (optional) |
-
-**Output**:
-```json
-{
-  "proposalUuid": "...",
-  "status": "draft",
-  "closedTasks": [{ "uuid": "...", "title": "..." }],
-  "deletedDocuments": [{ "uuid": "...", "title": "..." }]
-}
-```
 
 ### chorus_report_criteria_self_check
 
@@ -1517,7 +1504,7 @@ Therefore, after approval there is **no need** to manually call `chorus_pm_creat
 | 40 | chorus_get_activity | Get activity stream | ✅ Pass | Recorded submit, comment_added, etc. |
 | 41 | chorus_release_idea | Release claimed Idea | ✅ Pass | assigned → open |
 | 42 | chorus_admin_close_idea | Close Idea | ✅ Pass | any → closed |
-| 43 | chorus_admin_reject_proposal | Reject Proposal | ✅ Pass | pending → rejected, includes reviewNote |
+| 43 | chorus_pm_reject_proposal | Reject Proposal | ✅ Pass | pending → draft, includes reviewNote |
 | 44 | chorus_admin_delete_task | Delete Task | ✅ Pass | |
 | 45 | chorus_admin_delete_document | Delete Document | ✅ Pass | |
 | 46 | chorus_admin_delete_idea | Delete Idea | ✅ Pass | |
