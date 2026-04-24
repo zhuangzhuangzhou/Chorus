@@ -28,6 +28,8 @@ v0.6.2 added PGlite as an embedded database and swapped Redis for an in-memory e
 npx @chorus-aidlc/chorus
 ```
 
+![npx @chorus-aidlc/chorus](/blog/chorus-npm-install.gif)
+
 No Docker. No database config. No docker-compose.yml. npx pulls the package, PGlite runs PostgreSQL in-process, migrations run automatically. Open a browser and you're in. 
 
 This works because Chorus runs entirely on WASM and pure JS with zero native C/C++ dependencies. macOS ARM, Linux x86/ARM — npx just works, no build toolchain needed.
