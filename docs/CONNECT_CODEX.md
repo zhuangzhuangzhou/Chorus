@@ -64,7 +64,7 @@ CHORUS_API_KEY=cho_xxx \
 
 ## Next
 
-- Skill docs (tools reference): `public/chorus-plugin/skills/chorus/SKILL.md` (served as `/skill/chorus/SKILL.md` on your Chorus instance)
+- Skill docs (tools reference): `plugins/chorus/skills/chorus/SKILL.md` (the standalone version served as `/skill/chorus/SKILL.md` on your Chorus instance comes from `public/skill/chorus/SKILL.md`)
 - Workflow overview: run `$chorus` inside Codex
 - To connect Claude Code instead, see [CONNECT_CLAUDE_CODE.md](CONNECT_CLAUDE_CODE.md)
 - For any other MCP-capable agent (Cursor, Continue, custom, etc.), see [CONNECT_OTHER_AGENTS.md](CONNECT_OTHER_AGENTS.md)

@@ -9,10 +9,13 @@
 #
 # What this does (idempotent, safe to re-run):
 #   1. Verifies `codex` CLI is installed.
-#   2. Registers the Chorus plugin marketplace.
-#   3. Writes [mcp_servers.chorus] (url + Authorization header) into ~/.codex/config.toml.
-#   4. Registers plugin as INSTALLED_BY_DEFAULT — Codex picks it up on first launch
-#      (falls back to one-click `/plugins → Install` if auto-install does not fire).
+#   2. Registers (or upgrades) the Chorus plugin marketplace.
+#   3. Writes [mcp_servers.chorus] (url + Authorization header) and
+#      [plugins."chorus@chorus-plugins"] enabled = true into ~/.codex/config.toml,
+#      so Codex auto-enables the plugin on first launch (falls back to one-click
+#      `/plugins → Install` if auto-install does not fire).
+#   4. Installs a lazy hook wrapper under ~/.codex/hooks/chorus/ so Chorus hooks
+#      work even before the plugin cache is materialized.
 
 set -euo pipefail
 
@@ -54,7 +57,7 @@ hdr "2/5  Registering the Chorus plugin marketplace"
 existing_source=""
 if [ -f "$CONFIG_TOML" ]; then
   existing_source="$(awk -v name="$MARKETPLACE_NAME" '
-    $0 == "[marketplaces." name "]" { in_block=1; next }
+    $0 ~ "^\\[marketplaces\\." name "\\][[:space:]]*$" { in_block=1; next }
     in_block && /^\[/              { in_block=0 }
     in_block && /^source[[:space:]]*=/ {
       sub(/^source[[:space:]]*=[[:space:]]*/, "")

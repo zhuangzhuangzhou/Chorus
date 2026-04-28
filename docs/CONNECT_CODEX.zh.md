@@ -64,7 +64,7 @@ CHORUS_API_KEY=cho_xxx \
 
 ## 下一步
 
-- Skill 文档（工具参考）：`public/chorus-plugin/skills/chorus/SKILL.md`（也会在 Chorus 实例上以 `/skill/chorus/SKILL.md` 提供）
+- Skill 文档（工具参考）：`plugins/chorus/skills/chorus/SKILL.md`（Chorus 实例上 `/skill/chorus/SKILL.md` 提供的是独立版本，来自 `public/skill/chorus/SKILL.md`）
 - 工作流概览：在 Codex 里输入 `$chorus`
 - 要接入 Claude Code，见 [CONNECT_CLAUDE_CODE.zh.md](CONNECT_CLAUDE_CODE.zh.md)
 - 其他 MCP 兼容的 agent（Cursor、Continue、自研等）见 [CONNECT_OTHER_AGENTS.zh.md](CONNECT_OTHER_AGENTS.zh.md)
