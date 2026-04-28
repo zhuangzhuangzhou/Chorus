@@ -9,10 +9,13 @@
 #
 # What this does (idempotent, safe to re-run):
 #   1. Verifies `codex` CLI is installed.
-#   2. Registers the Chorus plugin marketplace.
-#   3. Writes [mcp_servers.chorus] (url + Authorization header) into ~/.codex/config.toml.
-#   4. Registers plugin as INSTALLED_BY_DEFAULT — Codex picks it up on first launch
-#      (falls back to one-click `/plugins → Install` if auto-install does not fire).
+#   2. Registers (or upgrades) the Chorus plugin marketplace.
+#   3. Writes [mcp_servers.chorus] (url + Authorization header) and
+#      [plugins."chorus@chorus-plugins"] enabled = true into ~/.codex/config.toml,
+#      so Codex auto-enables the plugin on first launch (falls back to one-click
+#      `/plugins → Install` if auto-install does not fire).
+#   4. Installs a lazy hook wrapper under ~/.codex/hooks/chorus/ so Chorus hooks
+#      work even before the plugin cache is materialized.
 
 set -euo pipefail
 
@@ -49,11 +52,40 @@ ok "Found $(codex --version 2>/dev/null | head -1)"
 
 # ---------- step 2: register marketplace ----------
 hdr "2/5  Registering the Chorus plugin marketplace"
-if grep -q "^\[marketplaces\.${MARKETPLACE_NAME}\]" "$CONFIG_TOML" 2>/dev/null; then
-  ok "Marketplace '${MARKETPLACE_NAME}' already registered"
-else
+# Extract the currently registered source (if any) for chorus-plugins.
+# awk scoped between the matching [marketplaces.<name>] header and the next [section].
+existing_source=""
+if [ -f "$CONFIG_TOML" ]; then
+  existing_source="$(awk -v name="$MARKETPLACE_NAME" '
+    $0 ~ "^\\[marketplaces\\." name "\\][[:space:]]*$" { in_block=1; next }
+    in_block && /^\[/              { in_block=0 }
+    in_block && /^source[[:space:]]*=/ {
+      sub(/^source[[:space:]]*=[[:space:]]*/, "")
+      gsub(/^"|"$/, "")
+      print
+      exit
+    }
+  ' "$CONFIG_TOML" 2>/dev/null || true)"
+fi
+
+if [ -z "$existing_source" ]; then
   codex plugin marketplace add "$MARKETPLACE_SOURCE_DEFAULT" >/dev/null
   ok "Added marketplace: $MARKETPLACE_SOURCE_DEFAULT"
+elif [ "$existing_source" = "$MARKETPLACE_SOURCE_DEFAULT" ]; then
+  # Same source — pull the latest plugin manifest/version.
+  if codex plugin marketplace upgrade "$MARKETPLACE_NAME" >/dev/null 2>&1; then
+    ok "Upgraded marketplace '${MARKETPLACE_NAME}' to latest"
+  else
+    warn "Marketplace '${MARKETPLACE_NAME}' already registered; upgrade skipped"
+  fi
+else
+  # Source changed — remove the stale registration and re-add.
+  warn "Marketplace '${MARKETPLACE_NAME}' points at a different source; re-registering"
+  warn "  old: $existing_source"
+  warn "  new: $MARKETPLACE_SOURCE_DEFAULT"
+  codex plugin marketplace remove "$MARKETPLACE_NAME" >/dev/null 2>&1 || true
+  codex plugin marketplace add "$MARKETPLACE_SOURCE_DEFAULT" >/dev/null
+  ok "Re-added marketplace: $MARKETPLACE_SOURCE_DEFAULT"
 fi
 
 # ---------- step 3: collect Chorus URL + API key ----------
@@ -87,27 +119,22 @@ else
   die "No TTY and CHORUS_API_KEY unset — cannot continue"
 fi
 
-# Sanity check: a root URL without a path is almost always wrong — the Chorus
-# MCP endpoint is served under a path (e.g. /api/mcp). Warn loudly; don't abort
-# so advanced users with a path-less reverse proxy can still proceed.
+# Must be http(s).
 case "$url" in
-  http://*/*|https://*/*)
-    # Has a path component — check it's not just a trailing slash.
-    path="${url#http*://}"
-    path="${path#*/}"
-    if [ -z "$path" ]; then
-      warn "URL has no path (just a host). MCP endpoints usually live under /api/mcp or similar."
-      warn "If /mcp in the TUI shows 'chorus' failing to connect, re-run with the full URL."
-    fi
-    ;;
-  http://*|https://*)
-    warn "URL has no path (just a host). MCP endpoints usually live under /api/mcp or similar."
-    warn "If /mcp in the TUI shows 'chorus' failing to connect, re-run with the full URL."
-    ;;
-  *)
-    die "URL must start with http:// or https:// — got: $url"
-    ;;
+  http://*|https://*) ;;
+  *) die "URL must start with http:// or https:// — got: $url" ;;
 esac
+
+# Normalize: the Chorus MCP endpoint lives under /api/mcp. If the user gave us
+# just a host (or a host with trailing slash, or any path that doesn't already
+# end in /api/mcp), append it so the MCP handshake hits the right route.
+case "$url" in
+  */api/mcp) ;;
+  */api/mcp/) url="${url%/}" ;;
+  */) url="${url}api/mcp" ;;
+  *)  url="${url}/api/mcp" ;;
+esac
+ok "MCP endpoint: $url"
 
 # ---------- step 4: write config.toml ----------
 hdr "4/5  Writing ~/.codex/config.toml"
@@ -126,11 +153,12 @@ fi
 tmp="$(mktemp "${TMPDIR:-/tmp}/chorus-config.XXXXXX")"
 awk '
   # A TOML table header line. Match [mcp_servers.chorus] and any
-  # [mcp_servers.chorus.<subtable>], set a flag that suppresses lines
-  # until the next [section] header appears.
-  /^\[mcp_servers\.chorus(\..*)?\][[:space:]]*$/ { skip = 1; next }
-  /^\[/                                             { skip = 0 }
-  skip != 1                                          { print }
+  # [mcp_servers.chorus.<subtable>], plus [plugins."chorus@chorus-plugins"],
+  # and suppress lines until the next [section] header appears.
+  /^\[mcp_servers\.chorus(\..*)?\][[:space:]]*$/           { skip = 1; next }
+  /^\[plugins\."chorus@chorus-plugins"\][[:space:]]*$/      { skip = 1; next }
+  /^\[/                                                      { skip = 0 }
+  skip != 1                                                   { print }
 ' "$CONFIG_TOML" > "$tmp"
 mv "$tmp" "$CONFIG_TOML"
 
@@ -146,9 +174,12 @@ url = "${url}"
 
 [mcp_servers.chorus.http_headers]
 Authorization = "Bearer ${apikey}"
+
+[plugins."chorus@chorus-plugins"]
+enabled = true
 TOML
 
-ok "Wrote [mcp_servers.chorus] → ${CONFIG_TOML}"
+ok "Wrote [mcp_servers.chorus] and [plugins.\"chorus@chorus-plugins\"] → ${CONFIG_TOML}"
 
 # ---------- step 5: install hooks ----------
 hdr "5/5  Installing Chorus hooks"

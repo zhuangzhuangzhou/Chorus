@@ -279,48 +279,19 @@ PGlite 在端口 5433 运行嵌入式 PostgreSQL。数据存储在 `.pglite/`，
 
 ### 连接 AI Agent
 
-在 Web UI 创建 API Key（Settings > Agents > Create API Key）。
+最快的方式是用应用内的 setup 向导：打开 Web UI，进入 **Settings → Setup Guide → 打开设置向导**，按照向导给出的分步指引接入自己的客户端（Claude Code、Codex、OpenClaw 或其他 agent）。向导会帮你创建 API Key、展示完整命令，并引导你验证连接。
+
+如果偏好文档：
+
+| 客户端 | 接入文档 |
+|--------|---------|
+| Claude Code | [CONNECT_CLAUDE_CODE.zh.md](docs/CONNECT_CLAUDE_CODE.zh.md) |
+| Codex CLI | [CONNECT_CODEX.zh.md](docs/CONNECT_CODEX.zh.md) |
+| 其他 MCP agent（Cursor / Continue / 自研等） | [CONNECT_OTHER_AGENTS.zh.md](docs/CONNECT_OTHER_AGENTS.zh.md) |
+
+在 Web UI 的 **Settings → Agents → Create API Key** 创建 API Key。Key 以 `cho_` 开头，仅在创建时显示一次。
 
 ![Create API Key](docs/images/create-key.png)
-
-#### 方式一：Chorus Plugin（推荐）
-
-```bash
-export CHORUS_URL="http://localhost:8637"
-export CHORUS_API_KEY="cho_your_api_key"
-```
-
-从 Plugin Marketplace 安装：
-
-```bash
-claude
-/plugin marketplace add Chorus-AIDLC/chorus
-/plugin install chorus@chorus-plugins
-```
-
-或本地加载：
-
-```bash
-claude --plugin-dir public/chorus-plugin
-```
-
-#### 方式二：手动配置 MCP
-
-在项目根目录创建 `.mcp.json`：
-
-```json
-{
-  "mcpServers": {
-    "chorus": {
-      "type": "http",
-      "url": "http://localhost:8637/api/mcp",
-      "headers": {
-        "Authorization": "Bearer cho_your_api_key"
-      }
-    }
-  }
-}
-```
 
 ---
 

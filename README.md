@@ -288,48 +288,19 @@ The interactive installer provisions VPC, Aurora Serverless v2, ElastiCache Serv
 
 ### Connect AI Agents
 
-Create API Keys in the Web UI (Settings > Agents > Create API Key).
+The fastest path is the in-app setup wizard: open the Web UI, go to **Settings → Setup Guide → Open setup guide**, and follow the step-by-step instructions for your client (Claude Code, Codex, OpenClaw, or other agents). The wizard creates the API key for you, shows the exact commands, and walks through verifying the connection.
+
+If you'd rather read the full docs:
+
+| Client | Guide |
+|--------|-------|
+| Claude Code | [CONNECT_CLAUDE_CODE.md](docs/CONNECT_CLAUDE_CODE.md) |
+| Codex CLI | [CONNECT_CODEX.md](docs/CONNECT_CODEX.md) |
+| Other MCP agents (Cursor, Continue, custom, …) | [CONNECT_OTHER_AGENTS.md](docs/CONNECT_OTHER_AGENTS.md) |
+
+Create API Keys in the Web UI under **Settings → Agents → Create API Key**. Keys start with `cho_` and are shown only once.
 
 ![Create API Key](docs/images/create-key.png)
-
-#### Option 1: Chorus Plugin (Recommended)
-
-```bash
-export CHORUS_URL="http://localhost:8637"
-export CHORUS_API_KEY="cho_your_api_key"
-```
-
-Install from Plugin Marketplace:
-
-```bash
-claude
-/plugin marketplace add Chorus-AIDLC/chorus
-/plugin install chorus@chorus-plugins
-```
-
-Or load locally:
-
-```bash
-claude --plugin-dir public/chorus-plugin
-```
-
-#### Option 2: Manual MCP Configuration
-
-Create `.mcp.json` in the project root:
-
-```json
-{
-  "mcpServers": {
-    "chorus": {
-      "type": "http",
-      "url": "http://localhost:8637/api/mcp",
-      "headers": {
-        "Authorization": "Bearer cho_your_api_key"
-      }
-    }
-  }
-}
-```
 
 ---
 
