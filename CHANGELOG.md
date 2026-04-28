@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.6.7] - 2026-04-28
+
+### Added
+- **Codex CLI plugin**: Ported Chorus plugin to Codex CLI under `plugins/chorus/` alongside the existing Claude Code plugin. Includes marketplace manifest, 7 workflow skills (chorus/idea/proposal/develop/review/quick-dev/yolo), 2 reviewer skills, hooks wiring (SessionStart + PostToolUse), one-shot installer `install-codex.sh` with idempotent `~/.codex/config.toml` setup, and 17-assertion regression test. (#222)
+- **Workspace picker for multi-company email**: When a user's email resolves to 2+ Companies (via emailDomains ∪ User.email), `/login/pick-workspace` lets them choose which workspace to sign in to. New `GET /api/auth/company-oidc` endpoint, email-gated to block UUID enumeration. (#227)
+- **Codex onboarding tab + per-client connect guides**: In-app Install Guide adds a Codex tab between Claude Code and OpenClaw with a 3-step one-shot installer flow. New `docs/CONNECT_CLAUDE_CODE`, `CONNECT_CODEX`, `CONNECT_OTHER_AGENTS` (en + zh) walk through each connection path end-to-end. README points at the setup wizard + per-client guide table. (#224)
+
+### Changed
+- **Email domain uniqueness**: Dropped SuperAdmin-side email-domain-uniqueness validation — the same domain can now be attached to multiple Companies (required for the workspace picker). (#227)
+- **Logout**: No longer calls `manager.signoutRedirect` — clearing the local session is sufficient, IdP SSO session stays intact for silent re-login. (#227)
+
+---
+
 ## [0.6.6] - 2026-04-23
 
 ### Added
