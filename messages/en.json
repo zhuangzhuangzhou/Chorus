@@ -1009,6 +1009,7 @@
       "description": "Choose your AI agent client and follow the setup instructions below.",
       "tabs": {
         "claudeCode": "Claude Code",
+        "codex": "Codex",
         "openClaw": "OpenClaw",
         "other": "Other Agents"
       },
@@ -1016,6 +1017,14 @@
         "step1Title": "Step 1: Set environment variables",
         "step1Tip": "Tip: Add these to ~/.bashrc or ~/.zshrc for persistence.",
         "step2Title": "Step 2: Open Claude Code and run"
+      },
+      "codex": {
+        "step1Title": "Step 1: Set environment variables",
+        "step1Tip": "Tip: Add these to ~/.bashrc or ~/.zshrc for persistence.",
+        "step2Title": "Step 2: Run the Codex installer",
+        "step2Tip": "The script registers the plugin marketplace and writes the MCP server entry into ~/.codex/config.toml.",
+        "step3Title": "Step 3: Verify connection",
+        "step3Desc": "Open Codex and ask it to check in to Chorus — e.g. type \"check in to chorus\"."
       },
       "openClaw": {
         "step1Title": "Step 1: Install plugin",
